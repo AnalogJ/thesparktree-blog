@@ -56,8 +56,8 @@ exclude: [vendor]
 # or "master" otherwise
 safe: false
 lsi: false
-username: biomadeira
-repo: jasper
+username: analogj
+repo: analogj.github.io
 branch: master
 relative_source: ../jasper/
 destination: ../jasper-pages/
