@@ -7,17 +7,17 @@ paginate: 5
 language: 'en-uk'
 
 # Website info
-name: 'Finding The Way Home'
-description: "A beautiful narrative written with the world's most elegant publishing platform. The story begins here."
+name: 'The SparkTree'
+description: "Devops/Automation guy. I build things. Then I break them. Most of the time I fix them again."
 
 # Author's info
-author: 'Casper McFadden'
+author: 'Jason Kulatunga'
 # edit 'categories' in the front matter of every post to match this username
-nickname: casper
-bio: 'A paranormal expert and his daughter bunk in an abandoned house populated by 3 mischievous ghosts and one friendly one.'
-location: 'Maine, USA'
+nickname: AnalogJ
+bio: 'Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.'
+location: 'San Francisco, CA'
 url: 'http://analogj.github.io/'
-image: 'assets/images/casper.png'
+image: 'assets/images/analogj.jpg'
 
 short_url: 'analogj.github.io/'
 google_analytics: UA-69281367-1
@@ -59,7 +59,7 @@ lsi: false
 username: analogj
 repo: analogj.github.io
 branch: master
-relative_source: ../jasper/
+relative_source: ../,/
 destination: ../jasper-pages/
 production_url:  https://analogj.github.io/
 source_url:      https://github.com/analogj/analogj.github.io/
