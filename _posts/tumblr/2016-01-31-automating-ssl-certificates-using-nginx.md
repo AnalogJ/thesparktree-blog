@@ -10,7 +10,7 @@ tags:
 - automation
 - SSL
 - nginx
-tumblr_url: http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx
+tumblr_url: https://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

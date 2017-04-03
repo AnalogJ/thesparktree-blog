@@ -8,7 +8,7 @@ language: 'en-uk'
 
 # Website info
 name: 'The SparkTree'
-description: "Devops/Automation guy. I build things. Then I break them. Most of the time I fix them again."
+description: "Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. "
 
 # Author's info
 author: 'Jason Kulatunga'
@@ -20,8 +20,8 @@ url: 'http://analogj.github.io/'
 image: 'assets/images/analogj.jpg'
 
 short_url: 'analogj.github.io/'
-google_analytics: UA-69281367-1
-disqus: username
+google_analytics: UA-33233417-3
+disqus: sparktree
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
 baseurl: /
 
