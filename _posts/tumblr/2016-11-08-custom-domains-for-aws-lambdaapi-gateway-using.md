@@ -15,7 +15,7 @@ tags:
 - apex
 tumblr_url: http://blog.thesparktree.com/post/152904762374/custom-domains-for-aws-lambdaapi-gateway-using
 navigation: True
-logo: 'assets/images/ghost.png'
+logo: 'assets/logo.png'
 categories: 'analogj'
 navigation: True
 ---

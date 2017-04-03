@@ -13,6 +13,7 @@ tags:
 - automation
 tumblr_url: http://blog.thesparktree.com/post/149300867304/you-dont-know-jenkins-part-2
 categories: 'analogj'
+logo: 'assets/logo-dark.png'
 navigation: True
 ---
 

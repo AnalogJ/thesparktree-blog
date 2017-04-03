@@ -12,6 +12,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 
 # Update

@@ -12,6 +12,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/69449035595/how-to-setup-a-free-continuous-integration-server
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
 ---
 
 ### Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)

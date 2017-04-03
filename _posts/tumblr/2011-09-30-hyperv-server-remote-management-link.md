@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41985761658/hyperv-server-remote-management-link
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 Best instructions for setting up Hyper V Server
 

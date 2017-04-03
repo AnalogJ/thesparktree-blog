@@ -11,6 +11,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41987546374/the-breakpoint-will-not-currently-be-hit-no
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 I'm posting this blog mostly to remind myself how to fix this if ever I run into it again, but if anyone else benefits from it, then awesome.
 

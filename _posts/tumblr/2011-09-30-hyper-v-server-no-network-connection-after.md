@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41985700752/hyper-v-server-no-network-connection-after
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 Run `nvspscrub.js /P` to clear all Virtual Networks
 

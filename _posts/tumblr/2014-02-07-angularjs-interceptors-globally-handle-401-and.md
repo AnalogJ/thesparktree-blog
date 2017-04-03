@@ -11,6 +11,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/75952317665/angularjs-interceptors-globally-handle-401-and
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 
 If you've built your slick new app using AngluarJS you're probably using the common pattern of using AngluarJS as your dynamic client side MVVM framework and delegating your server side code to act as a API for the most part.

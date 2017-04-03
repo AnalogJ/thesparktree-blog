@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41987394051/create-a-service-on-server-2008
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 http://support.microsoft.com/kb/251192
 How to create a service from an exe on server 2008

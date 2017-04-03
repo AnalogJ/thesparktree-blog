@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41986431131/hyperv-how-to-allow-remote-access-to-mmc-snap-ins
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 http://blogs.technet.com/b/server_core/archive/2008/01/14/configuring-the-firewall-for-remote-management-of-a-workgroup-server-core-installation.aspx
 

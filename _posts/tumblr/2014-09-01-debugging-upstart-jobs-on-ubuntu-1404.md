@@ -12,6 +12,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/96381672984/debugging-upstart-jobs-on-ubuntu-1404
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 
 Before you begin, you should be (intimately) familiar with the [Upstart Cookbook](http://upstart.ubuntu.com/cookbook/). It's an incredible resource for understanding the in's and out's of Upstart and its configuration.

@@ -10,6 +10,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/86424236989/npm-errors-with-infinite-loop
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
 ---
 Occasionally I’ll be working with a nodejs project and when I attempt to run `$ npm install` I’ll see what appears to be an infinite loop with the same package partially installing and then failing over and over.
 

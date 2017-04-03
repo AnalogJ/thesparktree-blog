@@ -16,6 +16,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/142690115934/continuous-delivery-for-versioned
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
 ---
 So you're the devops/automation guy or gal on your team. You live and die by “[Automate all the things](https://memegenerator.net/instance/9449708)”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That's awesome, that's how I got here too.
 

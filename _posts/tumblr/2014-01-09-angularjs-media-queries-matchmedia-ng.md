@@ -11,6 +11,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/72780878796/angularjs-media-queries-matchmedia-ng
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 [matchmedia-ng](https://github.com/AnalogJ/matchmedia-ng) is a set of AngularJS bindings and helper functions for the matchMedia javascript api. With matchMedia, AngularJS and [matchmedia-ng](https://github.com/AnalogJ/matchmedia-ng) you can automatically respond to the orientation, browser height, width and other properties supported by CSS Media Queries.
 

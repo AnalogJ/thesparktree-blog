@@ -14,6 +14,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/69538763994/transparently-adding-encrypted-fields-to-a-rails
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 As a software architect, you are in the business of designing new applications while balancing business requirements against future utility. Unfortunately design specifications are not as immutable as we dream they are, and sometimes significant changes must be made after the fact.
 

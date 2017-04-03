@@ -10,6 +10,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41986292128/how-to-call-a-function-on-a-databound-value-in
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 Wrap your Eval call:
 

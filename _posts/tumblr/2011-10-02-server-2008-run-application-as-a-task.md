@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41987099542/server-2008-run-application-as-a-task
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 Task Schedule works great in WHS 2011 (free an simple)
 

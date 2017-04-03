@@ -10,6 +10,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41987942679/dropbox-as-a-service-server-2008
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 
 **What I did**

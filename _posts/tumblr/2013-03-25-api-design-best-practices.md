@@ -13,6 +13,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41988581166/api-design-best-practices
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 Or how to stop third party developers from hating you.
 

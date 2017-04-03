@@ -13,6 +13,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/88872191934/continuous-deployment-with-dokku-full-guide
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it.
 You've heard of this cool new tool called docker, but you're not sure if it's that useful for you, you mostly play with web development.

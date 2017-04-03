@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41985959910/javascript-documentwrite
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 document write is an antipattern,
 

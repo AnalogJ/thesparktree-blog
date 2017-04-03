@@ -12,6 +12,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/124285589139/step-by-step-shipyard-2-docker-cluster
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 
 # Step-By-Step Shipyard 2 Docker Cluster

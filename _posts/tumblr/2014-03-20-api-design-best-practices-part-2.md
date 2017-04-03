@@ -9,6 +9,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/80164111992/api-design-best-practices-part-2
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 This is a follow up to my previous API design post ["API Design Best Practices"](http://blog.thesparktree.com/post/41988581166/api-design-best-practices)
 

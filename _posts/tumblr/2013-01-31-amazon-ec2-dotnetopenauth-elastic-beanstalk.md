@@ -8,6 +8,8 @@ tags: []
 tumblr_url: http://blog.thesparktree.com/post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 This is the fix for the dotnetopenauth.aspnet module not working on an amazon ec2 instance that was published out using beanstalk. The web deploy folder + url rewriting rules that amazon places in the web config confuse the module and it dies. The following issue [https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35](https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35) in github references it, but no fix is avaliable at this time.
 

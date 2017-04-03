@@ -9,6 +9,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41985876443/hyper-v-server-injecting-network-drivers
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 How to inject network drivers into HyperV Server when you see the message “No active network adapters found”
 

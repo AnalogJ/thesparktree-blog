@@ -10,6 +10,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/114053773684/the-unfortunately-long-story-dealing-with
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
 ---
 
 Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box.

@@ -12,6 +12,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/69434240145/dropstore-ng-opensource-angularjs-bindings-for
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 I created an github project called [dropstore-ng](https://github.com/AnalogJ/dropstore-ng) that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.
 The service wraps most of the Dropbox Datastore callbacks in promises, contains subscription methods for Dropbox events and provides transparent aliases for untouched library methods.

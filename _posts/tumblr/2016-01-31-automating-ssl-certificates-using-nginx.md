@@ -13,6 +13,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
 ---
 There's a ton of smart people out there who've written guides on [setting](https://sysops.forlaravel.com/letsencrypt) [up](https://blog.rudeotter.com/lets-encrypt-ssl-certificate-nginx-ubuntu/) [Nginx](https://davidzych.com/setting-up-ssl-with-lets-encrypt-on-ubuntu-and-nginx/), [and](https://community.letsencrypt.org/t/howto-easy-cert-generation-and-renewal-with-nginx/3491/2) [automating](https://adambard.com/blog/using-letsencrypt-with-nginx/) [Letsencrypt](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04) —but none that setup automation and work 100% correctly out of the box. That’s the goal here, I’ll be documenting all the steps required to get your web application protected by an automatically renewing SSL certificate.
 

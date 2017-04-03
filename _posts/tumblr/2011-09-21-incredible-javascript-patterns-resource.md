@@ -10,6 +10,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/41986143106/incredible-javascript-patterns-resource
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
+
 ---
 http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
 

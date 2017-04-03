@@ -13,6 +13,7 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/103257786994/how-to-setup-a-deis-heroku-like-paas-on
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo-dark.png'
 ---
 # Prerequisites
 

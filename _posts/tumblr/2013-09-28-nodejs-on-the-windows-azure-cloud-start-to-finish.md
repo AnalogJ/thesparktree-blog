@@ -11,6 +11,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/62530881389/nodejs-on-the-windows-azure-cloud-start-to-finish
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 
 So you want to run nodejs on a linux image on Azure, easy right?

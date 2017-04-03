@@ -12,6 +12,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/77311774912/creating-a-sails-application-using-passport
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 
 #Creating a Sails Application using Passport Authentication

@@ -13,6 +13,8 @@ tags:
 tumblr_url: http://blog.thesparktree.com/post/138999997429/generating-intranet-and-private-network-ssl
 categories: 'analogj'
 navigation: True
+logo: 'assets/logo.png'
+
 ---
 This post is a follow up to my previous one [Automating SSL Certificates using Nginx & LetsEncrypt](http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx). This time we’ll be generating SSL certificates for intranet and non-public networks.
 
