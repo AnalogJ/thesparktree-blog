@@ -312,7 +312,7 @@ end
 
 ---
 
-##Authentication (and Authorization)
+## Authentication (and Authorization)
 
 - Authentication verifies who you are.
 - Authorization verifies what you can do.
