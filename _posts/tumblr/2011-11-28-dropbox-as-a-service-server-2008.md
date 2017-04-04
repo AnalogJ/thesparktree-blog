@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - Dropbox
 - Service
-tumblr_url: http://blog.thesparktree.com/post/41987942679/dropbox-as-a-service-server-2008
+redirect_from: /post/41987942679/dropbox-as-a-service-server-2008
+disqus_id: 'http://blog.thesparktree.com/post/41987942679'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

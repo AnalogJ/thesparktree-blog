@@ -10,7 +10,8 @@ tags:
 - Architecture
 - OAuth
 - API
-tumblr_url: http://blog.thesparktree.com/post/41988581166/api-design-best-practices
+redirect_from: /post/41988581166/api-design-best-practices
+disqus_id: 'http://blog.thesparktree.com/post/41988581166'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

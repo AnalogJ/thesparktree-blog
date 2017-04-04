@@ -5,7 +5,8 @@ date: '2013-01-31T20:50:25-08:00'
 cover: 'assets/images/cover_aws.jpg'
 subclass: 'post tag-fiction'
 tags: []
-tumblr_url: http://blog.thesparktree.com/post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
+redirect_from: /post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
+disqus_id: 'http://blog.thesparktree.com/post/41988205995'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

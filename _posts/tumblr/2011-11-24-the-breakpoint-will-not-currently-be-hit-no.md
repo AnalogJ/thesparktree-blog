@@ -8,7 +8,8 @@ subclass: 'post tag-fiction'
 tags:
 - ASP.Net
 - C
-tumblr_url: http://blog.thesparktree.com/post/41987546374/the-breakpoint-will-not-currently-be-hit-no
+redirect_from: /post/41987546374/the-breakpoint-will-not-currently-be-hit-no
+disqus_id: 'http://blog.thesparktree.com/post/41987546374'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

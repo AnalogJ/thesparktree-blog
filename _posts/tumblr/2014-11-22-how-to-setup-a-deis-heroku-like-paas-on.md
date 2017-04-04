@@ -10,7 +10,8 @@ tags:
 - azure
 - docker
 - devops
-tumblr_url: http://blog.thesparktree.com/post/103257786994/how-to-setup-a-deis-heroku-like-paas-on
+redirect_from: /post/103257786994/how-to-setup-a-deis-heroku-like-paas-on
+disqus_id: 'http://blog.thesparktree.com/post/103257786994'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

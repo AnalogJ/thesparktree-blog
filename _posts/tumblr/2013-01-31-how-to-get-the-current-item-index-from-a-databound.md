@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - ASP.Net
 - C
-tumblr_url: http://blog.thesparktree.com/post/41986202792/how-to-get-the-current-item-index-from-a-databound
+redirect_from: /post/41986202792/how-to-get-the-current-item-index-from-a-databound
+disqus_id: 'http://blog.thesparktree.com/post/41986202792'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

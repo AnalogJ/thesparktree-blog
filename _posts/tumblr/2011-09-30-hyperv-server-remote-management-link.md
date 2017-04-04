@@ -6,7 +6,8 @@ cover: 'assets/images/cover_microsoft.jpg'
 subclass: 'post tag-fiction'
 tags:
 - HyperV
-tumblr_url: http://blog.thesparktree.com/post/41985761658/hyperv-server-remote-management-link
+redirect_from: /post/41985761658/hyperv-server-remote-management-link
+disqus_id: 'http://blog.thesparktree.com/post/41985761658'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

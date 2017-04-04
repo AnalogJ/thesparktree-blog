@@ -8,7 +8,8 @@ tags:
 - azure
 - nodejs
 - javascript
-tumblr_url: http://blog.thesparktree.com/post/62530881389/nodejs-on-the-windows-azure-cloud-start-to-finish
+redirect_from: /post/62530881389/nodejs-on-the-windows-azure-cloud-start-to-finish
+disqus_id: 'http://blog.thesparktree.com/post/62530881389'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

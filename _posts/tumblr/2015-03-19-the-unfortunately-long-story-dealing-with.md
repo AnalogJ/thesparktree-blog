@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - python
 - file-upload
-tumblr_url: http://blog.thesparktree.com/post/114053773684/the-unfortunately-long-story-dealing-with
+redirect_from: /post/114053773684/the-unfortunately-long-story-dealing-with
+disqus_id: 'http://blog.thesparktree.com/post/114053773684'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

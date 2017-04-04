@@ -8,7 +8,8 @@ tags:
 - angularjs
 - media queries
 - javascript
-tumblr_url: http://blog.thesparktree.com/post/72780878796/angularjs-media-queries-matchmedia-ng
+redirect_from: /post/72780878796/angularjs-media-queries-matchmedia-ng
+disqus_id: 'http://blog.thesparktree.com/post/72780878796'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

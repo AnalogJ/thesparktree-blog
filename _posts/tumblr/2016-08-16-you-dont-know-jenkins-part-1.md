@@ -10,7 +10,8 @@ tags:
 - groovy
 - chef
 - automation
-tumblr_url: http://blog.thesparktree.com/post/149039600544/you-dont-know-jenkins-part-1
+redirect_from: /post/149039600544/you-dont-know-jenkins-part-1
+disqus_id: 'http://blog.thesparktree.com/post/149039600544'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'
@@ -72,9 +73,9 @@ Thankfully the Chef cookbook is smart enough to use the anonymous user first, an
 
 ```ruby
 # TODO: this private key should be from secret databag
-###############################################################################
+#################################################
 # Install Jenkins
-###############################################################################
+#################################################
 include_recipe 'jenkins::master'
 
 ruby_block 'run as jenkins automation user' do
@@ -117,17 +118,11 @@ repositories {
 }
 
 dependencies {
- 0 %>
-
-
 	  jenkinsPlugins([
 		group: '',
 		name: '',
 		version: ''
 	  ])
-
-
-
 }
 
 task clean(type: Delete){
@@ -142,7 +137,7 @@ task install(type: Copy, dependsOn: [clean]){
 
 // should be run with `gradle update --refresh-dependencies`
 task update(dependsOn: [clean, install])
-```groovy
+```
 
 And then executing `gradle install` as part of your cookbook run.
 
@@ -168,7 +163,7 @@ end
 Now you'll have a `plugins.lock` file specifing all the plugins you used, and what version they're at.
 Locking your plugins to specific versions is as easy as specifying the version in the `attributes.rb` file
 
-  	default['jenkins_wrapper_cookbook']['plugins']['job-dsl'] = {'version' => '1.48'}
+    default['jenkins_wrapper_cookbook']['plugins']['job-dsl'] = {'version' => '1.48'}
 
 You can even update your plugins to the latest version at any time by running `gradle --refresh-dependencies update && gradle dependencies > 'plugins.lock'` and then restarting Jenkins
 
@@ -181,9 +176,9 @@ We'll also set a flag on the filesystem so that we don't continuously regenerate
 We only want to create a single Jenkins user via Chef, because all subsequent users will be defined in a config file, and won't require a full Chef run to update.
 
 ```ruby
-###############################################################################
+#################################################
 # Configure Jenkins automation user
-###############################################################################
+#################################################
 # TODO: this should be from an encrypted databag
 # make sure the plugins were installed before creating your first user because the mailer plugin is required
 # before we create any users https://github.com/chef-cookbooks/jenkins/issues/470
@@ -219,9 +214,9 @@ easy to understand and well documented. You should store your DSL job definition
 easy to modify/update. Then all you need is a bootstrap job to pull down your DSL job definition repo and run it on your Jenkins server.
 
 ```groovy
-###############################################################################
+#################################################
 # Create Bootstrap job using script
-###############################################################################
+#################################################
 
 jenkins_script 'dsl_bootstrap_job' do
   command  branchSpec = Collections.singletonList(new BranchSpec("*/master"));
@@ -273,9 +268,9 @@ Configuring Jenkins requires a thorough look at the [Jenkins](http://javadoc.jen
 Any setting you can change via the web UI can be set via Jenkins groovy code.
 
 ```ruby
-###############################################################################
+#################################################
 # Configure Jenkins Installation
-###############################################################################
+#################################################
 
 jenkins_script 'jenkins_configure' do
   command <<-EOH.gsub(/^ {4}/, '')
@@ -332,9 +327,9 @@ At this point in the guide, all we’re going to do is enable LDAP Authenticatio
 Here’s a LDAP Authentication strategy:
 
 ```ruby
-###############################################################################
+#################################################
 # Enable Jenkins Authentication
-###############################################################################
+#################################################
 
 jenkins_script 'enable_active_directory_authentication' do
   command <<-EOH.gsub(/^ {4}/, '')

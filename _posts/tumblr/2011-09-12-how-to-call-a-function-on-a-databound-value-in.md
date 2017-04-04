@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - ASP.Net
 - C
-tumblr_url: http://blog.thesparktree.com/post/41986292128/how-to-call-a-function-on-a-databound-value-in
+redirect_from: /post/41986292128/how-to-call-a-function-on-a-databound-value-in
+disqus_id: 'http://blog.thesparktree.com/post/41986292128'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

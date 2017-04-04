@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - Javascript
 - Patterns
-tumblr_url: http://blog.thesparktree.com/post/41986143106/incredible-javascript-patterns-resource
+redirect_from: /post/41986143106/incredible-javascript-patterns-resource
+disqus_id: 'http://blog.thesparktree.com/post/41986143106'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

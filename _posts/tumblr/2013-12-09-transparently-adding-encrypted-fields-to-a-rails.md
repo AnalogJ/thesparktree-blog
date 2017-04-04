@@ -11,7 +11,8 @@ tags:
 - ruby on rails
 - encryption
 - mongoid
-tumblr_url: http://blog.thesparktree.com/post/69538763994/transparently-adding-encrypted-fields-to-a-rails
+redirect_from: /post/69538763994/transparently-adding-encrypted-fields-to-a-rails
+disqus_id: 'http://blog.thesparktree.com/post/69538763994'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

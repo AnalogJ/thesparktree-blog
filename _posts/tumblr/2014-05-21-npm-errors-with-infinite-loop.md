@@ -7,7 +7,8 @@ subclass: 'post tag-fiction'
 tags:
 - npm
 - nodejs
-tumblr_url: http://blog.thesparktree.com/post/86424236989/npm-errors-with-infinite-loop
+redirect_from: /post/86424236989/npm-errors-with-infinite-loop
+disqus_id: 'http://blog.thesparktree.com/post/86424236989'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

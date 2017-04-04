@@ -9,7 +9,8 @@ tags:
 - cloudbees
 - github
 - jenkins
-tumblr_url: http://blog.thesparktree.com/post/69449035595/how-to-setup-a-free-continuous-integration-server
+redirect_from: /post/69449035595/how-to-setup-a-free-continuous-integration-server
+disqus_id: 'http://blog.thesparktree.com/post/69449035595'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

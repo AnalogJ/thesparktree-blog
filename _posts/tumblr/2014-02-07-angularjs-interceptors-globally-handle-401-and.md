@@ -8,7 +8,8 @@ tags:
 - angularjs
 - javascript
 - nodejs
-tumblr_url: http://blog.thesparktree.com/post/75952317665/angularjs-interceptors-globally-handle-401-and
+redirect_from: /post/75952317665/angularjs-interceptors-globally-handle-401-and
+disqus_id: 'http://blog.thesparktree.com/post/75952317665'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

@@ -9,7 +9,8 @@ tags:
 - docker
 - shipyard-project
 - cluser
-tumblr_url: http://blog.thesparktree.com/post/124285589139/step-by-step-shipyard-2-docker-cluster
+redirect_from: /post/124285589139/step-by-step-shipyard-2-docker-cluster
+disqus_id: 'http://blog.thesparktree.com/post/124285589139'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

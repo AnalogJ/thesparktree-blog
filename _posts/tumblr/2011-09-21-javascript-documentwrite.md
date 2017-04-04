@@ -6,7 +6,8 @@ cover: 'assets/images/cover_javascript.jpg'
 subclass: 'post tag-fiction'
 tags:
 - Javascript Antipattern
-tumblr_url: http://blog.thesparktree.com/post/41985959910/javascript-documentwrite
+redirect_from: /post/41985959910/javascript-documentwrite
+disqus_id: 'http://blog.thesparktree.com/post/41985959910'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'

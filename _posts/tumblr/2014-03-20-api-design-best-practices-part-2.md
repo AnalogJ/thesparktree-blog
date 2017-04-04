@@ -6,7 +6,8 @@ cover: 'assets/images/cover_code.jpg'
 subclass: 'post tag-fiction'
 tags:
 - API
-tumblr_url: http://blog.thesparktree.com/post/80164111992/api-design-best-practices-part-2
+redirect_from: /post/80164111992/api-design-best-practices-part-2
+disqus_id: 'http://blog.thesparktree.com/post/80164111992'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

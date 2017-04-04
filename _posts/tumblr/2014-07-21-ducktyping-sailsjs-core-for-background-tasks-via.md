@@ -9,7 +9,8 @@ tags:
 - nodejs
 - javascript
 - sailsjs
-tumblr_url: http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via
+redirect_from: /post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via
+disqus_id: 'http://blog.thesparktree.com/post/92465942639'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

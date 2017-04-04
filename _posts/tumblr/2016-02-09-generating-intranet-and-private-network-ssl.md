@@ -10,7 +10,8 @@ tags:
 - lexicon
 - automation
 - ssl
-tumblr_url: http://blog.thesparktree.com/post/138999997429/generating-intranet-and-private-network-ssl
+redirect_from: /post/138999997429/generating-intranet-and-private-network-ssl
+disqus_id: 'http://blog.thesparktree.com/post/138999997429'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo.png'

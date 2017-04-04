@@ -6,7 +6,8 @@ cover: 'assets/images/cover_microsoft.jpg'
 subclass: 'post tag-fiction'
 tags:
 - WHS2011
-tumblr_url: http://blog.thesparktree.com/post/41987099542/server-2008-run-application-as-a-task
+redirect_from: /post/41987099542/server-2008-run-application-as-a-task
+disqus_id: 'http://blog.thesparktree.com/post/41987099542'
 categories: 'analogj'
 navigation: True
 logo: 'assets/logo-dark.png'
