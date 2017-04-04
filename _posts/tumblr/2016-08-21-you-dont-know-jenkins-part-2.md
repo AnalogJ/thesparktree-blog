@@ -103,6 +103,8 @@ anything below. Also some of these techniques are only necessary for extremely c
 If you're following along at home using `Vagrant`, you'll want to delete the `dsl-bootstrap-job` and then checkout the `part_2` branch of the [AnalogJ/you-dont-know-jenkins](https://github.com/AnalogJ/you-dont-know-jenkins) repo.
 The DSL code has been moved to its own dedicated repo: [AnalogJ/you-dont-know-jenkins-job-dsl](https://github.com/AnalogJ/you-dont-know-jenkins-job-dsl)
 
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-job-dsl"></div>
+
 ---
 
 ## Factory/Builder pattern using a class library

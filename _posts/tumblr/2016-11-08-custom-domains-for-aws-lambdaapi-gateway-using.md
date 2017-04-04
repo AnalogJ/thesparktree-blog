@@ -51,6 +51,8 @@ Here's what it does:
 
 The code is all open source and lives here: [Analogj/aws-api-gateway-letsencrypt](https://github.com/AnalogJ/aws-api-gateway-letsencrypt/blob/master/api-gateway-custom-domain.py)
 
+<div class="github-widget" data-repo="AnalogJ/aws-api-gateway-letsencrypt"></div>
+
 I've also created a simple [Docker image](https://github.com/AnalogJ/aws-api-gateway-letsencrypt/blob/master/Dockerfile) which you can use if you don't want to install anything:
 
 ```bash

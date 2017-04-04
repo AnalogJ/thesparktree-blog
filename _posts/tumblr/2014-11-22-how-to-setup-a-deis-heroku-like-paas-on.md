@@ -18,7 +18,7 @@ logo: 'assets/logo-dark.png'
 ---
 # Prerequisites
 
-##Install and Configure the Azure CLI
+## Install and Configure the Azure CLI
 
 ```bash
 # If Node.js is installed on your system, use the following command to install the xplat-cli:

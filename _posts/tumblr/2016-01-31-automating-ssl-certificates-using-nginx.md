@@ -196,4 +196,6 @@ At this point you should have a working SSL protected web application, with auto
 
 If you’re looking for an example of how this process can be used to automatically protect a website running inside a Docker container, look no further than my minimal [letsencrypt-http01-docker-nginx-example](https://github.com/AnalogJ/letsencrypt-http01-docker-nginx-example) repo.
 
+<div class="github-widget" data-repo="AnalogJ/letsencrypt-http01-docker-nginx-example"></div>
+
 If you would like to see a more real world use of Letsencrypt with Nginx and automation you should check my [Gitmask](https://github.com/AnalogJ/gitmask) repo.

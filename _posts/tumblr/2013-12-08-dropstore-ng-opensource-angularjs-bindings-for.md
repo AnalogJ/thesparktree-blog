@@ -30,4 +30,4 @@ or through bower
 bower install dropstore-ng --save
 ```
 
--Jason
+<div class="github-widget" data-repo="AnalogJ/dropstore-ng"></div>

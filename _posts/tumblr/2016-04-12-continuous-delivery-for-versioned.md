@@ -45,6 +45,8 @@ This is obviously a very pointed example thats specific to Chef cookbooks, but v
 [CapsuleCD](https://github.com/AnalogJ/capsulecd) is a generic Continuous Delivery pipeline for versioned artifacts and libraries. Don't worry, I'm not trying to convince you to throw away all your CI scripts and replace your Jenkins server. [CapsuleCD](https://github.com/AnalogJ/capsulecd) is meant to work with your existing CI, not complete with it. It's goal is to bring automation to the packaging and deployment stage of your library release cycle.
 Depending how you set it up (and how much you trust your Unit Tests), every Pull Request could automatically start CapsuleCD to generate a new release of your library (Continuous Deployment) or just notify Ops to kick off CapsuleCD (Continuous Delivery).
 
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
 ## How's it work?
 
 [CapsuleCD](https://github.com/AnalogJ/capsulecd) is configurable CLI application which can be heavily customized. It can support package/release management for libraries written in any language, but comes with built-in support for the following languages:
@@ -113,3 +115,6 @@ To be honest, [CapsuleCD](https://github.com/AnalogJ/capsulecd) isn’t meant fo
 ## All our Rubygems are private, how do I override the publish step to point to our private Gem server?
 
 Check out the [Step pre/post hooks and override](https://github.com/AnalogJ/capsulecd/blob/master/README.md#step-prepost-hooks-and-overrides) section of the README.md
+
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>

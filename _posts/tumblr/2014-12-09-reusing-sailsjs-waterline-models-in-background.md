@@ -109,6 +109,8 @@ At this point we have a minimal working application. However one of the greatest
 
 I want my background tasks to work exactly as they would in my Sails apps, and that includes the realtime notification features. Luckily SailsJS is opensource and hooks can be overridden. Long story short, I wrote a modified version of the pubsub hook that can push pubsub notifications to a redis queue, just as the standard pubsub hook does. [AnalogJ/pubsub-emitter on Github](https://github.com/AnalogJ/pubsub-emitter)
 
+<div class="github-widget" data-repo="AnalogJ/pubsub-emitter"></div>
+
 Now our simple looks like:
 
 ```javascript
@@ -142,7 +144,7 @@ require('sails').load({
 })
 ```
 
-#Integrate Kue with Minimal SailsJS App
+# Integrate Kue with Minimal SailsJS App
 
 At this point we have a minimal SailsJS environment and a Kue script, all we have left to do is integrate them together.
 

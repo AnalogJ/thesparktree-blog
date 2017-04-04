@@ -63,6 +63,9 @@ It doesn't matter if you use Chef, Ansible, Puppet or Salt. Whichever CM system 
 Here's a few snippets of what this could look like in a Chef cookbook. If you'd like to jump straight to a fully working cookbook you can find it here: [AnalogJ/you-dont-know-jenkins](https://github.com/AnalogJ/you-dont-know-jenkins).
 Remember, none of this is unique to Chef, it can be re-implemented in any other CM system.
 
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins"></div>
+
 ---
 
 ## CLI Authentication

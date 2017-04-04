@@ -17,7 +17,7 @@ logo: 'assets/logo.png'
 
 ---
 
-#Creating a Sails Application using Passport Authentication
+# Creating a Sails Application using Passport Authentication
 
 1. `$ mkdir sails-passport-authentication`
 
