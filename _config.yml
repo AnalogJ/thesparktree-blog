@@ -66,6 +66,14 @@ destination: ../jasper-pages/
 production_url:  https://analogj.github.io/
 source_url:      https://github.com/analogj/analogj.github.io/
 
+
+mini_magick:
+  covers:
+    adaptive-resize: 2000x1000>
+    quality: 90
+    source: assets/images/originals
+    destination: assets/images
+
 exclude:
   - README.md
   - Rakefile

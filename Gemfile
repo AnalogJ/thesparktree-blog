@@ -7,3 +7,4 @@ gem "jekyll", "~> 3.4.3"
 #gem 'rouge', '~> 1.10', '>= 1.10.1'
 gem "github-pages", "~> 130"
 gem "rake", "~> 10.1.1"
+gem "jekyll-minimagick"
