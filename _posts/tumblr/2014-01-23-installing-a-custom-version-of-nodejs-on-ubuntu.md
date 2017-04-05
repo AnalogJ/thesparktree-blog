@@ -8,7 +8,9 @@ tags:
 - nodejs
 - node
 - ubuntu
-redirect_from: /post/74294778727/installing-a-custom-version-of-nodejs-on-ubuntu
+redirect_from:
+- /post/74294778727/installing-a-custom-version-of-nodejs-on-ubuntu
+- /post/74294778727
 disqus_id: 'http://blog.thesparktree.com/post/74294778727'
 categories: 'analogj'
 navigation: True

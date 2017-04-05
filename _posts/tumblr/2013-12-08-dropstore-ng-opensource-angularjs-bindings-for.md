@@ -9,7 +9,9 @@ tags:
 - angularjs
 - github
 - javascript
-redirect_from: /post/69434240145/dropstore-ng-opensource-angularjs-bindings-for
+redirect_from:
+- /post/69434240145/dropstore-ng-opensource-angularjs-bindings-for
+- /post/69434240145
 disqus_id: 'http://blog.thesparktree.com/post/69434240145'
 categories: 'analogj'
 navigation: True

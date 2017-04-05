@@ -9,7 +9,9 @@ tags:
 - sailsjs
 - passportjs
 - sails
-redirect_from: /post/77311774912/creating-a-sails-application-using-passport
+redirect_from:
+- /post/77311774912/creating-a-sails-application-using-passport
+- /post/77311774912
 disqus_id: 'http://blog.thesparktree.com/post/77311774912'
 categories: 'analogj'
 navigation: True

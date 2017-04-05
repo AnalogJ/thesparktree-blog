@@ -6,7 +6,9 @@ cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - Service
-redirect_from: /post/41987394051/create-a-service-on-server-2008
+redirect_from:
+- /post/41987394051/create-a-service-on-server-2008
+- /post/41987394051
 disqus_id: 'http://blog.thesparktree.com/post/41987394051'
 categories: 'analogj'
 navigation: True

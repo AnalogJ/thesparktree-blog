@@ -5,7 +5,9 @@ date: '2013-01-20T00:28:23-08:00'
 cover: '/assets/images/cover_code.jpg'
 subclass: 'post tag-post'
 tags: []
-redirect_from: /post/40987943309/dev-blog-day-1
+redirect_from:
+- /post/40987943309/dev-blog-day-1
+- /post/40987943309
 disqus_id: 'http://blog.thesparktree.com/post/40987943309'
 categories: 'analogj'
 navigation: True

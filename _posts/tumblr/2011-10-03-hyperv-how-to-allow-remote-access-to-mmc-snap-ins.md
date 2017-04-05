@@ -6,7 +6,9 @@ cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - HyperV
-redirect_from: /post/41986431131/hyperv-how-to-allow-remote-access-to-mmc-snap-ins
+redirect_from:
+- /post/41986431131/hyperv-how-to-allow-remote-access-to-mmc-snap-ins
+- /post/41986431131
 disqus_id: 'http://blog.thesparktree.com/post/41986431131'
 categories: 'analogj'
 navigation: True

@@ -13,7 +13,9 @@ tags:
 - python
 - ruby
 - nodejs
-redirect_from: /post/142690115934/continuous-delivery-for-versioned
+redirect_from:
+- /post/142690115934/continuous-delivery-for-versioned
+- /post/142690115934
 disqus_id: 'http://blog.thesparktree.com/post/142690115934'
 categories: 'analogj'
 navigation: True

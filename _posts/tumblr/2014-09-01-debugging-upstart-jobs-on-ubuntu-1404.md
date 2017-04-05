@@ -9,7 +9,9 @@ tags:
 - linux
 - ubuntu
 - debugging
-redirect_from: /post/96381672984/debugging-upstart-jobs-on-ubuntu-1404
+redirect_from:
+- /post/96381672984/debugging-upstart-jobs-on-ubuntu-1404
+- /post/96381672984
 disqus_id: 'http://blog.thesparktree.com/post/96381672984'
 categories: 'analogj'
 navigation: True

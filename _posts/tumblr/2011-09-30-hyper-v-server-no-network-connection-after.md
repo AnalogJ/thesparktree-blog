@@ -6,7 +6,9 @@ cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - HyperV
-redirect_from: /post/41985700752/hyper-v-server-no-network-connection-after
+redirect_from:
+- /post/41985700752/hyper-v-server-no-network-connection-after
+- /post/41985700752
 disqus_id: 'http://blog.thesparktree.com/post/41985700752'
 categories: 'analogj'
 navigation: True

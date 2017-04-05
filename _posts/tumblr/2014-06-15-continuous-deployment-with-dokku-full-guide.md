@@ -10,7 +10,9 @@ tags:
 - ssl
 - wercker
 - nodejs
-redirect_from: /post/88872191934/continuous-deployment-with-dokku-full-guide
+redirect_from:
+- /post/88872191934/continuous-deployment-with-dokku-full-guide
+- /post/88872191934
 disqus_id: 'http://blog.thesparktree.com/post/88872191934'
 categories: 'analogj'
 navigation: True

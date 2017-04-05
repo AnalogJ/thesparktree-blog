@@ -9,7 +9,9 @@ tags:
 - waterline
 - nodejs
 - kue
-redirect_from: /post/104779353989/reusing-sailsjs-waterline-models-in-background
+redirect_from:
+- /post/104779353989/reusing-sailsjs-waterline-models-in-background
+- /post/104779353989
 disqus_id: 'http://blog.thesparktree.com/post/104779353989'
 categories: 'analogj'
 navigation: True

@@ -6,7 +6,9 @@ cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - WHS2011
-redirect_from: /post/41987099542/server-2008-run-application-as-a-task
+redirect_from:
+- /post/41987099542/server-2008-run-application-as-a-task
+- /post/41987099542
 disqus_id: 'http://blog.thesparktree.com/post/41987099542'
 categories: 'analogj'
 navigation: True

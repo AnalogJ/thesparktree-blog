@@ -10,7 +10,9 @@ tags:
 - groovy
 - chef
 - automation
-redirect_from: /post/149039600544/you-dont-know-jenkins-part-1
+redirect_from:
+- /post/149039600544/you-dont-know-jenkins-part-1
+- /post/149039600544
 disqus_id: 'http://blog.thesparktree.com/post/149039600544'
 categories: 'analogj'
 navigation: True

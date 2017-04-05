@@ -7,7 +7,9 @@ subclass: 'post tag-post'
 tags:
 - Javascript
 - Patterns
-redirect_from: /post/41986143106/incredible-javascript-patterns-resource
+redirect_from:
+- /post/41986143106/incredible-javascript-patterns-resource
+- /post/41986143106
 disqus_id: 'http://blog.thesparktree.com/post/41986143106'
 categories: 'analogj'
 navigation: True

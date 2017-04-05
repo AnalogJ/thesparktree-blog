@@ -13,7 +13,9 @@ tags:
 - aws
 - devops
 - apex
-redirect_from: /post/152904762374/custom-domains-for-aws-lambdaapi-gateway-using
+redirect_from:
+- /post/152904762374/custom-domains-for-aws-lambdaapi-gateway-using
+- /post/152904762374
 disqus_id: 'http://blog.thesparktree.com/post/152904762374'
 navigation: True
 logo: '/assets/logo.png'

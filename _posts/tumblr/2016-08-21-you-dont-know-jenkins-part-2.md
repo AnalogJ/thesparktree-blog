@@ -11,7 +11,9 @@ tags:
 - chef
 - dsl
 - automation
-redirect_from: /post/149300867304/you-dont-know-jenkins-part-2
+redirect_from:
+- /post/149300867304/you-dont-know-jenkins-part-2
+- /post/149300867304
 disqus_id: 'http://blog.thesparktree.com/post/149300867304'
 categories: 'analogj'
 logo: '/assets/logo-dark.png'

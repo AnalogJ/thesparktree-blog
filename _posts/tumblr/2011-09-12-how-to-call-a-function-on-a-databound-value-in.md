@@ -5,9 +5,11 @@ date: '2011-09-12T00:00:00-07:00'
 cover: '/assets/images/cover_visual_studio.png'
 subclass: 'post tag-post'
 tags:
-- ASP.Net
-- C
-redirect_from: /post/41986292128/how-to-call-a-function-on-a-databound-value-in
+  - ASP.Net
+  - C
+redirect_from:
+  - /post/41986292128/how-to-call-a-function-on-a-databound-value-in
+  - /post/41986292128
 disqus_id: 'http://blog.thesparktree.com/post/41986292128'
 categories: 'analogj'
 navigation: True

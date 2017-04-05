@@ -7,7 +7,9 @@ subclass: 'post tag-post'
 tags:
 - npm
 - nodejs
-redirect_from: /post/86424236989/npm-errors-with-infinite-loop
+redirect_from:
+- /post/86424236989/npm-errors-with-infinite-loop
+- /post/86424236989
 disqus_id: 'http://blog.thesparktree.com/post/86424236989'
 categories: 'analogj'
 navigation: True

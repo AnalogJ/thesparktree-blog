@@ -10,7 +10,9 @@ tags:
 - RadEditor
 - C
 - ".Net"
-redirect_from: /post/41988475011/customize-the-rich-text-editor-in-sitecore
+redirect_from:
+- /post/41988475011/customize-the-rich-text-editor-in-sitecore
+- /post/41988475011
 disqus_id: 'http://blog.thesparktree.com/post/41988475011'
 categories: 'analogj'
 navigation: True

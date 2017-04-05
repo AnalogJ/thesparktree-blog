@@ -10,7 +10,9 @@ tags:
 - Architecture
 - OAuth
 - API
-redirect_from: /post/41988581166/api-design-best-practices
+redirect_from:
+- /post/41988581166/api-design-best-practices
+- /post/41988581166
 disqus_id: 'http://blog.thesparktree.com/post/41988581166'
 categories: 'analogj'
 navigation: True
