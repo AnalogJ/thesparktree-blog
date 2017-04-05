@@ -13,7 +13,7 @@ description: "Devops posts & guides about interesting tech like Docker, Letsencr
 # Author's info
 author: 'Jason Kulatunga'
 # edit 'categories' in the front matter of every post to match this username
-nickname: AnalogJ
+nickname: analogj
 bio: 'Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.'
 location: 'San Francisco, CA'
 url: 'http://analogj.github.io/'
