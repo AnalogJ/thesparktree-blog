@@ -4,6 +4,47 @@
     <meta name="referrer" content="origin" />
     <link rel="next" href="{{ site.baseurl }}page2/" />
 
+
+    {% if page.title %}
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="{{ site.name }} - {{ page.title }}" />
+    <meta name="twitter:description" content="{{ page.content | strip_html | truncatewords: 26 }}" />
+    <meta name="twitter:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
+    <meta name="twitter:image" content="{{ site.baseurl }}{{ page.cover }}" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="{{ site.name }}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="{{ site.name }} - {{ page.title }}" />
+    <meta property="og:description" content="{{ page.content | strip_html | truncatewords: 26 }}" />
+    <meta property="og:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
+    <meta property="og:image" content="{{ site.baseurl }}{{ page.cover }}" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "{{ site.name }}",
+        "url": "{{ site.baseurl }}{{ page.url | remove: '/' }}",
+        "image": "{{ site.baseurl }}{{ page.cover }}",
+        "description": "{{ page.content | strip_html | truncatewords: 26 }}"
+    }
+    </script>
+
+    {% elsif site.name %}
+    <!-- Twitter site metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="{{ site.name }}" />
+    <meta name="twitter:description" content="{{ site.description }}" />
+    <meta name="twitter:url" content="{{ site.baseurl }}" />
+    <meta name="twitter:image" content="{{ site.baseurl }}assets/images/home_cover.png" />
+
+    <!-- Opengraph site metadata -->
     <meta property="og:site_name" content="{{ site.name }}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="{{ site.name }}" />
@@ -11,30 +52,18 @@
     <meta property="og:url" content="{{ site.baseurl }}" />
     <meta property="og:image" content="{{ site.baseurl }}assets/images/home_cover.png" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@analogj">
-    <meta name="twitter:creator" content="@analogj">
-{% if page.title %}
-    <meta name="twitter:title" content="{{ site.name }} - {{ page.title }}" />
-    <meta name="twitter:description" content="{{ post.content | strip_html | truncatewords: 26 }}" />
-    <meta name="twitter:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
-    <meta name="twitter:image" content="{{ site.baseurl }}{{ page.cover }}" />
-{% elsif site.name %}
-    <meta name="twitter:title" content="{{ site.name }}" />
-    <meta name="twitter:description" content="{{ site.description }}" />
-    <meta name="twitter:url" content="{{ site.baseurl }}" />
-    <meta name="twitter:image" content="{{ site.baseurl }}assets/images/home_cover.png" />
-{% endif %}
     <script type="application/ld+json">
-{
-    "@context": "http://schema.org",
-    "@type": "Website",
-    "publisher": "The Sparktree",
-    "url": "{{ site.baseurl }}",
-    "image": "{{ site.baseurl }}assets/images/home_cover.png",
-    "description": "{{ site.description }}"
-}
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "{{ site.name }}",
+        "url": "{{ site.baseurl }}",
+        "image": "{{ site.baseurl }}assets/images/home_cover.png",
+        "description": "{{ site.description }}"
+    }
     </script>
+
+    {% endif %}
 
     <meta name="generator" content="Jekyll 3.0.0" />
     <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.baseurl }}feed.xml" />
