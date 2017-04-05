@@ -5,61 +5,61 @@
     <link rel="next" href="{{ site.baseurl }}page2/" />
 
 
-    {% if page.title %}
+    {% if page.path contains '_posts' %}
     <!-- Twitter page metadata -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@analogj">
     <meta name="twitter:creator" content="@analogj">
     <meta name="twitter:title" content="{{ site.name }} - {{ page.title }}" />
     <meta name="twitter:description" content="{{ page.content | strip_html | truncatewords: 26 | escape }}" />
-    <meta name="twitter:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
-    <meta name="twitter:image" content="{{ site.baseurl }}{{ page.cover }}" />
+    <meta name="twitter:url" content="{{ page.url | absolute_url }}" />
+    <meta name="twitter:image" content="{{ page.cover | absolute_url }}" />
 
     <!-- Opengraph page metadata -->
     <meta property="og:site_name" content="{{ site.name }}" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="{{ site.name }} - {{ page.title }}" />
     <meta property="og:description" content="{{ page.content | strip_html | truncatewords: 26 | escape }}" />
-    <meta property="og:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
-    <meta property="og:image" content="{{ site.baseurl }}{{ page.cover }}" />
+    <meta property="og:url" content="{{ page.url | absolute_url }}" />
+    <meta property="og:image" content="{{ page.cover | absolute_url }}" />
 
     <script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "Website",
         "publisher": "{{ site.name }}",
-        "url": "{{ site.baseurl }}{{ page.url | remove: '/' }}",
-        "image": "{{ site.baseurl }}{{ page.cover }}",
-        "description": "{{ page.content | strip_html | truncatewords: 26 }}"
+        "url": "{{ page.url | absolute_url }}",
+        "image": "{{ page.cover | absolute_url }}",
+        "description": "{{ page.content | strip_html | truncatewords: 26 | escape }}"
     }
     </script>
 
-    {% elsif site.name %}
+    {% else %}
     <!-- Twitter site metadata -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@analogj">
     <meta name="twitter:creator" content="@analogj">
     <meta name="twitter:title" content="{{ site.name }}" />
-    <meta name="twitter:description" content="{{ site.description }}" />
-    <meta name="twitter:url" content="{{ site.baseurl }}" />
-    <meta name="twitter:image" content="{{ site.baseurl }}assets/images/home_cover.png" />
+    <meta name="twitter:description" content="{{ site.description | escape }}" />
+    <meta name="twitter:url" content="{{ site.url}}" />
+    <meta name="twitter:image" content="{{ 'assets/images/home_cover.png' | absolute_url }}" />
 
     <!-- Opengraph site metadata -->
     <meta property="og:site_name" content="{{ site.name }}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="{{ site.name }}" />
-    <meta property="og:description" content="{{ site.description }}" />
-    <meta property="og:url" content="{{ site.baseurl }}" />
-    <meta property="og:image" content="{{ site.baseurl }}assets/images/home_cover.png" />
+    <meta property="og:description" content="{{ site.description | escape }}" />
+    <meta property="og:url" content="{{ site.url }}" />
+    <meta property="og:image" content="{{ 'assets/images/home_cover.png' | absolute_url }}" />
 
     <script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "Website",
         "publisher": "{{ site.name }}",
-        "url": "{{ site.baseurl }}",
-        "image": "{{ site.baseurl }}assets/images/home_cover.png",
-        "description": "{{ site.description }}"
+        "url": "{{ site.url }}",
+        "image": "{{ 'assets/images/home_cover.png' | absolute_url }}",
+        "description": "{{ site.description | escape }}"
     }
     </script>
 

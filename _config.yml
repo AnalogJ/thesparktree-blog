@@ -16,14 +16,14 @@ author: 'Jason Kulatunga'
 nickname: analogj
 bio: 'Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.'
 location: 'San Francisco, CA'
-url: 'http://analogj.github.io/'
+url: 'http://analogj.github.io'
 image: 'assets/images/analogj.jpg'
 
 short_url: 'analogj.github.io/'
 google_analytics: UA-33233417-3
 disqus: sparktree
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
-baseurl: /
+baseurl: ''
 
 # Permalinks
 permalink: /:title
