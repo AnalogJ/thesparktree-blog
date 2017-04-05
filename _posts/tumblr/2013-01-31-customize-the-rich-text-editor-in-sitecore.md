@@ -2,7 +2,7 @@
 layout: post
 title: Customize the Rich Text Editor in Sitecore
 date: '2013-01-31T20:53:45-08:00'
-cover: 'assets/images/cover_sitecore.jpg'
+cover: '/assets/images/cover_sitecore.jpg'
 subclass: 'post tag-post'
 tags:
 - Sitecore
@@ -14,7 +14,7 @@ redirect_from: /post/41988475011/customize-the-rich-text-editor-in-sitecore
 disqus_id: 'http://blog.thesparktree.com/post/41988475011'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 We ran into some issues at work with sitecore. It seems that by default the Rich Text Editor that Sitecore uses, Telerik's RadEditor, will automatically convert `<b>` and `<i>` tags to `<strong>` and `<em>`. Our designers prefer to use the `<i>` tag for bootstrap's icon classes so we needed a fix.

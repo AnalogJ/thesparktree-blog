@@ -2,7 +2,7 @@
 layout: post
 title: Continuous Deployment with Dokku (Full Guide)
 date: '2014-06-15T13:41:00-07:00'
-cover: 'assets/images/cover_docker.jpg'
+cover: '/assets/images/cover_docker.jpg'
 subclass: 'post tag-post'
 tags:
 - dokku
@@ -14,7 +14,7 @@ redirect_from: /post/88872191934/continuous-deployment-with-dokku-full-guide
 disqus_id: 'http://blog.thesparktree.com/post/88872191934'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it.
 You've heard of this cool new tool called docker, but you're not sure if it's that useful for you, you mostly play with web development.

@@ -2,7 +2,7 @@
 layout: post
 title: AngularJS Interceptors - Globally handle 401 and other Error Messages
 date: '2014-02-07T20:50:53-08:00'
-cover: 'assets/images/cover_angularjs.png'
+cover: '/assets/images/cover_angularjs.png'
 subclass: 'post tag-post'
 tags:
 - angularjs
@@ -12,7 +12,7 @@ redirect_from: /post/75952317665/angularjs-interceptors-globally-handle-401-and
 disqus_id: 'http://blog.thesparktree.com/post/75952317665'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 

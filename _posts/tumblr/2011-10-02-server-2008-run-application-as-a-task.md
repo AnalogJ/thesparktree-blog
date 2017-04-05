@@ -2,7 +2,7 @@
 layout: post
 title: Server 2008 Run Application as a Task
 date: '2011-10-02T00:00:00-07:00'
-cover: 'assets/images/cover_microsoft.jpg'
+cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - WHS2011
@@ -10,7 +10,7 @@ redirect_from: /post/41987099542/server-2008-run-application-as-a-task
 disqus_id: 'http://blog.thesparktree.com/post/41987099542'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 
 ---
 Task Schedule works great in WHS 2011 (free an simple)

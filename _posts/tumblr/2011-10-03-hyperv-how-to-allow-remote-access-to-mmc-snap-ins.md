@@ -2,7 +2,7 @@
 layout: post
 title: HyperV How to allow remote access to MMC Snap Ins
 date: '2011-10-03T00:00:00-07:00'
-cover: 'assets/images/cover_microsoft.jpg'
+cover: '/assets/images/cover_microsoft.jpg'
 subclass: 'post tag-post'
 tags:
 - HyperV
@@ -10,7 +10,7 @@ redirect_from: /post/41986431131/hyperv-how-to-allow-remote-access-to-mmc-snap-i
 disqus_id: 'http://blog.thesparktree.com/post/41986431131'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 
 ---
 http://blogs.technet.com/b/server_core/archive/2008/01/14/configuring-the-firewall-for-remote-management-of-a-workgroup-server-core-installation.aspx

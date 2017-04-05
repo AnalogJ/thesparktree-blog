@@ -2,7 +2,7 @@
 layout: post
 title: Creating a Sails Application using Passport Authentication
 date: '2014-02-20T16:58:00-08:00'
-cover: 'assets/images/cover_sails.jpg'
+cover: '/assets/images/cover_sails.jpg'
 subclass: 'post tag-post'
 tags:
 - nodejs
@@ -13,7 +13,7 @@ redirect_from: /post/77311774912/creating-a-sails-application-using-passport
 disqus_id: 'http://blog.thesparktree.com/post/77311774912'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 

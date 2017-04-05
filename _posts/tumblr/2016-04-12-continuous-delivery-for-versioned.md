@@ -3,7 +3,7 @@ layout: post
 title: Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower,
   Pip, etc)
 date: '2016-04-12T12:13:11-07:00'
-cover: 'assets/images/cover_github.png'
+cover: '/assets/images/cover_github.png'
 subclass: 'post tag-post'
 tags:
 - automation
@@ -17,7 +17,7 @@ redirect_from: /post/142690115934/continuous-delivery-for-versioned
 disqus_id: 'http://blog.thesparktree.com/post/142690115934'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 So you're the devops/automation guy or gal on your team. You live and die by “[Automate all the things](https://memegenerator.net/instance/9449708)”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That's awesome, that's how I got here too.
 

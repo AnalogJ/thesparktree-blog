@@ -2,7 +2,7 @@
 layout: post
 title: Ducktyping SailsJS Core for Background Tasks via Kue
 date: '2014-07-21T17:32:00-07:00'
-cover: 'assets/images/cover_sails.jpg'
+cover: '/assets/images/cover_sails.jpg'
 subclass: 'post tag-post'
 tags:
 - kue
@@ -13,7 +13,7 @@ redirect_from: /post/92465942639/ducktyping-sailsjs-core-for-background-tasks-vi
 disqus_id: 'http://blog.thesparktree.com/post/92465942639'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 
 # Update

@@ -2,7 +2,7 @@
 layout: post
 title: How to call a function on a databound value in ListView
 date: '2011-09-12T00:00:00-07:00'
-cover: 'assets/images/cover_visual_studio.png'
+cover: '/assets/images/cover_visual_studio.png'
 subclass: 'post tag-post'
 tags:
 - ASP.Net
@@ -11,7 +11,7 @@ redirect_from: /post/41986292128/how-to-call-a-function-on-a-databound-value-in
 disqus_id: 'http://blog.thesparktree.com/post/41986292128'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 Wrap your Eval call:

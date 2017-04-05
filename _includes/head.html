@@ -1,8 +1,8 @@
 <!-- Everything inside the #post tags pulls data from the page -->
 <!-- #post -->
-    <link rel="canonical" href="{{ site.baseurl }}" />
+    <link rel="canonical" href="{{ site.baseurl }}/" />
     <meta name="referrer" content="origin" />
-    <link rel="next" href="{{ site.baseurl }}page2/" />
+    <link rel="next" href="{{ site.baseurl }}/page2/" />
 
 
     {% if page.path contains '_posts' %}
@@ -42,7 +42,7 @@
     <meta name="twitter:title" content="{{ site.name }}" />
     <meta name="twitter:description" content="{{ site.description | escape }}" />
     <meta name="twitter:url" content="{{ site.url}}" />
-    <meta name="twitter:image" content="{{ 'assets/images/home_cover.png' | absolute_url }}" />
+    <meta name="twitter:image" content="{{ '/assets/images/home_cover.png' | absolute_url }}" />
 
     <!-- Opengraph site metadata -->
     <meta property="og:site_name" content="{{ site.name }}" />
@@ -50,7 +50,7 @@
     <meta property="og:title" content="{{ site.name }}" />
     <meta property="og:description" content="{{ site.description | escape }}" />
     <meta property="og:url" content="{{ site.url }}" />
-    <meta property="og:image" content="{{ 'assets/images/home_cover.png' | absolute_url }}" />
+    <meta property="og:image" content="{{ '/assets/images/home_cover.png' | absolute_url }}" />
 
     <script type="application/ld+json">
     {
@@ -58,7 +58,7 @@
         "@type": "Website",
         "publisher": "{{ site.name }}",
         "url": "{{ site.url }}",
-        "image": "{{ 'assets/images/home_cover.png' | absolute_url }}",
+        "image": "{{ '/assets/images/home_cover.png' | absolute_url }}",
         "description": "{{ site.description | escape }}"
     }
     </script>
@@ -66,5 +66,5 @@
     {% endif %}
 
     <meta name="generator" content="Jekyll 3.0.0" />
-    <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.baseurl }}feed.xml" />
+    <link rel="alternate" type="application/rss+xml" title="{{ site.name }}" href="{{ site.baseurl }}/feed.xml" />
 <!-- /post -->

@@ -2,7 +2,7 @@
 layout: post
 title: How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS
 date: '2014-11-22T00:04:00-08:00'
-cover: 'assets/images/cover_deis.jpg'
+cover: '/assets/images/cover_deis.jpg'
 subclass: 'post tag-post'
 tags:
 - coreos
@@ -14,7 +14,7 @@ redirect_from: /post/103257786994/how-to-setup-a-deis-heroku-like-paas-on
 disqus_id: 'http://blog.thesparktree.com/post/103257786994'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 # Prerequisites
 

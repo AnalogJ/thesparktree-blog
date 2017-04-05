@@ -17,7 +17,7 @@ nickname: analogj
 bio: 'Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.'
 location: 'San Francisco, CA'
 url: 'http://analogj.github.io'
-image: 'assets/images/analogj.jpg'
+image: '/assets/images/analogj.jpg'
 
 short_url: 'analogj.github.io/'
 google_analytics: UA-33233417-3

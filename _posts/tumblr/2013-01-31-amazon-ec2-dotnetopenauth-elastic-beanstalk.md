@@ -2,14 +2,14 @@
 layout: post
 title: Amazon EC2 + DotNetOpenAuth + Elastic Beanstalk = Url Rewrite Hell (fix)
 date: '2013-01-31T20:50:25-08:00'
-cover: 'assets/images/cover_aws.jpg'
+cover: '/assets/images/cover_aws.jpg'
 subclass: 'post tag-post'
 tags: []
 redirect_from: /post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
 disqus_id: 'http://blog.thesparktree.com/post/41988205995'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 
 ---
 This is the fix for the dotnetopenauth.aspnet module not working on an amazon ec2 instance that was published out using beanstalk. The web deploy folder + url rewriting rules that amazon places in the web config confuse the module and it dies. The following issue [https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35](https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35) in github references it, but no fix is avaliable at this time.

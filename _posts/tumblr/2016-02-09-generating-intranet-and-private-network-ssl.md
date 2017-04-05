@@ -2,7 +2,7 @@
 layout: post
 title: Generating Intranet and Private Network SSL Certificates using LetsEncrypt
 date: '2016-02-09T13:19:33-08:00'
-cover: 'assets/images/cover_letsencrypt.jpg'
+cover: '/assets/images/cover_letsencrypt.jpg'
 subclass: 'post tag-post'
 tags:
 - dns
@@ -14,7 +14,7 @@ redirect_from: /post/138999997429/generating-intranet-and-private-network-ssl
 disqus_id: 'http://blog.thesparktree.com/post/138999997429'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 This post is a follow up to my previous one [Automating SSL Certificates using Nginx & LetsEncrypt](http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx). This time we’ll be generating SSL certificates for intranet and non-public networks.

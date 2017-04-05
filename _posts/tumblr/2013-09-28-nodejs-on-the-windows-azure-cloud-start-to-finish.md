@@ -2,7 +2,7 @@
 layout: post
 title: NodeJS on the Windows Azure Cloud, Start to Finish
 date: '2013-09-28T14:43:00-07:00'
-cover: 'assets/images/cover_nodejs.jpg'
+cover: '/assets/images/cover_nodejs.jpg'
 subclass: 'post tag-post'
 tags:
 - azure
@@ -12,7 +12,7 @@ redirect_from: /post/62530881389/nodejs-on-the-windows-azure-cloud-start-to-fini
 disqus_id: 'http://blog.thesparktree.com/post/62530881389'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 

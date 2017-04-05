@@ -2,7 +2,7 @@
 layout: post
 title: Dropbox as a service Server 2008
 date: '2011-11-28T00:00:00-08:00'
-cover: 'assets/images/cover_dropbox.jpg'
+cover: '/assets/images/cover_dropbox.jpg'
 subclass: 'post tag-post'
 tags:
 - Dropbox
@@ -11,7 +11,7 @@ redirect_from: /post/41987942679/dropbox-as-a-service-server-2008
 disqus_id: 'http://blog.thesparktree.com/post/41987942679'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 

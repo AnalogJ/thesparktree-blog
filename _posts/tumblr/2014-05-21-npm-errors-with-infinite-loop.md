@@ -2,7 +2,7 @@
 layout: post
 title: npm errors with infinite loop
 date: '2014-05-21T14:35:02-07:00'
-cover: 'assets/images/cover_npm.png'
+cover: '/assets/images/cover_npm.png'
 subclass: 'post tag-post'
 tags:
 - npm
@@ -11,7 +11,7 @@ redirect_from: /post/86424236989/npm-errors-with-infinite-loop
 disqus_id: 'http://blog.thesparktree.com/post/86424236989'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 Occasionally I’ll be working with a nodejs project and when I attempt to run `$ npm install` I’ll see what appears to be an infinite loop with the same package partially installing and then failing over and over.
 

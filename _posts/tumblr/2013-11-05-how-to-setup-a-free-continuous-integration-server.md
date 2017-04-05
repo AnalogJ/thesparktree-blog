@@ -3,7 +3,7 @@ layout: post
 title: How to setup a Free Continuous Integration Server Using Cloudbees + Private
   Github
 date: '2013-11-05T00:00:00-08:00'
-cover: 'assets/images/cover_jenkins.jpg'
+cover: '/assets/images/cover_jenkins.jpg'
 subclass: 'post tag-post'
 tags:
 - cloudbees
@@ -13,7 +13,7 @@ redirect_from: /post/69449035595/how-to-setup-a-free-continuous-integration-serv
 disqus_id: 'http://blog.thesparktree.com/post/69449035595'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 
 ### Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)

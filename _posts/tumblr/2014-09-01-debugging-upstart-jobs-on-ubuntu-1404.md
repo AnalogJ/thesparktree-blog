@@ -2,7 +2,7 @@
 layout: post
 title: Debugging Upstart Jobs on Ubuntu 14.04
 date: '2014-09-01T15:22:00-07:00'
-cover: 'assets/images/cover_ubuntu.png'
+cover: '/assets/images/cover_ubuntu.png'
 subclass: 'post tag-post'
 tags:
 - upstart
@@ -13,7 +13,7 @@ redirect_from: /post/96381672984/debugging-upstart-jobs-on-ubuntu-1404
 disqus_id: 'http://blog.thesparktree.com/post/96381672984'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 
 Before you begin, you should be (intimately) familiar with the [Upstart Cookbook](http://upstart.ubuntu.com/cookbook/). It's an incredible resource for understanding the in's and out's of Upstart and its configuration.

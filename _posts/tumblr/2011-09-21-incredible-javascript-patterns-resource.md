@@ -2,7 +2,7 @@
 layout: post
 title: Incredible Javascript Patterns Resource
 date: '2011-09-21T00:00:00-07:00'
-cover: 'assets/images/cover_javascript.jpg'
+cover: '/assets/images/cover_javascript.jpg'
 subclass: 'post tag-post'
 tags:
 - Javascript
@@ -11,7 +11,7 @@ redirect_from: /post/41986143106/incredible-javascript-patterns-resource
 disqus_id: 'http://blog.thesparktree.com/post/41986143106'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 
 ---
 http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript

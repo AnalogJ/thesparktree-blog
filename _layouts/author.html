@@ -1,11 +1,11 @@
 ---
 layout: default
 title: Author
-cover: 'assets/images/home_cover.png'
+cover: '/assets/images/home_cover.png'
 class: 'author-template'
 navigation: True
 label: Author
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 current: author
 ---
 <!-- < default}} -->
@@ -17,7 +17,7 @@ current: author
 <!-- #author  -->
     <header class="main-header author-head {% if page.cover %}" style="background-image: url({{ site.baseurl }}{{ page.cover }}) {% else %}no-cover{% endif %}">
         <nav class="main-nav overlay clearfix">
-            {% if page.logo %}<a class="blog-logo" href="{{ site.baseurl }}"><img src="{{ site.baseurl }}{{ page.logo }}" alt="Blog Logo" /></a>{% endif %}
+            {% if page.logo %}<a class="blog-logo" href="{{ site.baseurl }}/"><img src="{{ site.baseurl }}{{ page.logo }}" alt="Blog Logo" /></a>{% endif %}
             {% if page.navigation %}
                 <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
             {% endif %}

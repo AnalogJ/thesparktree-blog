@@ -2,7 +2,7 @@
 layout: post
 title: API Design Best Practices - Part 2
 date: '2014-03-20T10:01:00-07:00'
-cover: 'assets/images/cover_code.jpg'
+cover: '/assets/images/cover_code.jpg'
 subclass: 'post tag-post'
 tags:
 - API
@@ -10,7 +10,7 @@ redirect_from: /post/80164111992/api-design-best-practices-part-2
 disqus_id: 'http://blog.thesparktree.com/post/80164111992'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 This is a follow up to my previous API design post ["API Design Best Practices"](http://blog.thesparktree.com/post/41988581166/api-design-best-practices)
 

@@ -2,7 +2,7 @@
 layout: post
 title: 'dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API'
 date: '2013-12-08T20:00:00-08:00'
-cover: 'assets/images/cover_angularjs.png'
+cover: '/assets/images/cover_angularjs.png'
 subclass: 'post tag-post'
 tags:
 - dropbox
@@ -13,7 +13,7 @@ redirect_from: /post/69434240145/dropstore-ng-opensource-angularjs-bindings-for
 disqus_id: 'http://blog.thesparktree.com/post/69434240145'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 I created an github project called [dropstore-ng](https://github.com/AnalogJ/dropstore-ng) that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.

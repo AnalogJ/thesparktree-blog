@@ -2,7 +2,7 @@
 layout: post
 title: Custom Domains for AWS Lambda/API Gateway using Letsencrypt
 date: '2016-11-08T12:41:19-08:00'
-cover: 'assets/images/cover_letsencrypt.jpg'
+cover: '/assets/images/cover_letsencrypt.jpg'
 subclass: 'post tag-post'
 
 tags:
@@ -16,7 +16,7 @@ tags:
 redirect_from: /post/152904762374/custom-domains-for-aws-lambdaapi-gateway-using
 disqus_id: 'http://blog.thesparktree.com/post/152904762374'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 categories: 'analogj'
 navigation: True
 ---

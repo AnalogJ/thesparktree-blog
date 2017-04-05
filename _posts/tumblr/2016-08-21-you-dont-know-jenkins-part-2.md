@@ -2,7 +2,7 @@
 layout: post
 title: You Don't Know Jenkins - Part 2
 date: '2016-08-21T22:37:09-07:00'
-cover: 'assets/images/cover_jenkins.jpg'
+cover: '/assets/images/cover_jenkins.jpg'
 subclass: 'post tag-post'
 tags:
 - jenkins
@@ -14,7 +14,7 @@ tags:
 redirect_from: /post/149300867304/you-dont-know-jenkins-part-2
 disqus_id: 'http://blog.thesparktree.com/post/149300867304'
 categories: 'analogj'
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 navigation: True
 ---
 

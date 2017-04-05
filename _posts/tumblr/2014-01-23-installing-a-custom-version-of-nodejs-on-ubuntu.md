@@ -2,7 +2,7 @@
 layout: post
 title: Installing a custom version of NodeJS on Ubuntu 13.10
 date: '2014-01-23T13:27:00-08:00'
-cover: 'assets/images/cover_ubuntu.png'
+cover: '/assets/images/cover_ubuntu.png'
 subclass: 'post tag-post'
 tags:
 - nodejs
@@ -12,7 +12,7 @@ redirect_from: /post/74294778727/installing-a-custom-version-of-nodejs-on-ubuntu
 disqus_id: 'http://blog.thesparktree.com/post/74294778727'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 The following is the quickest way to install nodejs latest and specific versions node.js on Ubuntu. According to the nodejs [official gists](https://gist.github.com/isaacs/579814), there are a few other ways to install node.js, and you can check out the other possibilities if you prefer.

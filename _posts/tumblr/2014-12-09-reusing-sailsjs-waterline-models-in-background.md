@@ -2,7 +2,7 @@
 layout: post
 title: Reusing SailsJS + Waterline Models in Background Tasks
 date: '2014-12-09T15:09:00-08:00'
-cover: 'assets/images/cover_sails.jpg'
+cover: '/assets/images/cover_sails.jpg'
 subclass: 'post tag-post'
 tags:
 - sailsjs
@@ -13,7 +13,7 @@ redirect_from: /post/104779353989/reusing-sailsjs-waterline-models-in-background
 disqus_id: 'http://blog.thesparktree.com/post/104779353989'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 Its been a while since I first attempted to design a background tasks/workers pattern for my SailsJS app that would let me reuse my well defined models. After posting my first attempt:[Ducktyping SailsJS Core for Background Tasks via Kue](http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via), I was introduced to a under-documented but more idiomatic feature that I could use to do the same thing: Sails Hooks.
 

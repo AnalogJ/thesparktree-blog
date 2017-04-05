@@ -2,7 +2,7 @@
 layout: post
 title: Python Fails - Multipart file uploads in Python
 date: '2015-03-19T12:38:13-07:00'
-cover: 'assets/images/cover_python.png'
+cover: '/assets/images/cover_python.png'
 subclass: 'post tag-post'
 tags:
 - python
@@ -11,7 +11,7 @@ redirect_from: /post/114053773684/the-unfortunately-long-story-dealing-with
 disqus_id: 'http://blog.thesparktree.com/post/114053773684'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 
 Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box.

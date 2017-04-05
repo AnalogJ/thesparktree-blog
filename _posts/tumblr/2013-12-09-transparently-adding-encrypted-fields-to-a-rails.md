@@ -2,7 +2,7 @@
 layout: post
 title: Transparently adding encrypted fields to a Rails app using Mongoid
 date: '2013-12-09T20:06:00-08:00'
-cover: 'assets/images/cover_rails.png'
+cover: '/assets/images/cover_rails.png'
 subclass: 'post tag-post'
 tags:
 - opensource
@@ -15,7 +15,7 @@ redirect_from: /post/69538763994/transparently-adding-encrypted-fields-to-a-rail
 disqus_id: 'http://blog.thesparktree.com/post/69538763994'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 As a software architect, you are in the business of designing new applications while balancing business requirements against future utility. Unfortunately design specifications are not as immutable as we dream they are, and sometimes significant changes must be made after the fact.

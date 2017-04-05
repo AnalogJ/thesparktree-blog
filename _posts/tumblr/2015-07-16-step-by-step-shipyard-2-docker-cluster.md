@@ -2,7 +2,7 @@
 layout: post
 title: Step-By-Step Shipyard 2 Docker Cluster
 date: '2015-07-16T21:11:15-07:00'
-cover: 'assets/images/cover_docker.jpg'
+cover: '/assets/images/cover_docker.jpg'
 subclass: 'post tag-post'
 tags:
 - devops
@@ -13,7 +13,7 @@ redirect_from: /post/124285589139/step-by-step-shipyard-2-docker-cluster
 disqus_id: 'http://blog.thesparktree.com/post/124285589139'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 ---
 
 # Step-By-Step Shipyard 2 Docker Cluster

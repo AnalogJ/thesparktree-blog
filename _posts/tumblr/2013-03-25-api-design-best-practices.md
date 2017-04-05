@@ -2,7 +2,7 @@
 layout: post
 title: API Design Best Practices
 date: '2013-03-25T00:00:00-07:00'
-cover: 'assets/images/cover_code.jpg'
+cover: '/assets/images/cover_code.jpg'
 subclass: 'post tag-post'
 tags:
 - GoodReads
@@ -14,7 +14,7 @@ redirect_from: /post/41988581166/api-design-best-practices
 disqus_id: 'http://blog.thesparktree.com/post/41988581166'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 Or how to stop third party developers from hating you.

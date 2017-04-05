@@ -3,7 +3,7 @@ layout: post
 title: The breakpoint will not currently be hit. No symbols have been loaded for this
   document.
 date: '2011-11-24T00:00:00-08:00'
-cover: 'assets/images/cover_visual_studio.png'
+cover: '/assets/images/cover_visual_studio.png'
 subclass: 'post tag-post'
 tags:
 - ASP.Net
@@ -12,7 +12,7 @@ redirect_from: /post/41987546374/the-breakpoint-will-not-currently-be-hit-no
 disqus_id: 'http://blog.thesparktree.com/post/41987546374'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo.png'
+logo: '/assets/logo.png'
 
 ---
 I'm posting this blog mostly to remind myself how to fix this if ever I run into it again, but if anyone else benefits from it, then awesome.

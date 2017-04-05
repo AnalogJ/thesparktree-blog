@@ -1,7 +1,7 @@
 ---
 layout: post
 title: You Don't Know Jenkins - Part 1
-cover: 'assets/images/cover_jenkins.jpg'
+cover: '/assets/images/cover_jenkins.jpg'
 subclass: 'post tag-post'
 date: '2016-08-16T14:27:07-07:00'
 tags:
@@ -14,7 +14,7 @@ redirect_from: /post/149039600544/you-dont-know-jenkins-part-1
 disqus_id: 'http://blog.thesparktree.com/post/149039600544'
 categories: 'analogj'
 navigation: True
-logo: 'assets/logo-dark.png'
+logo: '/assets/logo-dark.png'
 ---
 
 Jenkins is great. It's the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
