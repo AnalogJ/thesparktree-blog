@@ -16,10 +16,10 @@ author: 'Jason Kulatunga'
 nickname: analogj
 bio: 'Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.'
 location: 'San Francisco, CA'
-url: 'http://analogj.github.io'
+url: 'https://www.thesparktree.com'
 image: '/assets/images/analogj.jpg'
 
-short_url: 'analogj.github.io/'
+short_url: 'blog.thesparktree.com'
 google_analytics: UA-33233417-3
 disqus: sparktree
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
@@ -63,7 +63,7 @@ repo: analogj.github.io
 branch: master
 relative_source: ../,/
 destination: ../jasper-pages/
-production_url:  https://analogj.github.io/
+production_url:  https://blog.thesparktree.com/
 source_url:      https://github.com/analogj/analogj.github.io/
 
 
