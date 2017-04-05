@@ -3,7 +3,7 @@ layout: post
 title: npm errors with infinite loop
 date: '2014-05-21T14:35:02-07:00'
 cover: 'assets/images/cover_npm.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - npm
 - nodejs

@@ -3,7 +3,7 @@ layout: post
 title: Server 2008 Run Application as a Task
 date: '2011-10-02T00:00:00-07:00'
 cover: 'assets/images/cover_microsoft.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - WHS2011
 redirect_from: /post/41987099542/server-2008-run-application-as-a-task

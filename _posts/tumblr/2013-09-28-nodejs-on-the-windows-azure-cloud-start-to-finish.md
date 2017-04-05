@@ -3,7 +3,7 @@ layout: post
 title: NodeJS on the Windows Azure Cloud, Start to Finish
 date: '2013-09-28T14:43:00-07:00'
 cover: 'assets/images/cover_nodejs.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - azure
 - nodejs

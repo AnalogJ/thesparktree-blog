@@ -3,7 +3,7 @@ layout: post
 title: 'dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API'
 date: '2013-12-08T20:00:00-08:00'
 cover: 'assets/images/cover_angularjs.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - dropbox
 - angularjs

@@ -14,7 +14,7 @@ dependencies:
 
 test:
   post:
-    - bundle exec htmlproofer ../dist --check-html --disable-external
+    - bundle exec htmlproofer ../dist --check-html --disable-external --assume-extension
 
 deployment:
   # the following command deploys to www.capsulecd.com domain if the change is made on the master branch.

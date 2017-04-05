@@ -3,7 +3,7 @@ layout: post
 title: Transparently adding encrypted fields to a Rails app using Mongoid
 date: '2013-12-09T20:06:00-08:00'
 cover: 'assets/images/cover_rails.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - opensource
 - mongodb

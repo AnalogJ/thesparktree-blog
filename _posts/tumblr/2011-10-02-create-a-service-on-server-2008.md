@@ -3,7 +3,7 @@ layout: post
 title: Create a Service on Server 2008
 date: '2011-10-02T00:00:00-07:00'
 cover: 'assets/images/cover_microsoft.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - Service
 redirect_from: /post/41987394051/create-a-service-on-server-2008

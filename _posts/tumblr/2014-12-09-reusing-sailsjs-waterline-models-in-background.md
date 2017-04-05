@@ -3,7 +3,7 @@ layout: post
 title: Reusing SailsJS + Waterline Models in Background Tasks
 date: '2014-12-09T15:09:00-08:00'
 cover: 'assets/images/cover_sails.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - sailsjs
 - waterline

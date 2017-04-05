@@ -3,7 +3,7 @@ layout: post
 title: How to call a function on a databound value in ListView
 date: '2011-09-12T00:00:00-07:00'
 cover: 'assets/images/cover_visual_studio.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - ASP.Net
 - C

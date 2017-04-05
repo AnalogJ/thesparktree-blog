@@ -3,7 +3,7 @@ layout: post
 title: Custom Domains for AWS Lambda/API Gateway using Letsencrypt
 date: '2016-11-08T12:41:19-08:00'
 cover: 'assets/images/cover_letsencrypt.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 
 tags:
 - letsencrypt

@@ -3,7 +3,7 @@ layout: post
 title: Customize the Rich Text Editor in Sitecore
 date: '2013-01-31T20:53:45-08:00'
 cover: 'assets/images/cover_sitecore.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - Sitecore
 - Telerik

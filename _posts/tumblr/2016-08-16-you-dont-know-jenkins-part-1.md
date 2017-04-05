@@ -2,7 +2,7 @@
 layout: post
 title: You Don't Know Jenkins - Part 1
 cover: 'assets/images/cover_jenkins.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 date: '2016-08-16T14:27:07-07:00'
 tags:
 - Jenkins

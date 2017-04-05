@@ -3,7 +3,7 @@ layout: post
 title: You Don't Know Jenkins - Part 2
 date: '2016-08-21T22:37:09-07:00'
 cover: 'assets/images/cover_jenkins.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - jenkins
 - devops

@@ -3,7 +3,7 @@ layout: post
 title: Continuous Deployment with Dokku (Full Guide)
 date: '2014-06-15T13:41:00-07:00'
 cover: 'assets/images/cover_docker.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - dokku
 - continuous deployment

@@ -3,7 +3,7 @@ layout: post
 title: Ducktyping SailsJS Core for Background Tasks via Kue
 date: '2014-07-21T17:32:00-07:00'
 cover: 'assets/images/cover_sails.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - kue
 - nodejs

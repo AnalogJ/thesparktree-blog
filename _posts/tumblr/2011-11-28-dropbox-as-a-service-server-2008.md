@@ -3,7 +3,7 @@ layout: post
 title: Dropbox as a service Server 2008
 date: '2011-11-28T00:00:00-08:00'
 cover: 'assets/images/cover_dropbox.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - Dropbox
 - Service

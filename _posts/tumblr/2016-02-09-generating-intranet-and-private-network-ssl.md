@@ -3,7 +3,7 @@ layout: post
 title: Generating Intranet and Private Network SSL Certificates using LetsEncrypt
 date: '2016-02-09T13:19:33-08:00'
 cover: 'assets/images/cover_letsencrypt.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - dns
 - letsencrypt

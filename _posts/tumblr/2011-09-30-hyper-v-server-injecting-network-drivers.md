@@ -3,7 +3,7 @@ layout: post
 title: Hyper-V Server Injecting Network Drivers
 date: '2011-09-30T00:00:00-07:00'
 cover: 'assets/images/cover_microsoft.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - HyperV
 redirect_from: /post/41985876443/hyper-v-server-injecting-network-drivers

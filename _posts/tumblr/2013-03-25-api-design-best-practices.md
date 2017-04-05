@@ -3,7 +3,7 @@ layout: post
 title: API Design Best Practices
 date: '2013-03-25T00:00:00-07:00'
 cover: 'assets/images/cover_code.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - GoodReads
 - Best Practices

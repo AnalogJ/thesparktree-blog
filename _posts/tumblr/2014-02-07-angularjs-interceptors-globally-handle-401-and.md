@@ -3,7 +3,7 @@ layout: post
 title: AngularJS Interceptors - Globally handle 401 and other Error Messages
 date: '2014-02-07T20:50:53-08:00'
 cover: 'assets/images/cover_angularjs.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - angularjs
 - javascript

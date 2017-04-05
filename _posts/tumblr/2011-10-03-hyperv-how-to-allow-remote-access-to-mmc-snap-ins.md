@@ -3,7 +3,7 @@ layout: post
 title: HyperV How to allow remote access to MMC Snap Ins
 date: '2011-10-03T00:00:00-07:00'
 cover: 'assets/images/cover_microsoft.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - HyperV
 redirect_from: /post/41986431131/hyperv-how-to-allow-remote-access-to-mmc-snap-ins

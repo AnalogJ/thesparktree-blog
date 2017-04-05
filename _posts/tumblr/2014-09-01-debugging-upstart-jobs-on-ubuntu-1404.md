@@ -3,7 +3,7 @@ layout: post
 title: Debugging Upstart Jobs on Ubuntu 14.04
 date: '2014-09-01T15:22:00-07:00'
 cover: 'assets/images/cover_ubuntu.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - upstart
 - linux

@@ -3,7 +3,7 @@ layout: post
 title: How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS
 date: '2014-11-22T00:04:00-08:00'
 cover: 'assets/images/cover_deis.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - coreos
 - deis

@@ -4,7 +4,7 @@ title: How to setup a Free Continuous Integration Server Using Cloudbees + Priva
   Github
 date: '2013-11-05T00:00:00-08:00'
 cover: 'assets/images/cover_jenkins.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - cloudbees
 - github

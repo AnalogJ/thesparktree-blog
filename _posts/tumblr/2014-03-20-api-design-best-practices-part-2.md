@@ -3,7 +3,7 @@ layout: post
 title: API Design Best Practices - Part 2
 date: '2014-03-20T10:01:00-07:00'
 cover: 'assets/images/cover_code.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - API
 redirect_from: /post/80164111992/api-design-best-practices-part-2

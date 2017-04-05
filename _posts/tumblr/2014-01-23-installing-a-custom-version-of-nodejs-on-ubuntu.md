@@ -3,7 +3,7 @@ layout: post
 title: Installing a custom version of NodeJS on Ubuntu 13.10
 date: '2014-01-23T13:27:00-08:00'
 cover: 'assets/images/cover_ubuntu.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - nodejs
 - node

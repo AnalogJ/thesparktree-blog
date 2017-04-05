@@ -3,7 +3,7 @@ layout: post
 title: AngularJS + Media Queries = matchmedia-ng
 date: '2014-01-09T13:05:05-08:00'
 cover: 'assets/images/cover_angularjs.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - angularjs
 - media queries

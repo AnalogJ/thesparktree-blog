@@ -3,7 +3,7 @@ layout: post
 title: Python Fails - Multipart file uploads in Python
 date: '2015-03-19T12:38:13-07:00'
 cover: 'assets/images/cover_python.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - python
 - file-upload

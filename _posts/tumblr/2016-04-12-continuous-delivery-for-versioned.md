@@ -4,7 +4,7 @@ title: Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, B
   Pip, etc)
 date: '2016-04-12T12:13:11-07:00'
 cover: 'assets/images/cover_github.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - automation
 - devops

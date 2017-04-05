@@ -3,7 +3,7 @@ layout: post
 title: Amazon EC2 + DotNetOpenAuth + Elastic Beanstalk = Url Rewrite Hell (fix)
 date: '2013-01-31T20:50:25-08:00'
 cover: 'assets/images/cover_aws.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags: []
 redirect_from: /post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
 disqus_id: 'http://blog.thesparktree.com/post/41988205995'

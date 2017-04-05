@@ -4,7 +4,7 @@ title: The breakpoint will not currently be hit. No symbols have been loaded for
   document.
 date: '2011-11-24T00:00:00-08:00'
 cover: 'assets/images/cover_visual_studio.png'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - ASP.Net
 - C

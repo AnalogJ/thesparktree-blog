@@ -3,7 +3,7 @@ layout: post
 title: Incredible Javascript Patterns Resource
 date: '2011-09-21T00:00:00-07:00'
 cover: 'assets/images/cover_javascript.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - Javascript
 - Patterns

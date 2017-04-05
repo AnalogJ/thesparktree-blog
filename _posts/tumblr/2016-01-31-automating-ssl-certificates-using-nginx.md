@@ -3,7 +3,7 @@ layout: post
 title: Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22
 date: '2016-01-31T21:49:09-08:00'
 cover: 'assets/images/cover_letsencrypt.jpg'
-subclass: 'post tag-fiction'
+subclass: 'post tag-post'
 tags:
 - letsencrypt
 - docker
