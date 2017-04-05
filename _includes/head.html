@@ -11,7 +11,7 @@
     <meta name="twitter:site" content="@analogj">
     <meta name="twitter:creator" content="@analogj">
     <meta name="twitter:title" content="{{ site.name }} - {{ page.title }}" />
-    <meta name="twitter:description" content="{{ page.content | strip_html | truncatewords: 26 }}" />
+    <meta name="twitter:description" content="{{ page.content | strip_html | truncatewords: 26 | escape }}" />
     <meta name="twitter:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
     <meta name="twitter:image" content="{{ site.baseurl }}{{ page.cover }}" />
 
@@ -19,7 +19,7 @@
     <meta property="og:site_name" content="{{ site.name }}" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="{{ site.name }} - {{ page.title }}" />
-    <meta property="og:description" content="{{ page.content | strip_html | truncatewords: 26 }}" />
+    <meta property="og:description" content="{{ page.content | strip_html | truncatewords: 26 | escape }}" />
     <meta property="og:url" content="{{ site.baseurl }}{{ page.url | remove: '/' }}" />
     <meta property="og:image" content="{{ site.baseurl }}{{ page.cover }}" />
 
