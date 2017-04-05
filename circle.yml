@@ -2,6 +2,11 @@ machine:
   environment:
     NOKOGIRI_USE_SYSTEM_LIBRARIES: true # speeds up installation of html-proofer
 
+general:
+  branches:
+    ignore:
+      - master
+
 dependencies:
   pre:
     - sudo apt-get --reinstall install libept1.4.12
@@ -17,12 +22,11 @@ test:
     - bundle exec htmlproofer ../dist --check-html --disable-external --assume-extension
 
 deployment:
-  # the following command deploys to www.capsulecd.com domain if the change is made on the master branch.
   production:
-    branch: master
+    branch: src
     commands:
       - git config --global user.email circleci@circleci
       - git config --global user.name CircleCI
       - cd ../dist && git init && git add . && git commit -m "Deploy"
       - cd ../dist && git remote add origin git@github.com:AnalogJ/analogj.github.io.git
-      - cd ../dist && git push --force origin master:gh-pages
+      - cd ../dist && git push --force origin master:master
