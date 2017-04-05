@@ -1,0 +1,29 @@
+machine:
+  environment:
+    NOKOGIRI_USE_SYSTEM_LIBRARIES: true # speeds up installation of html-proofer
+
+dependencies:
+  pre:
+    - sudo apt-get --reinstall install libept1.4.12
+    - sudo apt-get install -y aptitude
+    - sudo aptitude -y install imagemagick
+    - sudo aptitude -y install libmagickcore-dev
+    - sudo aptitude -y install libmagickwand-dev
+  post:
+    - bundle exec jekyll build --destination ../
+
+test:
+  post:
+    - bundle exec htmlproofer ./_site --check-html --disable-external
+
+deployment:
+  # the following command deploys to www.capsulecd.com domain if the change is made on the master branch.
+  production:
+    branch: master
+    commands:
+      - ls
+      - pwd
+      - ls /
+      - cd ../dist && git init && git add . && git commit -m "Deploy"
+      - cd ../dist && git remote add origin git@github.com:AnalogJ/analogj.github.io.git
+      - cd ../dist && git push --force origin master:gh-pages
