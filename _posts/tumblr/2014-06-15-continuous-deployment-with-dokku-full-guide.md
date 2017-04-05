@@ -239,21 +239,21 @@ The `wercker.yml` file is broken up into two parts, the `build` and `deploy` sec
 I'm going to assume that you've already connected your bitbucket/github account, and added your project. Lets jump straight into the configuration.
 First lets got to the `settings` tab, and add a new SSH key. Wercker will generate the private key pair for us, we just have to name the key, and copy the public key that they give us.
 
-![](https://31.media.tumblr.com/b4d358c720c880bcfa859f55487af103/tumblr_inline_n782lvfFkZ1rzg9b0.png)
+![Ssh Keys]({{ site.url }}/assets/images/dokku/tumblr_inline_n782lvfFkZ1rzg9b0.png)
 
 We can then add the key to our Dokku server by modifying the `authorized_keys` file or using `sudo sshcommand acl-add dokku {{key name/descriptor}}`
 
 Then, we should add a new `Deploy Target` to our Wercker project, pointing to our Cloud@Cost server. Select `Custom deploy` from the dropdown.
 
-![]({{ site.url }}/assets/images/dokku/tumblr_inline_n782yw22Zh1rzg9b0.png)
+![Custom Deploy Target]({{ site.url }}/assets/images/dokku/tumblr_inline_n782yw22Zh1rzg9b0.png)
 
 Create a new environmental variable called `SERVER_HOSTNAME` and specify your dokku server hostname or ipaddress.
 
-![]({{ site.url }}/assets/images/dokku/tumblr_inline_n782y5dmXQ1rzg9b0.png)
+![Env Variable]({{ site.url }}/assets/images/dokku/tumblr_inline_n782y5dmXQ1rzg9b0.png)
 
 Create one more environmental variable called `DOKKU` and point it to the SSH keypair you created earlier
 
-![]({{ site.url }}/assets/images/dokku/tumblr_inline_n7830psbV91rzg9b0.png)
+![Env Variable Populated]({{ site.url }}/assets/images/dokku/tumblr_inline_n7830psbV91rzg9b0.png)
 
 Make sure you hit the `Save` button, otherwise Wercker will ignore your configuration changes.
 
