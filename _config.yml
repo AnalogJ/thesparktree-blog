@@ -7,7 +7,7 @@ paginate: 5
 language: 'en-uk'
 
 # Website info
-name: 'The SparkTree'
+name: 'Sparktree'
 description: "Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. "
 
 # Author's info
