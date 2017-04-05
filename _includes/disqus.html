@@ -8,7 +8,7 @@
     var disqus_config = function () {
         this.page.url = '{{ site.url }}{{ page.url }}'; //'a unique URL for each page where Disqus is present'
         this.page.identifier = '{{ page.disqus_id }}' || '{{ page.url }}'; //'a unique identifier for each page where Disqus is present';
-        this.page.title = '{{ page.title }}';
+        this.page.title = '{{ page.title | escape }}';
     };
 
     (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
