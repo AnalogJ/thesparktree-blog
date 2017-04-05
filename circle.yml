@@ -10,7 +10,7 @@ dependencies:
     - sudo aptitude -y install libmagickcore-dev
     - sudo aptitude -y install libmagickwand-dev
   post:
-    - bundle exec jekyll build --destination ../
+    - bundle exec jekyll build --destination ../dist
 
 test:
   post:
