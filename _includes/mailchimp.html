@@ -3,12 +3,13 @@
     <h3 class="gh-subscribe-title">Subscribe to {{site.name}}</h3>
     <p>Get the latest posts delivered right to your inbox.</p>
 
-    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd&SIGNUP={{ page.url | escape }}" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
         <div class="mc-field-group form-group">
             <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
         </div>
         <button class="" type="submit">Subscribe</button>
 
+        <input type="hidden" name="SIGNUP" value="{{ page.url | escape }}" id="mce-SIGNUP">
         <div id="mce-responses" class="clear">
             <div class="response" id="mce-error-response" style="display:none"></div>
             <div class="response" id="mce-success-response" style="display:none"></div>
