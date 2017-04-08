@@ -85,15 +85,15 @@ Now lets copy our public key over to the Cloud@Cost machine
 To copy the public key to the machine you want to SSH and fix permissions (you will be prompted for the root password):
 
 ```bash
-$ ssh root@{{server ip address}} 'mkdir -p /root/.ssh'
-$ scp /root/.ssh/id_rsa.pub root@{{server ip address}}:/root/.ssh/authorized_keys
-$ ssh root@{{server ip address}} 'chmod  700 /root/.ssh'
-$ ssh root@{{server ip address}} 'chmod  600 /root/.ssh/*'
+$ ssh root@{server ip address} 'mkdir -p /root/.ssh'
+$ scp /root/.ssh/id_rsa.pub root@{server ip address}:/root/.ssh/authorized_keys
+$ ssh root@{server ip address} 'chmod  700 /root/.ssh'
+$ ssh root@{server ip address} 'chmod  600 /root/.ssh/*'
 ```
 
 You should now be able to ssh directly from to Cloud@Cost server without providing a password:
 
-	$ ssh root@{{server ip address}}
+	$ ssh root@{server ip address}
 
 # Dokku for everyone!
 Now that we've finished with the baby steps, lets get into the meat of the matter. Docker/Dokku!
@@ -108,7 +108,7 @@ Now that Dokku is installed, we have to tell it what domain it's hosted on. Basi
 
 Finally, we need to make sure that we can push code and create apps on our Dokku service. We'll need to add our ssh key to the Dokku user, and specify a short descriptor for our key (eg. `dokkukey`). On our host machine, run the following:
 
-	$ cat ~/.ssh/id_rsa.pub | ssh root@{{server ip address}} "sudo sshcommand acl-add dokku {{key name/descriptor}}"
+	$ cat ~/.ssh/id_rsa.pub | ssh root@{server ip address} "sudo sshcommand acl-add dokku {key name/descriptor}"
 
 # Plugins
 
@@ -127,23 +127,23 @@ $ dokku plugins-install
 
 # Deploy an app
 
-Now that Dokku is all setup, we can push our web app to Dokku. Make sure you don't have any spaces in your `{{dokku remote name}}` or `{{application name}}`.
+Now that Dokku is all setup, we can push our web app to Dokku. Make sure you don't have any spaces in your `{dokku remote name}` or `{application name}`.
 
 ```bash
 $ cd node-js-sample
-$ git remote add {{dokku remote name}} dokku@{{server ip address}}:{{application name}}
-$ git push {{dokku remote name}} master
+$ git remote add {dokku remote name} dokku@{server ip address}:{application name}
+$ git push {dokku remote name} master
 ```
 
 You can now see your application's url by typing:
 
-	$ dokku url {{application name}}
+	$ dokku url {application name}
 
 Lets start up the postgresql container.
 
 ```bash
-$ dokku postgresql:create {{application name}}
-$ dokku postgresql:link {{application name}} {{application name}}
+$ dokku postgresql:create {application name}
+$ dokku postgresql:link {application name} {application name}
 ```
 
 # Setting Environmental variables.
@@ -159,7 +159,7 @@ $ dokku config:unset <app> KEY1 [KEY2 ...] # unset one or more config vars
 so we could do something like:
 
 ```
-$ dokku config:set {{application name}} NODE_ENV=development
+$ dokku config:set {application name} NODE_ENV=development
 ```
 
 # Adding SSL
@@ -178,7 +178,7 @@ server.csr - Your new certificate (bundle)
 ```
 
 If you had any intermediate certificates, you should just concatenate them to the server.csr file to create a certificate bundle.
-Now copy the `secure.key` and `server.csr` to the `/home/dokku/{{application name}}/tls` folder on your cloud@cost server. Create the `tls` folder if it doesn't exist. Rename the `secure.key` file to `server.key` and rename the `server.csr` to `server.crt`
+Now copy the `secure.key` and `server.csr` to the `/home/dokku/{application name}/tls` folder on your cloud@cost server. Create the `tls` folder if it doesn't exist. Rename the `secure.key` file to `server.key` and rename the `server.csr` to `server.crt`
 
 ```
 $ ls -al
@@ -243,7 +243,7 @@ First lets got to the `settings` tab, and add a new SSH key. Wercker will genera
 
 ![Ssh Keys]({{ site.url }}/assets/images/dokku/tumblr_inline_n782lvfFkZ1rzg9b0.png)
 
-We can then add the key to our Dokku server by modifying the `authorized_keys` file or using `sudo sshcommand acl-add dokku {{key name/descriptor}}`
+We can then add the key to our Dokku server by modifying the `authorized_keys` file or using `sudo sshcommand acl-add dokku {key name/descriptor}`
 
 Then, we should add a new `Deploy Target` to our Wercker project, pointing to our Cloud@Cost server. Select `Custom deploy` from the dropdown.
 

@@ -31,14 +31,15 @@ class: 'post-template'
             <time class="post-date" datetime="{{ page.date | date:'%Y-%m-%d' }}">{{ page.date | date_to_string }}</time>
                 <!-- [[tags prefix=" on "]] -->
                 {% if page.tags.size > 0 %} 
-                on 
+                <span class="tags-wrapper">
                 {% for tag in page.tags %}
                     {% if forloop.index == page.tags.size %}
                        <a href='{{ site.baseurl }}/tag/{{ tag }}'>{{ tag | capitalize }}</a>
                     {% else %}
                        <a href='{{ site.baseurl }}/tag/{{ tag }}'>{{ tag | capitalize }}</a>,
-                    {% endif %}   
+                    {% endif %}
                 {% endfor %}
+                </span>
                 {% endif %}
             </section>
         </header>
@@ -91,7 +92,11 @@ class: 'post-template'
                     <span class="hidden">Google+</span>
                 </a>
             </section>
-            
+
+            <!-- Subscribe -->
+            {% if site.disqus %}
+            {% include mailchimp.html %}
+            {% endif %}
             <!-- Add Disqus Comments -->
             {% if site.disqus %}
                 {% include disqus.html %}

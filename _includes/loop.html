@@ -27,8 +27,8 @@
             <!-- author -->
             <a href='{{ site.baseurl }}/author/{{ site.nickname }}'>{{ site.author }}</a>
             <!-- [[tags prefix=" on "]] -->
-            {% if post.tags.size > 0 %} 
-                on 
+            {% if post.tags.size > 0 %}
+            <span class="tags-wrapper">
                 {% for tag in post.tags %}
                     {% if forloop.index == post.tags.size %}
                        <a href='{{ site.baseurl }}/tag/{{ tag }}'>{{ tag | capitalize }}</a>
@@ -36,6 +36,7 @@
                        <a href='{{ site.baseurl }}/tag/{{ tag }}'>{{ tag | capitalize }}</a>,
                     {% endif %}   
                 {% endfor %}
+            </span>
             {% endif %}
             <time class="post-date" datetime="{{ post.date | date:'%Y-%m-%d' }}">{{ post.date | date_to_string }}</time>
         </footer>
