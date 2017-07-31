@@ -2,7 +2,7 @@
 layout: post
 title: 15 Lessons in Golang
 date: '2017-07-31T01:19:33-08:00'
-cover: '/assets/images/cover_localhost.png'
+cover: '/assets/images/cover_golang.png'
 subclass: 'post tag-post'
 tags:
 - golang
