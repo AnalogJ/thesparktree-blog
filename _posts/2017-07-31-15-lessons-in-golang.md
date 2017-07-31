@@ -42,10 +42,10 @@ were an incredible motivator.
 
 Here's a bunch of the unexpected/unconventional things I learned while porting my app to Golang.
 
-Please note, these are things that I didn't **expect** when I started writing Golang code with a
+> Please note, these are things that I didn't **expect** when I started writing Golang code with a
 background in popular typed and dynamically typed languages, (C++, C#, Java, Ruby, Python and NodeJS).
 These are not necessarily criticisms of Golang. I was able to go from 0 -> working release of my software
-in a completely new language in 2 weeks. Thats pretty awesome if you ask me.
+in a completely new language in 2 weeks. That's pretty awesome if you ask me.
 
 # Before your first line.
 
