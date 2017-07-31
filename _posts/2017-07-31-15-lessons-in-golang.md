@@ -19,11 +19,14 @@ It mostly caught my interest due to the fact that it's pitched as a statically t
 
 For a long time that was the extent of my Golang knowledge. I knew I wanted to take a closer look at
 it at some point, but I had other priorities. About 4 months ago, I realized the Golang could be the
-solution to one of the problems I was facing with capsulecd, my application for generically automating
+solution to one of the problems I was facing with [CapsuleCD](https://github.com/AnalogJ/capsulecd), my application for generically automating
 package releases for any language (npm, cookbooks, gems, pip, jars, etc).
 
-The problem was that capsulecd was a executable distributed in a Ruby gem, which meant that anyone
-who wanted to use capsulecd needed to have a Ruby interpreter installed on their build machine, even
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+
+The problem was that [CapsuleCD](https://github.com/AnalogJ/capsulecd) was a executable distributed in a Ruby gem, which meant that anyone
+who wanted to use `CapsuleCD` needed to have a Ruby interpreter installed on their build machine, even
 if all they were just trying to do was package a Python library. This made my Docker containers bloated,
 and more complicated to develop. Wouldn't it be nice to just have single binary I could download into the
 container? And so the migration to Golang began, if only in my head at that point.
@@ -150,7 +153,7 @@ style and `go fmt` can reformat your code to comply with it. It's a neat tool, a
 introduced me to the powerful [`parser`](https://golang.org/pkg/go/parser/) and [`ast`](https://golang.org/pkg/go/ast/) libraries.
 
 ## GOARCH, GOOS, CGO & Cross Compiling
-My goal of creating a single standalone capsulecd binary is the entire reason I started my port
+My goal of creating a single standalone `CapsuleCD` binary is the entire reason I started my port
 to Golang. However it quickly became apparent that simple static binaries aren't an intrinsic feature
 of Golang (which should have been obvious). If your code is all written in vanilla Golang, and the code
 of all your dependencies (and their dependencies), then you can [build static binaries](http://golangcookbook.com/chapters/running/cross-compiling/)
@@ -221,6 +224,6 @@ and enjoyable experience. I was able to go from no experience to building a real
 little time, not just toy examples from some book. I know that I'm no expert in Golang yet, and that there are still  theory gaps
 in my understanding of Golang, but I feel like they are much further apart than I expected when I went down this `self-taught without books` path.
 
-Golang worked exactly as I thought it would, giving me [binaries](https://github.com/AnalogJ/capsulecd) that I can easily download
+Golang worked exactly as I thought it would, giving me [binaries](https://github.com/AnalogJ/capsulecd/releases) that I can easily download
 onto slim Docker containers, without requiring a Ruby interpreter. If you maintain executables in other languages, I would
 definitely recommend you consider giving Golang a try.
