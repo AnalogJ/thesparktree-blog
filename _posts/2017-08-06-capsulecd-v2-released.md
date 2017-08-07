@@ -13,7 +13,7 @@ tags:
 - capsulecd
 - docker
 navigation: True
-logo: '/assets/logo.png'
+logo: '/assets/logo-dark.png'
 categories: 'analogj'
 ---
 
