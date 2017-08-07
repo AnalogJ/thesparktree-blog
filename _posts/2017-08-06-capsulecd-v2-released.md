@@ -48,7 +48,7 @@ Click below to watch a screencast of `CapuleCD` in action:
 
 <p align="center">
 <a href="https://analogj.github.io/capsulecd">
-  <img width="800" src="https://cdn.rawgit.com/AnalogJ/capsulecd/v2.0.10/capsulecd-screencast.png">
+  <img alt="CapsuleCD screencast" width="800" src="https://cdn.rawgit.com/AnalogJ/capsulecd/v2.0.10/capsulecd-screencast.png">
   </a>
 </p>
 
