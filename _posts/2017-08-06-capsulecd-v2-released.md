@@ -17,7 +17,8 @@ logo: '/assets/logo.png'
 categories: 'analogj'
 ---
 
-[CapsuleCD](https://github.com/AnalogJ/capsulecd) is made up of a series of scripts/commands that make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices: 
+[CapsuleCD](https://github.com/AnalogJ/capsulecd) is made up of a series of scripts/commands that
+make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices:
 
 - bumping `semvar` tags
 - regenerating any `*.lock` files
@@ -30,9 +31,15 @@ categories: 'analogj'
 
 While `CapsuleCD` **was** a series of scripts, with the release of **v2** that's no longer the case. 
 
-`CapsuleCD` has been re-written, and is now available as a [static binary](https://github.com/AnalogJ/capsulecd/releases) on [`macOS`](https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-darwin-amd64) and [`Linux`](https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-linux-amd64) (`Windows` and `NuGet` support is hopefully coming soon)
+`CapsuleCD` has been re-written, and is now available as a [static binary](https://github.com/AnalogJ/capsulecd/releases)
+on [`macOS`](https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-darwin-amd64) and
+[`Linux`](https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-linux-amd64)
+(`Windows` and `NuGet` support is hopefully coming soon)
 
-You no longer need to worry that the version of Ruby used by your library & `gemspec` is different than the version required by `CapsuleCD`. If you maintain any Python or NodeJS libraries, this also means that a Ruby runtime for just for CapsuleCD is unnecessary. The `CapsuleCD` [Docker](https://hub.docker.com/r/analogj/capsulecd/tags/) images for other languages are much slimmer, and based off standard community images. 
+You no longer need to worry that the version of Ruby used by your library & `gemspec` is different than the
+version required by `CapsuleCD`. If you maintain any Python or NodeJS libraries, this also means that a Ruby
+runtime for just for CapsuleCD is unnecessary. The `CapsuleCD` [Docker](https://hub.docker.com/r/analogj/capsulecd/tags/)
+images for other languages are much slimmer, and based off the standard community images with [minimal changes](https://github.com/AnalogJ/capsulecd-docker).
 
 Releasing a new version of your Ruby library hasn't changed, it's as easy as downloading the [binary](https://github.com/AnalogJ/capsulecd/releases) and running:
 
