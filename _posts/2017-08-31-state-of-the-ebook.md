@@ -1,7 +1,7 @@
 ---
 layout: post
 title: State of the eBook ecosystem
-date: '2017-09-01T01:19:33-08:00'
+date: '2017-08-31T01:19:33-08:00'
 cover: '/assets/images/cover_quietthyme.png'
 subclass: 'post tag-post'
 tags:
