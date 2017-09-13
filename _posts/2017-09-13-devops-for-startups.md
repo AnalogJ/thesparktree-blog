@@ -66,7 +66,7 @@ but you may be able to just get away with [Github Project Boards](https://help.g
 	scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.
 
 # Before your first staging environment deploy
-- Have a *unit test suite** - Yeah yeah, TDD. But be honest, when's the last time you started a project with TDD? Still, you'll thank
+- Have a **unit test suite** - Yeah yeah, TDD. But be honest, when's the last time you started a project with TDD? Still, you'll thank
 yourself when you come back to your code after 2 weeks, or even just a couple of days. It's also a pre-req for some of the next points.
 - **Code Coverage/Code Quality** tools - When I feel that I have an application that can actually run on a server is when I
 know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
