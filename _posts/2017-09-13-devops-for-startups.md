@@ -118,7 +118,7 @@ what software makes up your stack, but also so you can be notified of bug fixes 
 	- [Pingdom](https://www.pingdom.com/free) **[free]** will let notify you if your application is inaccessible externally.
 	- Track system metrics like CPU and memory load on your servers. [NewRelic](https://newrelic.com/) **[free]**,
 	[Librato](https://www.librato.com/) **[free]** and [StackDriver](https://cloud.google.com/stackdriver/) **[paid]** work well.
-	- Configure a user analytics & monitoring solution like [Google Analytics](www.google.com/analytics/) **[free]**. Setup alerts when your traffic
+	- Configure a user analytics & monitoring solution like [Google Analytics](https://www.google.com/analytics/) **[free]**. Setup alerts when your traffic
 	increases or drops more than 15%.
 
 
