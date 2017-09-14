@@ -25,6 +25,7 @@ tags:
 - codecov
 - coverallsio
 - stackdriver
+- gitlab
 
 navigation: True
 logo: '/assets/logo.png'
@@ -40,7 +41,8 @@ I primarily focus on free tools and services because of how cheap I am, so feel 
 you big spender, you.
 
 # Before your first line
-- **Store your code in Git** - [Github](https://github.com/) *[free open source]*/[Bitbucket](https://bitbucket.org/) *[free private]* -
+- **Store your code in Git** - [Github](https://github.com/) *[free open source]*/[Bitbucket](https://bitbucket.org/)
+*[free private]*/[GitLab](https://www.gitlab.com) *[free private]*  -
 there shouldn't be more to say here other than, store your source in a VCS from day 1.
 - Design your app with **multiple environments** in mind. You should be able to switch between Local/Stage/Production development
 with no code changes, just configuration changes (via environmental variables or a config file). I love [nconf](https://github.com/indexzero/nconf)
