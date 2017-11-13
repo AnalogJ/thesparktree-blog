@@ -17,7 +17,10 @@ navigation: True
 ---
 
 
-With the release of Jenkins 2.x, support for Pipeline jobs in built-in. This is important for multiple reasons, but mostly because Pipeline jobs are now the defacto standard for creating complex jobs, custom deployment workflows without additional plugins. The best part is that pipelines are basically just Groovy scripts with some Jenkins specific additions.
+With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly
+because Pipeline jobs are now the defacto standard for creating complex jobs, custom deployment workflows without
+additional plugins. The best part is that pipelines are basically just Groovy scripts with some Jenkins specific
+additions.
 
 While Pipeline jobs can be used to build artifacts just like a regular Freestyle job, their true power is only apparent when you
 start using the Pipeline for orchestration.
