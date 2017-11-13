@@ -144,7 +144,7 @@ import org.yaml.snakeyaml.Yaml
 
 Reusing Pipelines functions is easy too, just move your code into a Shared Library, configure it as a Library in the Jenkins Manage page, and then import it in your Pipeline script
 
-```
+```groovy
 @Library('somelib')
 import com.mycorp.pipeline.somelib.UsefulClass
 ```
@@ -186,7 +186,7 @@ assert """\
 
 A little known but incredibly useful feature of the pipeline shell `sh` step, is that you can redirect the STDOUT into a groovy variable.
 
-```
+```groovy
 def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 echo "Git commit sha: ${gitCommit}"
 ```
