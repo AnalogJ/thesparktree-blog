@@ -1,7 +1,7 @@
 ---
 layout: post
 title: You Don't Know Jenkins - Part 3
-date: '2016-08-21T22:37:09-07:00'
+date: '2017-11-13T22:37:09-07:00'
 cover: '/assets/images/cover_jenkins.jpg'
 subclass: 'post tag-post'
 tags:
