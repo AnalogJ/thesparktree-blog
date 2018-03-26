@@ -21,7 +21,7 @@ logo: '/assets/logo-dark.png'
 categories: 'analogj'
 ---
 
-Here's the premise, we have one or more Jenkins masters running our various jobs, and we've bottlenecking the server: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources. 
+Here's the premise, we have one or more Jenkins masters running our various jobs, and the server is bottlenecking: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources.
 
 Wouldn't it be nice if we could share slave nodes between the masters? Create a cluster of slave nodes and have the various Jenkins masters run their jobs without needing to worry about scheduling or the underlying utilization of the hardware?
 
