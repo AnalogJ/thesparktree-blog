@@ -1,8 +1,8 @@
 ---
 layout: post
-title: Jenkins Dockerized Slave Cluster - Premise
+title: 'Jenkins Dockerized Slave Cluster - Premise'
 date: '18-03-25T01:19:33-08:00'
-cover: '/assets/images/cover_kubernetes.png'
+cover: '/assets/images/cover_kubernetes.jpg'
 subclass: 'post tag-post'
 tags:
 - devops
