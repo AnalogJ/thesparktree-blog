@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Jenkins Dockerized Slave Cluster - Part 1 - Foundation'
+title: 'Jenkins Kubernetes Cluster - Part 1 - Foundation'
 date: '18-03-25T01:19:33-08:00'
 cover: '/assets/images/cover_kubernetes.jpg'
 subclass: 'post tag-post'
@@ -95,8 +95,17 @@ $ wget https://stable.release.core-os.net/amd64-usr/current/coreos_production_op
 # extract the bz2 compressed file
 $ bunzip2 coreos_production_openstack_image.img.bz2
 
-# 
+# convert image to RAW type
+$ qemu-img convert -f qcow2 -O raw coreos_production_openstack_image.img coreos_production_openstack_image.raw
 
+# upload image to OpenStack
+
+$ glance \
+	image-create \
+	--name cores-stable \
+	--container-format bare \
+	--disk-formate raw \
+	--file coreos_production_openstack_image.raw
 ```
 
 ## Terraform Folder Structure
@@ -119,7 +128,7 @@ Now that we have our OpenStack environment primed, its time to start working on 
 │   │   ├── variables.tf
 │   │   ├── main.tf
 │   │   ├── outputs.tf
-│   ├── networking
+│   ├── network
 │   │   ├── README.md
 │   │   ├── variables.tf
 │   │   ├── main.tf
@@ -134,10 +143,125 @@ Now that we have our OpenStack environment primed, its time to start working on 
 ## Variables
 Since I have the benefit of having working code already, I'm going to start backwards and talk about the different configuration variables we'll be defining for use in our Terraform files. These variables are what you can use to customize your CoreOS (and eventual Kubernetes) cluster to your needs, across various environments. 
 
+```
+path: /terraform.tf
+
+# OpenStack variables
+
+variable "os_username" {
+	description = "Your OpenStack username"
+} 
+
+variable "os_password" {
+	description = "Your OpenStack password"
+}  
+
+variable "os_tenant_id" {
+	description = "Your OpenStack tenant id"
+}
+
+variable "os_auth_url" {
+	description = "Your OpenStack auth url"
+}
+
+variable "os_region" {
+	description = "Your OpenStack region"
+}
+
+# Project variables
+
+variable "project_name" {
+	description = "Prefix added to every resource created by this Terraform project"
+	default = "test"
+} 
+
+variable "coreos_image_id" {
+	description = "OpenStack id/name used when uploading CoreOS image"
+	default = ""
+}
+
+variable "external_domain" {
+	description = "Domain name you'll be using to access your cluster"
+	default = "slave-cluster.corp.example.com"
+} 
+
+variable "public_key_path" {
+	description "Path to your SSH public key"
+	default = "~/.ssh/id_rsa.pub"
+} 
+
+# Network variables
+variable "network_name" {
+	description = "OpenStack pre-configured internal network for nodes"
+	default = "internal"
+} 
+
+variable "lb_subnet_id" {
+	description = "OpenStack pre-configured subnet ID to be used by Load Balancer"
+} 
+variable "lb_ip_address" {
+	description = "IP address to be requested by Load Balancer"
+} 
 
 
+# Compute variables 
+variable "compute_count" {
+	description = "Number of slaves/nodes in your Kubernetes cluster"
+	default = 3
+}
+
+variable "compute_flavor" {
+	description = "OpenStack flavor (compute, memory, and storage capacity) for compute nodes"
+	default = "m1.medium"
+}
+
+variable "controller_count" {
+	description = "Number of controllers/masters in your Kubernetes cluster."
+	default = 1
+} 
+
+variable "controller_flavor" {
+	description = "OpenStack flavor (compute, memory, and storage capacity) for controller nodes"
+	default = "m1.medium"
+}
+
+# Kubernetes variables
+
+variable "cluster_join_token" {
+	description = "Secure token used to join compute nodes to Kubernetes cluster. `[a-z0-9]{6}.[a-z0-9]{16}`"
+} 
+
+```
+
+Now that you have a basic understanding of the different inputs available, its time to actually start writing terraform modules.
 
 ## Networking
+
+The first module we're going to build is the networking module. Because there's no such thing as "one size fits all" when it comes to networking, we're going to constrain our solution a bit:
+
+- We're going to connect all resources/machines to one network/subnet.
+- We're going to assume that this network already exists. 
+- This network should be "accessible" (via intranet or internet, thats up to you)
+- Our security model will be based on security groups rather than discrete networks and multiple subnets.
+
+This tutorial is designed to be secure by default, while still being understandable to a networking beginner.
+
+So lets look at the network diagram:
+
+![Network Diagram]()
+
+Basically here's what we want:
+
+- By default incoming traffic on any port is disabled, unless explicitly allowed
+- Incoming SSH traffic (port 22) is allowed on all servers. We're authenticating via keypair which is secure, however you may want to disable this. 
+- Incoming HTTPS traffic (port 443) to compute nodes is enabled. This is because we want to access the `kubernetes-dashboard`. 
+- Incoming traffic on port 6443 to the controller node is enabled. This is the API server, which we'll be wiring up to Jenkins. 
+- Nodes in the Compute security group can talk to the Controller security group. This is required since members of a cluster need to talk to each other. 
+
+That's it. Now lets see those rules in Terraform configuration syntax. 
+
+
+
 
 ## Compute
 
