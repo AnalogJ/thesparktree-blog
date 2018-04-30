@@ -1,8 +1,8 @@
 ---
 layout: post
 title: 'Drawbridge - SSH Config management for Jump/Bastion hosts'
-date: '18-03-25T01:19:33-08:00'
-cover: '/assets/images/cover_kubernetes.jpg'
+date: '18-04-30T01:19:33-08:00'
+cover: '/assets/images/cover_drawbridge.png'
 subclass: 'post tag-post'
 tags:
 - devops
