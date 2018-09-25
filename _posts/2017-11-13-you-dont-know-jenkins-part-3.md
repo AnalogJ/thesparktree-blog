@@ -30,6 +30,16 @@ orchestration workflow. With Pipelines, this concept is now a first class citize
 trigger down stream  jobs, run stages in parallel, make decisions about what stages to run based on parameters. You 
 have the power to build a Pipeline that suites your needs.
 
+This post is part of a series is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
+
+- [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
+- [Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)
+- **[Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)**
+- Part 4 - Advanced DSL & Pipeline Techniques *(Coming soon)*
+
+This is **Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration**. If you haven't read [Part 1](http://blog.thesparktree.com/you-dont-know-jenkins-part-1), you might want to start there.
+
+
 ---
 
 ## Declarative vs Scripted Pipeline
