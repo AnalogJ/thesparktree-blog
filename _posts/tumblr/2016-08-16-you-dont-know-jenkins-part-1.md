@@ -32,9 +32,11 @@ Its frightening to even contemplate upgrading your Jenkins version & plugins, le
 
 This series is all about solving these common problems using new Jenkins features, modern automation & configuration-as-code practices.
 
-- **Part 1 - Automated Jenkins Install using Chef**
-- Part 2 - Maintainable Jenkins Jobs using Job DSL *(Coming soon)*
-- Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration *(Coming soon)*
+This series is all about solving these common problems using new Jenkins features, modern automation & configuration-as-code practices.
+
+- **[Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)**
+- [Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)
+- [Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)
 - Part 4 - Advanced DSL & Pipeline Techniques *(Coming soon)*
 
 
