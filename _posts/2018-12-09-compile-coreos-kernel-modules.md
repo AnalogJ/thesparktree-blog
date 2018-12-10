@@ -19,8 +19,8 @@ categories: 'analogj'
 
 # Story Time
 
-As a Devops & Infrastructure guy, I'm fairly proud of my wide breadth of knowledge. It could be hubris, but I feel like I
-could be thrown into most problems and I'd be able to code, architect or Google my way out of it, even if the end result needs a bit of polish afterwards.
+As a Devops & Infrastructure guy, I'm pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code.
+With a bit of help from Google I can usually come up with a working solution, even if the end result needs a bit of polish afterwards.
 
 That self-assurance was checked on my latest project: **building a dockerized home server.**
 
