@@ -198,9 +198,14 @@ However, since there's additional kernel modules that we need, the full build co
 ```bash
 ## DEVELOPMENT CONTAINER ###
 
-make -C /usr/src/linux M=drivers/video modules && make -C /usr/src/linux M=drivers/video modules_install
-make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules && make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules_install
-make -C /usr/src/linux M=drivers/gpu/drm KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video modules && make -C /usr/src/linux KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video M=drivers/gpu/drm modules_install
+make -C /usr/src/linux M=drivers/video modules && \
+make -C /usr/src/linux M=drivers/video modules_install
+
+make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules && \
+make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules_install
+
+make -C /usr/src/linux M=drivers/gpu/drm KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video modules && \
+make -C /usr/src/linux M=drivers/gpu/drm KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video modules_install
 ```
 
 The `make modules` command will build & compile the `.ko` files, while the `make modules_install` command will copy them to the `/lib/modules/$(uname -r)/extras/` directory.
