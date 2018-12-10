@@ -168,7 +168,7 @@ make oldconfig
 
 # lets use the interactive UI to enable the options that we need to enable.
 # remember, "m" means build as module.
-Make menuconfig
+make menuconfig
 
 # next lets prepare the source code to be built
 make prepare && make modules_prepare
@@ -190,7 +190,7 @@ The general form for building and installing a kernel module looks like the foll
 
 ```bash
 ## DEVELOPMENT CONTAINER ###
-make -C /usr/src/linux SUBDIRS=drivers/drm modules && make -C /usr/src/linux SUBDIRS=drivers/drm modules_install
+make -C /usr/src/linux SUBDIRS=drivers/gpu/drm modules && make -C /usr/src/linux SUBDIRS=drivers/gpu/drm modules_install
 ```
 
 However, since there's additional kernel modules that we need, the full build command looks like:
@@ -198,11 +198,9 @@ However, since there's additional kernel modules that we need, the full build co
 ```bash
 ## DEVELOPMENT CONTAINER ###
 
-make -C /usr/src/linux SUBDIRS=drivers/video modules && make -C /usr/src/linux SUBDIRS=drivers/video modules_install
-make -C /usr/src/linux SUBDIRS=drivers/video/backlight modules && make -C /usr/src/linux SUBDIRS=drivers/video/backlight modules_install
-make -C /usr/src/linux SUBDIRS=drivers/acpi modules && make -C /usr/src/linux SUBDIRS=drivers/acpi modules_install
-make -C /usr/src/linux SUBDIRS=drivers/dma-buf modules && make -C /usr/src/linux SUBDIRS=drivers/dma-buf modules_install
-make -C /usr/src/linux SUBDIRS=drivers/gpu/drm modules && make -C /usr/src/linux SUBDIRS=drivers/gpu/drm modules_install
+make -C /usr/src/linux M=drivers/video modules && make -C /usr/src/linux M=drivers/video modules_install
+make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules && make -C /usr/src/linux M=drivers/acpi KBUILD_EXTMOD=drivers/video modules_install
+make -C /usr/src/linux M=drivers/gpu/drm KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video modules && make -C /usr/src/linux KBUILD_EXTMOD=drivers/acpi KBUILD_EXTMOD=drivers/video M=drivers/gpu/drm modules_install
 ```
 
 The `make modules` command will build & compile the `.ko` files, while the `make modules_install` command will copy them to the `/lib/modules/$(uname -r)/extras/` directory.
