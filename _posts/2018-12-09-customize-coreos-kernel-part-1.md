@@ -328,7 +328,7 @@ directly in the kernel as a built-in. In our case `CONFIG_HDMI` is set to `n` in
 While it looks like I may have to scrap this work and start over from scratch, hopefully your `kernel module` does not have any
 dependencies that are unavailable as modules.
 
-In Part 2 of this series I'll walk though the steps I took to build a full custom CoreOS kernel.
+In Part 2 of this series I'll walk though the steps I attempt to build a full custom CoreOS kernel.
 
 # References
 - https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver
