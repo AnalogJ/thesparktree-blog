@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Compile CoreOS Kernel Modules - Part 1'
+title: 'Customize CoreOS Kernel - Part 1 - Kernel Modules'
 date: '18-12-09T01:19:33-08:00'
 cover: '/assets/images/cover_coreos.png'
 subclass: 'post tag-post'
@@ -50,7 +50,7 @@ After doing a bunch of debugging I determined that I needed to compile the CoreO
 - `Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)`
 - `Intel 8xx/9xx/G3x/G4x/HD Graphics`
 
-Here's the first problem. If you're unfamiliar with CoreOS, all you need to know is that unlike traditional OS's the CoreOS kernel is
+Here's Problem #1. If you're unfamiliar with CoreOS, all you need to know is that unlike traditional OS's the CoreOS kernel is
 continuously updated, similar to how Google Chrome is always kept up-to date. This means that **any local modifications I make to the kernel
 will be completely lost on the next kernel update**.
 
@@ -62,11 +62,11 @@ Here's where we end story time and actually start coding.
 CoreOS is so minimal that it doesn't even have a any compilers or even a package manager installed.
 In fact, it's designed such that all real work takes place inside of containers.
 
-But before we can even do much work towards solving problem 1, we run into a second issue: **the standard location for storing kernel modules `/lib/modules` is read-only in CoreOS.**
+But before we can even do much work towards solving Problem #1, we run into a second issue: **the standard location for storing kernel modules `/lib/modules` is read-only in CoreOS.**
 If you think about it, it kind of all makes sense: an OS that auto-updates its kernel needs to ensure that it controls all locations where
 kernel code is loaded from.
 
-We'll solve problem 2 first, by creating a `overlay` filesystem over the standard `/lib/modules` directory. This overlay filesystem will
+We'll solve Problem #2 first, by creating a `overlay` filesystem over the standard `/lib/modules` directory. This overlay filesystem will
 leave the underlying directory untouched, while creating a new writable directory where we can place our kernel modules.
 
 ```bash
@@ -90,7 +90,7 @@ overlay /lib/modules overlay lowerdir=/lib/modules,upperdir=/opt/modules,workdir
 
 ```
 
-Now that problem #2 is solved, lets go back to problem #1: the lack of a package manager and compilation tools in CoreOS.
+Now that Problem #2 is solved, lets go back to Problem #1: the lack of a package manager and compilation tools in CoreOS.
 Thankfully the CoreOS developers provide a `develoment container`, which has a bunch of tools that can be used to manipulate CoreOS (and includes a package manager).
 
 ```bash
@@ -247,10 +247,88 @@ The modules in `/lib/modules/$(uname -r)/extras` should be individually loaded v
 
 ```bash
 ## HOST ##
-modprobe
+modprobe acpi_ipmi
+...
+```
+
+Once we've completed the dependent modules, lets load the modules we actually care about `drm`, `drm_kms_helper` and `i915`.
+
+```bash
+## HOST ##
+$ modprobe drm_kms_helper
+modprobe: ERROR: could not insert 'drm_kms_helper': Unknown symbol in module, or unknown parameter (see dmesg)
+```
+
+Uh oh. Lets look at the logs in `dmesg`
+
+```
+[83845.709910] drm: Unknown symbol hdmi_vendor_infoframe_init (err 0)
+[83845.710508] drm: Unknown symbol dma_fence_add_callback (err 0)
+[83845.711248] drm: Unknown symbol dma_buf_attach (err 0)
+[83845.711921] drm: Unknown symbol dma_fence_default_wait (err 0)
+[83845.712474] drm: Unknown symbol dma_buf_export (err 0)
+[83845.712884] drm: Unknown symbol dma_buf_map_attachment (err 0)
+[83845.713648] drm: Unknown symbol dma_fence_remove_callback (err 0)
+[83845.714288] drm: Unknown symbol dma_buf_unmap_attachment (err 0)
+[83845.714946] drm: Unknown symbol dma_fence_context_alloc (err 0)
+[83845.715508] drm: Unknown symbol dma_fence_signal (err 0)
+[83845.716182] drm: Unknown symbol dma_buf_get (err 0)
+[83845.716762] drm: Unknown symbol dma_buf_put (err 0)
+[83845.717257] drm: Unknown symbol dma_buf_fd (err 0)
+[83845.717843] drm: Unknown symbol dma_fence_init (err 0)
+[83845.718371] drm: Unknown symbol hdmi_avi_infoframe_init (err 0)
+[83845.719094] drm: Unknown symbol dma_fence_enable_sw_signaling (err 0)
+[83845.719835] drm: Unknown symbol dma_buf_detach (err 0)
+[83845.720422] drm: Unknown symbol dma_fence_release (err 0)
+[83845.721103] drm: Unknown symbol sync_file_get_fence (err 0)
+[83845.721771] drm: Unknown symbol sync_file_create (err 0)
+```
+
+Looks like we've hit Problem #4, looks like theres some **additional dependencies that we need to enable as modules.**
+
+Lets check for `hdmi_vendor_infoframe_init` first. In our case we're building off the linux kernel used by CoreOS, so
+we'll do a search of the source code in the `github.com/coreos/linux` repo.
+
+It looks like the symbol is exported in the [drivers/video/hdmi.c](https://github.com/coreos/linux/blob/v4.14.81/drivers/video/hdmi.c) file.
+Now lets look at the [Makefile in the video directory](https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Makefile) to determine which kernel config flag controls this file:
+
+```bash
+..
+# SPDX-License-Identifier: GPL-2.0
+obj-$(CONFIG_VGASTATE)            += vgastate.o
+obj-$(CONFIG_HDMI)                += hdmi.o
+
+obj-$(CONFIG_VT)		  += console/
+..
+```
+
+Looks like the `CONFIG_HDMI` option controls the inclusion of the `hdmi.c` file. Perfect.
+
+Now lets check the [`Kconfig` file](https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Kconfig) for more information about the `CONFIG_HDMI` option.
+
+```bash
+
+config HDMI
+	bool
 
 ```
 
+After looking at the `Kconfig` file and the `Makefile` closely, it seems that there is no configuration available to build `hdmi.c`
+file into a kernel module. This is confirmed when we run `make menuconfig`, press `/` to search, and enter `HDMI`.
+
+![make menuconfig]({{ site.url }}/assets/images/coreos_kernel_module/make_menuconfig.png)
+
+Looks like we've hit a dead end.
+
+**While we can create kernel modules for the `i915` and `drm` drivers, the `hdmi.c` file cannot be compiled as a module, only included
+directly in the kernel as a built-in. In our case `CONFIG_HDMI` is set to `n` in the CoreOS kernel build.**
+
+# Fin
+
+While it looks like I may have to scrap this work and start over from scratch, hopefully your `kernel module` does not have any
+dependencies that are unavailable as modules.
+
+In Part 2 of this series I'll walk though the steps I took to build a full custom CoreOS kernel.
 
 # References
 - https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver
