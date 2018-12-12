@@ -32,7 +32,7 @@ I've touched on my home server a bit in the past, and I'll be doing a follow up 
 - **OS needed to be as minimal as possible, since all work was done in Docker containers**
 
 I've had a Home Server that checked off the first three items for a while, but not that last one. Professionally, I've been lucky enough to
-use (and abuse) a Kubernetes cluster which builds our Jenkins jobs. That Kubernetes cluster was built ontop of ~CoreOS~ Container Linux, which
+use (and abuse) a Kubernetes cluster which builds our Jenkins jobs. That Kubernetes cluster was built ontop of ~~CoreOS~~ Container Linux, which
 I've grown to love. It checks off that last requirement perfectly.
 
 So I did what any tinkerer would do, I started up a CoreOS VM, rebuilt my entire software stack for another OS, learned a compeletely new
@@ -50,7 +50,7 @@ After doing a bunch of debugging I determined that I needed to compile the CoreO
 - `Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)`
 - `Intel 8xx/9xx/G3x/G4x/HD Graphics`
 
-Here's Problem #1. If you're unfamiliar with CoreOS, all you need to know is that unlike traditional OS's the CoreOS kernel is
+Here's **Problem #1**. If you're unfamiliar with CoreOS, all you need to know is that unlike traditional OS's the CoreOS kernel is
 continuously updated, similar to how Google Chrome is always kept up-to date. This means that **any local modifications I make to the kernel
 will be completely lost on the next kernel update**.
 
@@ -62,7 +62,7 @@ Here's where we end story time and actually start coding.
 CoreOS is so minimal that it doesn't even have a any compilers or even a package manager installed.
 In fact, it's designed such that all real work takes place inside of containers.
 
-But before we can even do much work towards solving Problem #1, we run into a second issue: **the standard location for storing kernel modules `/lib/modules` is read-only in CoreOS.**
+But before we can even do much work towards solving Problem #1, we run into **Problem #2: the standard location for storing kernel modules `/lib/modules` is read-only in CoreOS.**
 If you think about it, it kind of all makes sense: an OS that auto-updates its kernel needs to ensure that it controls all locations where
 kernel code is loaded from.
 
@@ -115,7 +115,7 @@ curl -L "$url" |
 
 ```
 Now that we've downloaded the developement container image (`coreos_developer_container.bin`) we can create a container based off of it.
-Problem 3 rears its ugly head now: **containers created via `systemd-nspawn` seem to have a diskspace limit of ~3GB.** This can be fixed by
+**Problem #3** rears its ugly head now: **containers created via `systemd-nspawn` seem to have a diskspace limit of ~3GB.** This can be fixed by
 doing a couple of additional volume mounts when starting the container:
 
 ```bash
@@ -284,7 +284,7 @@ Uh oh. Lets look at the logs in `dmesg`
 [83845.721771] drm: Unknown symbol sync_file_create (err 0)
 ```
 
-Looks like we've hit Problem #4, looks like theres some **additional dependencies that we need to enable as modules.**
+Looks like we've hit **Problem #4: like there's some additional dependencies that we need to enable as modules.**
 
 Lets check for `hdmi_vendor_infoframe_init` first. In our case we're building off the linux kernel used by CoreOS, so
 we'll do a search of the source code in the `github.com/coreos/linux` repo.
