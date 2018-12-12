@@ -284,7 +284,7 @@ Uh oh. Lets look at the logs in `dmesg`
 [83845.721771] drm: Unknown symbol sync_file_create (err 0)
 ```
 
-Looks like we've hit **Problem #4: like there's some additional dependencies that we need to enable as modules.**
+Looks like we've hit **Problem #4: there's some additional dependencies that we need to enable as modules.**
 
 Lets check for `hdmi_vendor_infoframe_init` first. In our case we're building off the linux kernel used by CoreOS, so
 we'll do a search of the source code in the `github.com/coreos/linux` repo.
