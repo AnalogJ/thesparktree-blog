@@ -316,7 +316,7 @@ config HDMI
 After looking at the `Kconfig` file and the `Makefile` closely, it seems that there is no configuration available to build `hdmi.c`
 file into a kernel module. This is confirmed when we run `make menuconfig`, press `/` to search, and enter `HDMI`.
 
-![make menuconfig]({{ site.url }}/assets/images/coreos_kernel_module/make_menuconfig.png)
+![make menuconfig]({{ site.url }}/assets/images/coreos/make_menuconfig.png)
 
 Looks like we've hit a dead end.
 
