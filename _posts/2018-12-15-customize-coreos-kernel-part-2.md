@@ -247,6 +247,10 @@ vagrant ssh
 cd  ~/coreos-sdk
 cork update --manifest-url=https://github.com/mediadepot/coreos-manifest.git --manifest-branch=mediadepot --downgrade-replace
 
+./set_shared_user_password.sh 12345
+./setup_board --board 'amd64-usr'
+./build_packages --board 'amd64-usr'
 
 ```
 
+Note the `--board 'amd64-usr'` options specified withe

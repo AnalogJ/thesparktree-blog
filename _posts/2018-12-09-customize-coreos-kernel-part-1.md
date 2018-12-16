@@ -335,6 +335,15 @@ I obviously never got that far.
 
 In Part 2 of this series I'll walk though the steps as I attempt to build a full custom CoreOS kernel.
 
+# Special Thanks
+
+I'd like to give a special thanks to the following people:
+
+- Abylay Ospan
+- David Michael
+- Ayan Halder
+- Mathieu Levallois
+
 # References
 - https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver
 - https://coreos.com/os/docs/latest/kernel-modules.html - Initial instructions for building a Kernel module
