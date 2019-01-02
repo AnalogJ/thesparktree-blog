@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Customize CoreOS Kernel - Part 1 - Kernel Modules'
+title: 'Customize the CoreOS Kernel - Part 1 - Kernel Modules'
 date: '18-12-09T01:19:33-08:00'
 cover: '/assets/images/cover_coreos.png'
 subclass: 'post tag-post'
