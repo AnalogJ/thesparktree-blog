@@ -1,19 +1,15 @@
 version: 2
 
-executors:
-  docker-executor:
-    docker:
-      - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-    working_directory: /tmp/thesparktree-blog
-
 jobs:
   build:
-    executor: docker-executor
+    docker:
+      - image: circleci/ruby:2.3-jessie
+    working_directory: /tmp/thesparktree-blog
     environment:
       NOKOGIRI_USE_SYSTEM_LIBRARIES: true
-      LANG: en_US.UTF-8
-      LANGUAGE: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
     - checkout
     - run: sudo apt-get --reinstall install libept1.4.12
@@ -22,24 +18,23 @@ jobs:
     - run: sudo aptitude -y install libmagickcore-dev
     - run: sudo aptitude -y install libmagickwand-dev
 
-
     # Dependencies
     # Restore the dependency cache
     - restore_cache:
         keys:
         # This branch if available
-        - v1-dep-{{ .Branch }}-
+        - v2-dep-{{ .Branch }}-
         # Default branch if not
-        - v1-dep-src-
+        - v2-dep-src-
         # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
-        - v1-dep-
+        - v2-dep-
 
     - run: 'bundle check --path=vendor/bundle || bundle install --path=vendor/bundle --jobs=4 --retry=3 '
-    - run: bundle exec jekyll build --destination ../dist
+    - run: bundle exec jekyll build --destination dist
 
     # Save dependency cache
     - save_cache:
-        key: v1-dep-{{ .Branch }}-{{ epoch }}
+        key: v2-dep-{{ .Branch }}-{{ epoch }}
         paths:
         # This is a broad list of cache paths to include many possible development environments
         # You can probably delete some of these entries
@@ -48,6 +43,8 @@ jobs:
     #   This would typically be a build job when using workflows, possibly combined with build
     # This is based on your 1.0 configuration file or project settings
     - run: bundle exec htmlproofer dist --check-html --disable-external --assume-extension
+    - store_artifacts:
+        path: /tmp/thesparktree-blog/dist
 
     - persist_to_workspace:
         # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
@@ -58,11 +55,12 @@ jobs:
           - dist
 
   deploy:
-    executor: docker-executor
+    docker:
+      - image: circleci/ruby:2.3-jessie
     environment:
-      LANG: en_US.UTF-8
-      LANGUAGE: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
 
     steps:
     - attach_workspace:
@@ -89,6 +87,7 @@ workflows:
       - deploy:
           requires:
             - build
-          branches:
-            only:
-              - src
+          filters:
+            branches:
+              only:
+                - src
