@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'Customize CoreOS Kernel - Part 1 - Kernel Modules'
+title: 'Customize the CoreOS Kernel - Part 1 - Kernel Modules'
 date: '18-12-09T01:19:33-08:00'
 cover: '/assets/images/cover_coreos.png'
 subclass: 'post tag-post'
@@ -316,7 +316,7 @@ config HDMI
 After looking at the `Kconfig` file and the `Makefile` closely, it seems that there is no configuration available to build `hdmi.c`
 file into a kernel module. This is confirmed when we run `make menuconfig`, press `/` to search, and enter `HDMI`.
 
-![make menuconfig]({{ site.url }}/assets/images/coreos_kernel_module/make_menuconfig.png)
+![make menuconfig]({{ site.url }}/assets/images/coreos/make_menuconfig.png)
 
 Looks like we've hit a dead end.
 
@@ -334,6 +334,15 @@ I obviously never got that far.
 
 
 In Part 2 of this series I'll walk though the steps as I attempt to build a full custom CoreOS kernel.
+
+# Special Thanks
+
+I'd like to give a special thanks to the following people:
+
+- Abylay Ospan
+- David Michael
+- Ayan Halder
+- Mathieu Levallois
 
 # References
 - https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver
