@@ -7,9 +7,9 @@ jobs:
     working_directory: /tmp/thesparktree-blog
     environment:
       NOKOGIRI_USE_SYSTEM_LIBRARIES: true
-      LANG: en_US.UTF-8
-      LANGUAGE: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
     - checkout
     - run: sudo apt-get --reinstall install libept1.4.12
@@ -17,7 +17,6 @@ jobs:
     - run: sudo aptitude -y install imagemagick
     - run: sudo aptitude -y install libmagickcore-dev
     - run: sudo aptitude -y install libmagickwand-dev
-    - run: sudo locale-gen en_US.UTF-8 && sudo locale-gen en en_US en_US.UTF-8 && sudo dpkg-reconfigure locales
 
     # Dependencies
     # Restore the dependency cache
@@ -57,9 +56,9 @@ jobs:
     docker:
       - image: circleci/ruby:2.6-jessie
     environment:
-      LANG: en_US.UTF-8
-      LANGUAGE: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
+      LANG: C.UTF-8
+      LANGUAGE: C.UTF-8
+      LC_ALL: C.UTF-8
 
     steps:
     - attach_workspace:
