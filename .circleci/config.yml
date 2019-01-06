@@ -54,7 +54,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/ruby:2.6-jessie
+      - image: circleci/ruby:2.3-jessie
     environment:
       LANG: C.UTF-8
       LANGUAGE: C.UTF-8
