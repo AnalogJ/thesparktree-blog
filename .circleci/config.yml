@@ -71,12 +71,10 @@ jobs:
     - deploy:
         name: "Deploy to GH-Pages"
         command: |
-          ls -alt
-          pwd
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 
           git config --global user.email circleci@circleci
           git config --global user.name CircleCI
-          git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
           cd dist
           git init
           git checkout -b master
