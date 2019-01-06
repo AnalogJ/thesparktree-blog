@@ -89,6 +89,7 @@ workflows:
       - deploy:
           requires:
             - build
-          branches:
-            only:
-              - src
+          filters:
+            branches:
+              only:
+                - src
