@@ -30,7 +30,7 @@ jobs:
         - v2-dep-
 
     - run: 'bundle check --path=vendor/bundle || bundle install --path=vendor/bundle --jobs=4 --retry=3 '
-    - run: bundle exec jekyll build --destination ../dist
+    - run: bundle exec jekyll build --destination dist
 
     # Save dependency cache
     - save_cache:
@@ -43,6 +43,8 @@ jobs:
     #   This would typically be a build job when using workflows, possibly combined with build
     # This is based on your 1.0 configuration file or project settings
     - run: bundle exec htmlproofer dist --check-html --disable-external --assume-extension
+    - store_artifacts:
+        path: /tmp/thesparktree-blog/dist
 
     - persist_to_workspace:
         # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
