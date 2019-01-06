@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/ruby:2.6-stretch
+      - image: circleci/ruby:2.6-jessie
     working_directory: /tmp/thesparktree-blog
     environment:
       NOKOGIRI_USE_SYSTEM_LIBRARIES: true
@@ -55,7 +55,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/ruby:2.6-stretch
+      - image: circleci/ruby:2.6-jessie
     environment:
       LANG: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
