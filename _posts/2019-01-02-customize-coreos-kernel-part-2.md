@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Customize the CoreOS Kernel - Part 2 - Kernel SDK'
-date: '10-01-01T01:19:33-08:00'
+date: '19-01-02T01:19:33-08:00'
 cover: '/assets/images/cover_coreos.png'
 subclass: 'post tag-post'
 tags:
