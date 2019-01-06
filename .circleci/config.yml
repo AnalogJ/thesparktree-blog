@@ -39,6 +39,7 @@ jobs:
         # This is a broad list of cache paths to include many possible development environments
         # You can probably delete some of these entries
         - ~/.bundle
+        - vendor/bundle
     # Test
     #   This would typically be a build job when using workflows, possibly combined with build
     # This is based on your 1.0 configuration file or project settings
@@ -57,6 +58,7 @@ jobs:
   deploy:
     docker:
       - image: circleci/ruby:2.3-jessie
+    working_directory: /tmp/thesparktree-blog
     environment:
       LANG: C.UTF-8
       LANGUAGE: C.UTF-8
@@ -69,6 +71,9 @@ jobs:
     - deploy:
         name: "Deploy to GH-Pages"
         command: |
+          ls -alt
+          pwd
+
           git config --global user.email circleci@circleci
           git config --global user.name CircleCI
           cd dist
