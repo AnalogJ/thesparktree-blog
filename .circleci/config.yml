@@ -1,15 +1,10 @@
-version: 2.1
-
-executors:
-  docker-executor:
-    docker:
-      - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-    working_directory: /tmp/thesparktree-blog
+version: 2
 
 jobs:
   build:
-    executor: docker-executor
-    environment:
+    docker:
+      - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+    working_directory: /tmp/thesparktree-blog    environment:
       NOKOGIRI_USE_SYSTEM_LIBRARIES: true
       LANG: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
@@ -58,7 +53,8 @@ jobs:
           - dist
 
   deploy:
-    executor: docker-executor
+    docker:
+      - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
     environment:
       LANG: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
