@@ -4,7 +4,8 @@ jobs:
   build:
     docker:
       - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-    working_directory: /tmp/thesparktree-blog    environment:
+    working_directory: /tmp/thesparktree-blog
+    environment:
       NOKOGIRI_USE_SYSTEM_LIBRARIES: true
       LANG: en_US.UTF-8
       LANGUAGE: en_US.UTF-8
