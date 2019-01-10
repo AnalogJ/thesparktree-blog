@@ -383,6 +383,8 @@ We'll do that in the next section:
 # Building our customized CoreOS Image
 Now we're finally ready to build our custom CoreOS images, lets look at our updated `Vagrantfile` and `provisioner.sh`
 
+<div class="github-widget" data-repo="mediadepot/vagrant-coreos-kernel-builder"></div>
+
 ## Vagrantfile
 
 ```bash
@@ -526,9 +528,9 @@ cat ignition.json
 }
 ```
 
-You'll want to ensure that you replace my ssh publick in `sshAuthorizedKeys` with yours (check `~/.ssh/id_rsa.pub`)
+You'll want to ensure that you replace my ssh public key in `sshAuthorizedKeys` with yours (check `~/.ssh/id_rsa.pub`)
 
-After that we'll want to place it somewhere accessible to the server we'll be installing CoreOS on. https://transfer.sh/ works in a pinch.
+After that we'll want to place it somewhere accessible to the server we'll be installing CoreOS on. [https://transfer.sh/](https://transfer.sh/) works in a pinch.
 
 `curl --upload-file ./ignition.json https://transfer.sh/ignition.json`
 
@@ -562,7 +564,7 @@ the `ignition.json` file we specified will be used to configure the Server, allo
 
 ## Validate Custom CoreOS install
 
-After we ssh onto our server (`ssh core@{{SERVER_IP}}`) we can verify that our custom CoreOS image has been installed:
+After we ssh onto our server (`ssh core@{% raw  %}{{SERVER_IP}}{% endraw %}`) we can verify that our custom CoreOS image has been installed:
 ```
 ## SERVER ##
 
