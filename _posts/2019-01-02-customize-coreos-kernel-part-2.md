@@ -132,10 +132,12 @@ The first thing we're going to do is fork and clone repo so that we can customiz
 I forked `coreos/manifest` to [mediadepot/coreos-manifest](https://github.com/mediadepot/coreos-manifest) and then ran
 `git clone git@github.com:mediadepot/coreos-manifest.git`
 
-You may have noticed that there's a ton of branches in this repo. These branches are all prefixed with `build-`. These `build-` branches
-are how CoreOS manages versioning and directly matches the major version specified in https://coreos.com/releases/
+<div class="github-widget" data-repo="mediadepot/coreos-manifest"></div>
 
-![build branches]({{ site.url }}/assets/images/coreos/build_branches.png]
+You may have noticed that there's a ton of branches in this repo. These branches are all prefixed with `build-`. These `build-` branches
+are how CoreOS manages versioning and directly matches the major version specified in [https://coreos.com/releases/](https://coreos.com/releases/)
+
+![build branches]({{ site.url }}/assets/images/coreos/build_branches.png)
 
 In my case I want to build my custom image off of the current CoreOS Stable version which is `1911.4.0`.
 
@@ -232,6 +234,8 @@ Before we go further, lets list all the changes we need to make to the CoreOS so
 ## Custom Kernel
 Let's start by making changes to the `coreos-overlay` since that's where the linux kernel customization code for CoreOS exists.
 
+<div class="github-widget" data-repo="mediadepot/coreos-overlay"></div>
+
 The file containing the kernel config options for our CoreOS build can be found in
 [sys-kernel/coreos-modules/files/amd64_defconfig-4.14](https://github.com/mediadepot/coreos-overlay/blob/mediadepot/sys-kernel/coreos-modules/files/amd64_defconfig-4.14)
 
@@ -315,6 +319,8 @@ Not so fast.
 **While we now have a bootable `.iso` that uses our custom kernel, the `coreos-install` script in the `.iso` actually
 downloads a vanilla `.bin` file from the public CoreOS mirror and installs that `.bin` to the host machine.**
 
+<div class="github-widget" data-repo="mediadepot/coreos-init"></div>
+
 We'll need open our fork of `coreos/init`: [`mediadepot/coreos-init`](https://github.com/mediadepot/coreos-init) and update the [`coreos-install`](https://github.com/mediadepot/coreos-init/blob/mediadepot/bin/coreos-install) script:
 
 - to point to our custom BASE_URL (where we'll be hosting our images)
@@ -328,6 +334,8 @@ This next change is optional, but was a nice indicator to verify that the custom
 as intended. We'll modify our `coreos-scripts` repo, changing the OS_NAME from "Container Linux by CoreOS" to
 "MediaDepot CoreOS". This simple change will allow us to verify that our customized image (with our kernel changes)
 was correctly installed on our server.
+
+<div class="github-widget" data-repo="mediadepot/coreos-scripts"></div>
 
 We'll make this change in `build_library/set_lsb_release`
 
