@@ -24,7 +24,7 @@ if you want to follow in my footsteps.
 
 This series will be broken up into multiple parts
 
-- Part 1 - Hardware
+- **Part 1 - Hardware**
 - Part 2 - Build Log
 - Part 3 - MediaDepot/CoreOS Configuration
 - Part 4 - Application Docker Containers
@@ -38,26 +38,24 @@ alternatives I explored and compromised I had to consider.
 
 Since most of you just care about the part list and the price, lets get that out of the way first:
 
-[PCPartPicker part list](https://pcpartpicker.com/list/rd2mpG) / [Price breakdown by merchant](https://pcpartpicker.com/list/rd2mpG/by_merchant/)
-
 Type|Item|Price
 :----|:----|:----
-**CPU** | [Intel - Xeon E3-1275 V6 3.8 GHz Quad-Core Processor](https://pcpartpicker.com/product/QncMnQ/intel-xeon-e3-1275-v6-38ghz-quad-core-processor-bx80677e31275v6) | $349.99 @ SuperBiiz
-**CPU Cooler** | [Noctua - NH-L9i 33.84 CFM CPU Cooler](https://pcpartpicker.com/product/xxphP6/noctua-cpu-cooler-nhl9i) | $39.95 @ Amazon
-**Motherboard** | [Supermicro - X11SSL-CF Micro ATX LGA1151 Motherboard](https://pcpartpicker.com/product/JxH48d/supermicro-x11ssl-cf-micro-atx-lga1151-motherboard-x11ssl-cf) | $275.00
+**CPU** | [Intel - Xeon E3-1275 V6 3.8 GHz Quad-Core Processor](https://amzn.to/2snR6Bd) | $367.97 
+**CPU Cooler** | [Noctua - NH-L9i 33.84 CFM CPU Cooler](https://amzn.to/2Md8P7z) | $39.95 
+**Motherboard** | [Supermicro - X11SSL-CF Micro ATX LGA1151 Motherboard](https://amzn.to/2RPHNs8) | $275.00
 **Memory** | [Crucial - 32 GB (2 x 16 GB) DDR4-2400 Memory](https://pcpartpicker.com/product/LXDzK8/crucial-32gb-2-x-16gb-ddr4-2400-memory-ct9029050) | $380.00
 **Power** | [Seasonic SS-350M1U Seasonic Power Supply SS-350M1U EPS 1U ATX12V v23.1 & EPS12V 80PLUS 350W Brown Box](https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box) | $80.00
-**Case**| U-NAS NSC-810A Server Chassis| $245.00
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://pcpartpicker.com/product/zZKcCJ/western-digital-red-8tb-35-5400rpm-internal-hard-drive-wd80efax) | $249.89 @ OutletPC
-**Video Card** | [PNY - Quadro P2000 5 GB Video Card](https://pcpartpicker.com/product/x4bkcf/pny-quadro-p2000-5gb-video-card-vcqp2000-pb) | $419.99 @ B&H
-**Other** | [Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet](https://www.amazon.com/Cable-Matters-Internal-SFF-8643-Breakout/dp/B01BW1U2L2) | $17.99 @ Amazon
-**Other** | [Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)](https://pcpartpicker.com/product/z8bwrH/clovertale-braided-atx-sleeved-cable-extension-kit-for-power-supply-cable-kit-psu-connectors-24-pin-8-pin-6-pin-4-4-pin-6-pack-with-reusable-fastening-cable-ties-10-pack-redblack) | $26.99 @ Amazon
-**Other** | [EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)](https://pcpartpicker.com/product/JPrmP6/emozny-dupont-wire-kit-male-to-malefemaleto-female-male-to-female-pin-headers-jumper-caps-kit-standard) | $9.98 @ Amazon
+**Case**| [U-NAS NSC-810A Server Chassis](http://www.u-nas.com/xcart/product.php?productid=17640) | $245.00
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Video Card** | [PNY - Quadro P2000 5 GB Video Card](https://amzn.to/2D6dKUI) | $425.00
+**Other** | [Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet](https://amzn.to/2CibYyh) | $17.99 
+**Other** | [Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)](https://amzn.to/2D63ITt) | $26.99
+**Other** | [EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)](https://amzn.to/2VLMX7n) | $9.98
  | **Total** | **$3338.23**
 
 
@@ -76,11 +74,11 @@ In my case, I wanted the following:
 - look more like an appliance than a computer tower
 - have the smallest footprint possible.
 
-I decided to go with the NSC-810A by U-NAS. It's a bit on the expensive side when it comes to a case, but it provides me with the room to use a
+I decided to go with the [NSC-810A by U-NAS](http://www.u-nas.com/xcart/product.php?productid=17640). It's a bit on the expensive side when it comes to a case, but it provides me with the room to use a
 micro-ATX motherboard, while still supporting 8 hot-swappable hard drives in a small footprint. And it doesn't look that bad either,
 which is important for a server that's sitting on my shelf, rather than a server rack in the basement.
 
-<<IMAGE OF CASE HERE>>
+![nsc-810a]({{ site.url }}/assets/images/nas/unas-nsc-810A.jpg)
 
 | Specification | Value |
 | --- | --- |
@@ -122,16 +120,15 @@ Here's a helpful table I put together so I could quickly compare CPU's as they a
 | 7 | 2017-Jan | V6 | Kaby Lake | 1151, 2066 | 
 | 8 | 2017-Oct	| | Coffee Lake	| |
 
-Given these requirements I decided to go with a Xeon V6 processor. Specifically the Xeon E3-1275V6.
+Given these requirements I decided to go with a Xeon V6 processor. Specifically the [Xeon E3-1275V6](https://amzn.to/2snR6Bd).
 
-You might think that the Xeon E3-1275V6 is probably overkill for a simple NAS, and you're not wrong.
+You might think that the Xeon [Xeon E3-1275V6](https://amzn.to/2snR6Bd) is probably overkill for a simple NAS, and you're not wrong.
 The reason I chose is is that my server is not a simple NAS, it'll be running a bunch of applications in parallel 24x7 and I
 wanted the highest multi-core and CPU clock I could get without breaking the bank.
 
 If you're not going to be running as many workloads on your home server as I am feel free to dial back the power (and cost) of your CPU. **However I would stay away from the E3-1220V6 or below as it only has 2 cores vs 4 cores for E3-1230V6 and above**
 
-<<IMAGE OF CPU HERE>>
-
+![xeon e3-1275V6]({{ site.url }}/assets/images/nas/xeon-e3-1275V6.jpg)
 
 | Specification | Value |
 | --- | --- |
@@ -154,11 +151,15 @@ You'll want to consider the applications you're running on your server:
 
 - The rule of thumb for ZFS is 1GB RAM for every 1TB of storage. 
 	- With 8 storage drives you could potentially have 96TB of storage (8*12TB) which is more than the Max RAM.
+- Socket 1151 has been replaced by Socket 2066, so if you want to eventually upgrade to a newer CPU, you wont be able to.  
 
 
 ## CPU Fan
 
-Given that we've selected a small form factor case and a powerful CPU, ventilation and cooling are going to become very important. Noctura is well known in the PC market for their quiet but powerful cooling solutions. They have a CPU fan thats targeted specifically towards small form factor cases, and is compatible with our LGA1151 CPU socket: [NH-L9i](https://noctua.at/en/nh-l9i)
+Given that we've selected a small form factor case and a powerful CPU, ventilation and cooling are going to become very important.
+Noctura is well known in the PC market for their quiet but powerful cooling solutions.
+They have a CPU fan thats targeted specifically towards small form factor cases, and is compatible with our LGA1151 CPU socket:
+[Noctua - NH-L9i](https://amzn.to/2Md8P7z)
 
 Thats not enough though. We'll need to verify that the Thermal Design Power (TDP) of our chosen CPU is compatible with the Noctura fan.
 
@@ -167,7 +168,7 @@ Thats not enough though. We'll need to verify that the Thermal Design Power (TDP
 
 Thankfully Noctura releases TDP guidelines for all their fans, including the [NH-L9i](https://noctua.at/en/nh_l9i_tdp_guidelines). Though our exact CPU model is not listed as compatible, we can see that the fan can handle ~91W TDP from Kaby Lake processors, which higher than our expected TDP of 71W.
 
-<<IMAGE OF CPU COOLER HERE>>
+![noctua nh-l9i]({{ site.url }}/assets/images/nas/noctua-nh-l9i.jpg)
 
 ## Motherboard
 
@@ -194,7 +195,7 @@ If you're looking at Supermicro motherboards I highly recommend the following re
 - [Supermicro Motherboard Matrix](https://www.supermicro.com/support/resources/MB_matrix.php) - compare/filter all Supermicro motherboards
 - [Supermicro Product Naming Conventions](https://www.supermicro.com/products/Product_Naming_Convention/Naming_MBD_Intel_UP.cfm) - helped me decode the motherboard feature just by glancing at model numbers
  
-After comparing features and looking at prices, I settled on the [X11SSL-CF](https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSL-CF.cfm) motherboard by Supermicro.
+After comparing features and looking at prices, I settled on the [X11SSL-CF motherboard by Supermicro](https://amzn.to/2RPHNs8).
 
 Before we dive into why, lets take a look at some other motherboards I considered, but ultimately decided against:
 
@@ -229,7 +230,8 @@ While there are solutions for each of the problems above I went with a no-compro
 | SAS | 2x mini-SAS HD (SFF8643) SAS3 |
 | Remote Management | [IPMI](https://www.supermicro.com/en/solutions/management-software/bmc-resources) |
 
-<<IMAGE OF MOTHERBOARD HERE>>
+![supermicro x11ssl-cf]({{ site.url }}/assets/images/nas/supermicro-x11ssl-cf.jpg)
+
 
 ### Compromises 
 
@@ -263,7 +265,7 @@ When it comes to ECC UDIMM DDR4 RAM, its that last point that's the problem. DDR
 
 I ended up going with Crucial RAM that was compatible on paper, even though it wasn't on the official compatibility list because I wanted to save money and it had been tested working on the same model motherboard. 
 
-# Power Supply (PSU)
+## Power Supply (PSU)
 
 We're looking for a PSU that is:
 
@@ -276,16 +278,17 @@ We're looking for a PSU that is:
 - [80 PLUS Certified](https://www.tomshardware.com/reviews/psu-buying-guide,2916-5.html) - Power efficient since we're running 24x7
 - Quiet (server PSU's are known to be jet-engine loud)
 
-The only real PSU that matches these requirements is the Seasonic SS-300M1U and Seasonic SS-350M1U. I decided to go with the SS-350M1U as I felt the extra power was necessary with my dedicated video card. With just storage drives you may be fine with just the SS-300M1U.
+The only real PSU that matches these requirements is the Seasonic SS-300M1U and Seasonic SS-350M1U. I decided to go with the [SS-350M1U](https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box) as I felt the extra power was necessary with my dedicated video card. With just storage drives you may be fine with just the SS-300M1U.
 
 | Specification | Value |
 | --- | --- |
+| Model | Seasonic SS-350M1U |
 | Wattage | 350W |
 | Efficiency | 80 PLUS |
 | Cabling | Modular |
 [source](http://www2.seasonic.com/product/ss-350-m1u-active-pfc-f0/)
 
-<<IMAGE OF PSU HERE>>
+![seasonic SS-350M1U]({{ site.url }}/assets/images/nas/seasonic-SS-350M1U.png)
 
 ### Compromises
 
@@ -304,11 +307,11 @@ I need a video card that:
 - can handle heavy, long duration usage
 - can fit in a small form factor case
 
-Again, there wasn't much to choose from. The Nvidia P2000 (released 2017) is the first enterprise video card that supports [unlimited concurrent transcodes](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix). Later versions of the video card add additional features while costing significantly more. It's the best cost-effective solution for a transcode heavy server like mine.
+Again, there wasn't much to choose from. The [Nvidia Quadro P2000](https://amzn.to/2D6dKUI)  (released 2017) is the first enterprise video card that supports [unlimited concurrent transcodes](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix). Later versions of the video card add additional features while costing significantly more. It's the best cost-effective solution for a transcode heavy server like mine.
 
 | Specification | Value |
 | --- | --- |
-| Model | P2000 |
+| Model | Nvidia Quadro P2000 |
 | GPU Memory | 5GB | 
 | Interface | PCIe x16 | 
 | Transcodes | Unlimited |
@@ -316,7 +319,7 @@ Again, there wasn't much to choose from. The Nvidia P2000 (released 2017) is the
 | Form Factor | 4.40" H x 7.90" L, Single Slot |
 [source](https://www.pny.com/nvidia-quadro-p2000)
 
-<<IMAGE OF VIDEO CARD>>
+![nvidia quadro p2000]({{ site.url }}/assets/images/nas/nvidia-quadro-p2000.jpeg)
 
 ### Compromises
 
