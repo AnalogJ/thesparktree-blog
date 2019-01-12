@@ -58,7 +58,6 @@ Type|Item|Price
 **Other** | [Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet](https://www.amazon.com/Cable-Matters-Internal-SFF-8643-Breakout/dp/B01BW1U2L2) | $17.99 @ Amazon
 **Other** | [Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)](https://pcpartpicker.com/product/z8bwrH/clovertale-braided-atx-sleeved-cable-extension-kit-for-power-supply-cable-kit-psu-connectors-24-pin-8-pin-6-pin-4-4-pin-6-pack-with-reusable-fastening-cable-ties-10-pack-redblack) | $26.99 @ Amazon
 **Other** | [EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)](https://pcpartpicker.com/product/JPrmP6/emozny-dupont-wire-kit-male-to-malefemaleto-female-male-to-female-pin-headers-jumper-caps-kit-standard) | $9.98 @ Amazon
- | *Prices include shipping, taxes, rebates, and discounts* |
  | **Total** | **$3338.23**
 
 
@@ -314,7 +313,7 @@ Again, there wasn't much to choose from. The Nvidia P2000 (released 2017) is the
 | Interface | PCIe x16 | 
 | Transcodes | Unlimited |
 | Max Power Consumption | 75W |
-| Form Factor | 4.40” H x 7.90” L, Single Slot |
+| Form Factor | 4.40" H x 7.90" L, Single Slot |
 [source](https://www.pny.com/nvidia-quadro-p2000)
 
 <<IMAGE OF VIDEO CARD>>
