@@ -29,7 +29,7 @@ This series will be broken up into multiple parts
 - Part 3 - MediaDepot/CoreOS Configuration
 - Part 4 - Application Docker Containers
 
-This is Part 1, where we'll be talking about the Hardware. Specifically the hardware I chose to build my server, the
+This is **Part 1**, where we'll be talking about the Hardware. Specifically the hardware I chose to build my server, the
 alternatives I explored and compromised I had to consider.
 
 ---
