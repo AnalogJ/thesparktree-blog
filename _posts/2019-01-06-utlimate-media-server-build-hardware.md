@@ -326,3 +326,5 @@ Again, there wasn't much to choose from. The [Nvidia Quadro P2000](https://amzn.
 - requires a PCIe x16 slot (uncommon in micro-ATX motherboards)
 - additional power consumption
 - iGPU is more cost effective for infrequent transcoding usage
+
+## Additional Items
