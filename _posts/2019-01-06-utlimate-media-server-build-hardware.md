@@ -52,11 +52,12 @@ Type|Item|Price
 **Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
 **Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
 **Storage** | [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq) | $250.20
+**Boot Drive** | [Samsung 500GB 860 EVO 2.5" SSD](https://amzn.to/2VW45Y7) | $82.99
 **Video Card** | [PNY - Quadro P2000 5 GB Video Card](https://amzn.to/2D6dKUI) | $425.00
 **Other** | [Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet](https://amzn.to/2CibYyh) | $17.99 
 **Other** | [Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)](https://amzn.to/2D63ITt) | $26.99
 **Other** | [EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)](https://amzn.to/2VLMX7n) | $9.98
- | **Total** | **$3338.23**
+ | **Total** | **$3421.22**
 
 
 Yeah, you read that right, ~3k for my ultimate media server, and thats using server grade hardware thats already 2 years old. This is an expensive hobby.
@@ -327,4 +328,72 @@ Again, there wasn't much to choose from. The [Nvidia Quadro P2000](https://amzn.
 - additional power consumption
 - iGPU is more cost effective for infrequent transcoding usage
 
-## Additional Items
+## Boot Drive
+
+Here's what I considered when choosing my boot drive:
+
+- a 2.5" drive that mounts in the NSC-810A boot drive bay
+- has fast I/O as I'll be running multiple docker containers & applications on my server concurrently
+- should be atleast 300GB large, as the boot drive will act like a cache drive for all my applications (some of which are media heavy like Plex) and will be the primary drive for new downloads (until the downloads are complete and moved to a storage drive automatically)
+- S.M.A.R.T capable so that I can monitor the health of the drive using automated tools. 
+- Low power usage 
+ 
+I ended up going with a  [Samsung 500GB 860 EVO 2.5" SSD](https://amzn.to/2VW45Y7) drive as it checked off all of the boxes. 
+
+| Specification | Value |
+| --- | --- |
+| Model | Samsung 500GB 860 EVO |
+| Capacity | 500GB | 
+| Form Factor | 2.5" | 
+| Max Seq Read | Up to 550 MB/s |
+| Max Seq Write | Up to 520 MB/s	 |
+| NAND Type | Samsung 64-Layer V-NAND |
+| S.M.A.R.T. Support | Yes |
+| Max Power Consumption | 4.0W |
+[source](https://www.samsung.com/us/computing/memory-storage/solid-state-drives/ssd-860-evo-2-5--sata-iii-500gb-mz-76e500b-am/)
+
+![samsung 860 evo]({{ site.url }}/assets/images/nas/samsung-500gb-evo-860.jpg)
+
+
+### Compromises
+- The Samsung 860 EVO is a TLC NAND type drive:
+
+	> Storing 3 bits per cell, TLC flash is the cheapest form of flash to manufacture. The biggest disadvantage to this type of flash is that it is only suitable for consumer usage, and would not be able to meet the standards for industrial use. Read/write life cycles are considerably shorter at 3,000 to 5,000 cycles per cell.	 
+	[SLC, MLC, TLC](https://www.mydigitaldiscount.com/everything-you-need-to-know-about-slc-mlc-and-tlc-nand-flash.html)
+
+While this concerning, I've mitigated the issue with the following:
+- The boot drive contains very little important data, all completed downloads and persistent data is automatically moved off onto the storage drives
+- Application data is backed up into the cloud using `duplicati`.
+- S.M.A.R.T will notify me when my drive begins to fail
+- The drive is incredibly cheap for the performance it provides. 
+
+
+## Storage
+
+Storage one of the most important areas of our built, but its also one of the most flexible. 
+Our server is designed to use JBOD (Just-a-bunch-of-disks) meaning we can add storage as necessary, and our disks can be of varying sizes (unlike RAID).
+
+However, even with this flexibility, there are a couple of things we're looking for:
+
+- S.M.A.R.T support to ensure that we can monitor the health of our drives
+- Read speed performance
+- Good price to GB ratio
+- NAS type storage drives, power efficient
+- Large cache 
+
+I went with the [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](https://amzn.to/2SNujdq). 
+
+| Specification | Value |
+| --- | --- |
+| Model | Western Digital - Red |
+| Capacity | 8TB | 
+| Cache | 256MB | 
+| RPM | 5400 |
+| S.M.A.R.T. Support | Yes |
+[source](https://www.wd.com/products/internal-storage/wd-red.html)
+
+![wd nas red]({{ site.url }}/assets/images/nas/wd-nas-red-8tb.jpg)
+
+
+### Compromises
+- You can also [shuck white label versions of this drive from EasyStore 8TB](https://imgur.com/gallery/IsZxx)
