@@ -15,6 +15,8 @@ tags:
 navigation: True
 logo: '/assets/logo.png'
 categories: 'analogj'
+redirect_from:
+  - /utlimate-media-server-build-hardware
 ---
 
 I've referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
