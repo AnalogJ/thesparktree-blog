@@ -79,7 +79,7 @@ I decided to go with the [NSC-810A by U-NAS](http://www.u-nas.com/xcart/product.
 micro-ATX motherboard, while still supporting 8 hot-swappable hard drives in a small footprint. And it doesn't look that bad either,
 which is important for a server that's sitting on my shelf, rather than a server rack in the basement.
 
-![nsc-810a]({{ site.url }}/assets/images/nas/unas-nsc-810A.jpg)
+<img src="{{ site.url }}/assets/images/nas/unas-nsc-810A.jpg" alt="nsc-810a" style="max-height: 600px;"/>
 
 | Specification | Value |
 | --- | --- |
@@ -90,6 +90,7 @@ which is important for a server that's sitting on my shelf, rather than a server
 | PCIe Slots | 2x |
 | Power Supply Form Factor | 1U Flex |
 | Dimensions(L x W x H) | 31.5cm x 27.5cm x 19.7cm |
+
 [source](http://www.u-nas.com/xcart/product.php?productid=17640)
 
 ### Compromises
@@ -129,7 +130,7 @@ wanted the highest multi-core and CPU clock I could get without breaking the ban
 
 If you're not going to be running as many workloads on your home server as I am feel free to dial back the power (and cost) of your CPU. **However I would stay away from the E3-1220V6 or below as it only has 2 cores vs 4 cores for E3-1230V6 and above**
 
-![xeon e3-1275V6]({{ site.url }}/assets/images/nas/xeon-e3-1275V6.jpg)
+<img src="{{ site.url }}/assets/images/nas/xeon-e3-1275V6.jpg" alt="xeon e3-1275V6" style="max-height: 600px;"/>
 
 | Specification | Value |
 | --- | --- |
@@ -169,7 +170,8 @@ Thats not enough though. We'll need to verify that the Thermal Design Power (TDP
 
 Thankfully Noctura releases TDP guidelines for all their fans, including the [NH-L9i](https://noctua.at/en/nh_l9i_tdp_guidelines). Though our exact CPU model is not listed as compatible, we can see that the fan can handle ~91W TDP from Kaby Lake processors, which higher than our expected TDP of 71W.
 
-![noctua nh-l9i]({{ site.url }}/assets/images/nas/noctua-nh-l9i.jpg)
+<img src="{{ site.url }}/assets/images/nas/noctua-nh-l9i.jpg" alt="noctua nh-l9i" style="max-height: 600px;"/>
+
 
 ## Motherboard
 
@@ -231,7 +233,7 @@ While there are solutions for each of the problems above I went with a no-compro
 | SAS | 2x mini-SAS HD (SFF8643) SAS3 |
 | Remote Management | [IPMI](https://www.supermicro.com/en/solutions/management-software/bmc-resources) |
 
-![supermicro x11ssl-cf]({{ site.url }}/assets/images/nas/supermicro-x11ssl-cf.jpg)
+<img src="{{ site.url }}/assets/images/nas/supermicro-x11ssl-cf.jpg" alt="supermicro x11ssl-cf" style="max-height: 600px;"/>
 
 
 ### Compromises 
@@ -287,9 +289,11 @@ The only real PSU that matches these requirements is the Seasonic SS-300M1U and 
 | Wattage | 350W |
 | Efficiency | 80 PLUS |
 | Cabling | Modular |
+
 [source](http://www2.seasonic.com/product/ss-350-m1u-active-pfc-f0/)
 
-![seasonic SS-350M1U]({{ site.url }}/assets/images/nas/seasonic-SS-350M1U.png)
+<img src="{{ site.url }}/assets/images/nas/seasonic-SS-350M1U.png" alt="seasonic SS-350M1U" style="max-height: 600px;"/>
+
 
 ### Compromises
 
@@ -318,9 +322,11 @@ Again, there wasn't much to choose from. The [Nvidia Quadro P2000](https://amzn.
 | Transcodes | Unlimited |
 | Max Power Consumption | 75W |
 | Form Factor | 4.40" H x 7.90" L, Single Slot |
+
 [source](https://www.pny.com/nvidia-quadro-p2000)
 
-![nvidia quadro p2000]({{ site.url }}/assets/images/nas/nvidia-quadro-p2000.jpeg)
+<img src="{{ site.url }}/assets/images/nas/nvidia-quadro-p2000.jpeg" alt="nvidia quadro p2000" style="max-height: 600px;"/>
+
 
 ### Compromises
 
@@ -350,9 +356,10 @@ I ended up going with a  [Samsung 500GB 860 EVO 2.5" SSD](https://amzn.to/2VW45Y
 | NAND Type | Samsung 64-Layer V-NAND |
 | S.M.A.R.T. Support | Yes |
 | Max Power Consumption | 4.0W |
+
 [source](https://www.samsung.com/us/computing/memory-storage/solid-state-drives/ssd-860-evo-2-5--sata-iii-500gb-mz-76e500b-am/)
 
-![samsung 860 evo]({{ site.url }}/assets/images/nas/samsung-500gb-evo-860.jpg)
+<img src="{{ site.url }}/assets/images/nas/samsung-500gb-evo-860.jpg" alt="samsung 860 evo" style="max-height: 600px;"/>
 
 
 ### Compromises
@@ -390,10 +397,10 @@ I went with the [Western Digital - Red 8 TB 3.5" 5400RPM Internal Hard Drive](ht
 | Cache | 256MB | 
 | RPM | 5400 |
 | S.M.A.R.T. Support | Yes |
+
 [source](https://www.wd.com/products/internal-storage/wd-red.html)
 
-![wd nas red]({{ site.url }}/assets/images/nas/wd-nas-red-8tb.jpg)
-
+<img src="{{ site.url }}/assets/images/nas/wd-nas-red-8tb.jpg" alt="wd nas red" style="max-height: 600px;"/>
 
 ### Compromises
 - You can also [shuck white label versions of this drive from EasyStore 8TB](https://imgur.com/gallery/IsZxx)
