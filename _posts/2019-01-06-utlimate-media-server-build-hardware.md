@@ -36,7 +36,7 @@ alternatives I explored and compromised I had to consider.
 
 # Hardware
 
-Since most of you just care about the part list and the price, lets get that out of the way first (note, **affiliate links):
+Since most of you just care about the part list and the price, lets get that out of the way first (note, **affiliate links**):
 
 Type|Item|Price
 :----|:----|:----
