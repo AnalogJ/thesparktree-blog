@@ -296,6 +296,7 @@ The only real PSU that matches these requirements is the Seasonic SS-300M1U and 
 - It seems that the SS-300M1U and SS-350M1U PSU's are end-of-life and are no longer manufactured. Unfortunately I was unable to find a replacement, so I purchased mine used on Ebay.
 - It does not have an 8-pin power connector, only a 4-pin. That was seemingly ok with my motherboard, but YMMV.
 
+<a id="#VideoCard"/>
 ## Video Card
 While a video card is optional for most servers, I'm building a dedicated streaming/transcoding server for Plex and the iGPU just isn't enough. 
 
