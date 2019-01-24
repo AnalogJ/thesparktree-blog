@@ -254,7 +254,7 @@ While this motherboard works great for my requirements, you should pay attention
 - Supermicro motherboards with an onboard SAS controller is more expensive, look at LSI HBA controller cards if you have room.
 
 
-# Memory (RAM)
+## Memory (RAM)
 Our options for RAM are limited by our motherboard and CPU:
 
 - 64GB max
@@ -303,6 +303,7 @@ The only real PSU that matches these requirements is the Seasonic SS-300M1U and 
 - It does not have an 8-pin power connector, only a 4-pin. That was seemingly ok with my motherboard, but YMMV.
 
 ## Video Card
+
 While a video card is optional for most servers, I'm building a dedicated streaming/transcoding server for Plex and the iGPU just isn't enough. 
 
 I need a video card that:
