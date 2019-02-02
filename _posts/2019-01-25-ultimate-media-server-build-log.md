@@ -52,7 +52,7 @@ After that I started by unboxing the U-NAS NSC-810A box
 The footprint of the new server vs the old was very similar, with the NSC-810A being almost unnoticeably larger, while supporting
 micro-ATX motherboards.
 
-<img src="{{ site.url }}/assets/images/nas-build/800vs810A.jpg" alt="" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/800vs810A.jpg" alt="800 vs 810A" style="max-height: 500px;"/>
 <small>credit to [nev_neo](https://forums.servethehome.com/index.php?members/nev_neo.1731/) from [serve the home](https://forums.servethehome.com/index.php?threads/u-nas-nsc-810a-matx-chassis.12897/page-6#post-147716)</small>
 
 Now that I had the NSC-810A out, it was time to tear it down. I wanted to replace the stock 120mm case fans with some
@@ -66,23 +66,23 @@ quieter cooling fans, and replace the provided thin SATA cables with my SAS-SATA
 
 After the case teardown, I got to work unboxing my Supermicro X11SSL-CF motherboard, Xeon E3-1275 and 64GB of DDR4 ECC RAM.
 
-<img src="{{ site.url }}/assets/images/nas-build/motherboard.jpg" alt="" style="max-height: 500px;"/>
-<img src="{{ site.url }}/assets/images/nas-build/ram.jpg" alt="" style="max-height: 500px;"/>
-<img src="{{ site.url }}/assets/images/nas-build/cpu.jpg" alt="" style="max-height: 500px;"/>
-<img src="{{ site.url }}/assets/images/nas-build/motherboard_ram_slot_order.png" alt="" style="max-height: 500px;"/>
-<img src="{{ site.url }}/assets/images/nas-build/motherboard_mounted.jpg" alt="" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard.jpg" alt="motherbaord" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/ram.jpg" alt="ram" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/cpu.jpg" alt="cpu" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard_ram_slot_order.png" alt="ram" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard_mounted.jpg" alt="mounted" style="max-height: 500px;"/>
 
 This is actually where I noticed that the SAS port was not what I was expecting.
 The Supermicro X11SSL-CF has a mini-SAS HD port (SFF-8644) rather than a mini-SAS port (SFF-8088), something not mentioned on
 the Supermicro spec website.
 
-<img src="{{ site.url }}/assets/images/nas-build/motherboard_minisas_hd.jpg" alt="" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard_minisas_hd.jpg" alt="minisas hd" style="max-height: 500px;"/>
 
 Pre-case-install, I wanted to test out the hardware, so I wired up the power supply to the motheboard, and attached a linux live-USB.
 
 During this process, I noticed the next oddity with my hardware, the 8-pin power supply.
 
-<img src="{{ site.url }}/assets/images/nas-build/motherboard_8pin.jpg" alt="" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard_8pin.jpg" alt="8pin" style="max-height: 500px;"/>
 
 Unfortunately my Seasonic SS-350M1U does not have an 8pin motherboard power supply cable, only a 4pin.
 After taking a look at the Supermicro documentation however, it seems that I may be in the clear. In the X11SSL-CF manual,
