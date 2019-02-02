@@ -89,7 +89,7 @@ After taking a look at the Supermicro documentation however, it seems that I may
 the secondary power supply pin-diagram states that 4 of the 8 pins are set to ground, and are unnecessary, saving me from
 purchasing a molex-4pin power supply adapter.
 
-<img src="{{ site.url }}/assets/images/nas-build/motherboard_8pin_manual.png" alt="" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/nas-build/motherboard_8pin_manual.png" alt="manual" style="max-height: 500px;"/>
 
 After verifying that the CPU/Motherboard/RAM combo was working, it was time to wire up the case.
 
