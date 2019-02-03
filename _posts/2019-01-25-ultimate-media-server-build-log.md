@@ -99,6 +99,10 @@ After verifying that the CPU/Motherboard/RAM combo was working, it was time to w
 <img src="{{ site.url }}/assets/images/nas-build/wiring_4.jpg" alt="wiring" style="max-height: 500px;"/>
 <img src="{{ site.url }}/assets/images/nas-build/wiring_5.jpg" alt="wiring" style="max-height: 500px;"/>
 
+As you can see above, my Nvidia Quadro P2000 was uncomfortably close to the top of the case, and I was concerned that it may
+short against the top of the case. The NSC-810A comes with a handy plastic shield, which I ended up cutting and placing on the
+video card as added protection.
+
 Finally, I started loading in my hard drives
 
 <img src="{{ site.url }}/assets/images/nas-build/harddrive.jpg" alt="harddrive" style="max-height: 500px;"/>
