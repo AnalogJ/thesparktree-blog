@@ -26,8 +26,8 @@ if you want to follow in my footsteps.
 
 This series will be broken up into multiple parts
 
-- **Part 1 - Hardware**
-- Part 2 - Build Log
+- **[Part 1 - Hardware](/ultimate-media-server-build-hardware)**
+- [Part 2 - Build Log(/ultimate-media-server-build-log)
 - Part 3 - MediaDepot/CoreOS Configuration
 - Part 4 - Application Docker Containers
 
