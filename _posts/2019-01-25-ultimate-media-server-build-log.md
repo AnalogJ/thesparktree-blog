@@ -110,3 +110,47 @@ Finally, I started loading in my hard drives
 Here's the final product.
 
 <img src="{{ site.url }}/assets/images/nas-build/complete.jpg" alt="harddrive" style="max-height: 500px;"/>
+
+## IPMI Configuration
+
+After closing up the case and placing the server in its final location, I began noticing the case fans (and CPU fans) were pulsating.
+I did some quick reading and determined that this was due to the fan speed thresholds set on my Supermicro motherboard. Basically
+the Noctua (and Cougar) fans are very quiet, and run at low RPM. This low RPM is below the standard threshold speed set in the motherboard config.
+The motherboard then thinks that the fan has failed, and to compensate it will rev up the remaining fans, at which point the Noctua or Cougar fan
+will speed up as well, and the motherboard will sense it and notify the fans to begin normal operations. Rinse & repeat.
+
+Here's how I fixed this issue.
+
+First I needed to get the IPMI tools installed on my OS. Since I'm running CoreOS, that's a bit more work than normal
+
+### Setup ipmitool on CoreOS
+
+```
+`$ sudo modprobe ipmi_si ipmi_devintf # make sure that ipmi kernel modules are loaded.
+$ toolbox --bind=/dev/ipmi0 # start the CoreOS toolbox container
+$ dnf install ipmitool # install  ipmitool
+$ ipmitool -I open channel info 1 # verify that ipmitool is working
+```
+
+### Set fan thresholds
+
+Now that we have the IPMI tools installed, lets update the fan thresholds:
+
+```
+
+# Noctua - https://noctua.at/en/nh-l9i/specification
+ipmitool sensor thresh FANA lower 300 400 500
+
+# Cougar FAN1
+ipmitool sensor thresh FAN1 lower 400 500 600
+
+#Cougar FAN4
+ipmitool sensor thresh FAN4 lower 400 500 600
+
+```
+
+### Reboot BMC
+
+Next try to reboot BMC by going to IPMI web interface >> Maintenance >> Unit Reset.
+
+
