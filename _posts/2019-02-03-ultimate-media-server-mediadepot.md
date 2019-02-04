@@ -15,7 +15,7 @@ tags:
 navigation: True
 logo: '/assets/logo.png'
 categories: 'analogj'
-published: false
+hidden: true
 ---
 
 I've referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
