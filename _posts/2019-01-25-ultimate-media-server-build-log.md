@@ -139,7 +139,7 @@ Now that we have the IPMI tools installed, lets update the fan thresholds:
 ```
 
 # Noctua - https://noctua.at/en/nh-l9i/specification
-ipmitool sensor thresh FANA lower 300 400 500
+ipmitool sensor thresh FAN3 lower 300 400 500
 
 # Cougar FAN1
 ipmitool sensor thresh FAN1 lower 400 500 600
