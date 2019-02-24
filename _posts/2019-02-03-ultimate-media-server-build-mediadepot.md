@@ -41,7 +41,60 @@ one part of the solution. Software (OS & Applications) determine the functionali
 
 Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.
 
-<blockquote class="imgur-embed-pub" lang="en" data-id="a/VMcMtVY"><a href="//imgur.com/VMcMtVY"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+
+<div id="lightgallery">
+  <a href="{{ site.url }}/assets/images/mediadepot_software/1_heimdall.png">
+      <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/2_portainer.png">
+      <img src="{{ site.url }}/assets/images/mediadepot_software/2_portainer.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/3_filerun.png">
+      <img src="{{ site.url }}/assets/images/mediadepot_software/3_filerun.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/4_duplicati.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/4_duplicati.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/5_tautulli.png">
+      <img src="{{ site.url }}/assets/images/mediadepot_software/5_tautulli.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/6_sickchill.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/6_sickchill.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/8_jackett.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/8_jackett.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/10_plex.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/10_plex.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/11_netdata.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/11_netdata.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/16_app_data.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/16_app_data.png" />
+  </a>
+  <a href="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares.png">
+    <img src="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares.png" />
+  </a>
+</div>
 
 Still interested? Good. Now that we have an idea what the finished product will look like, lets discuss the actual software stack and my requirements.
 
@@ -66,7 +119,7 @@ Given that our goal of building the **"The Ultimate Media Server"** is pretty ha
 The first two items on the list are already done. The hardware chosen in [Part 1](https://blog.thesparktree.com/ultimate-media-server-build-hardware) was only for a single server.
 The headless requirement (**#2**) is solved by the IPMI functionality built into our SuperMicro X11SSL-CF motherboard.
 
-<< IMAGE of IPMI >>
+<img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png" alt="IPMI" style="max-height: 500px;"/>
 
 IPMI provides us with the ability to remotely manage the server, including the ability to see what’s "running" on the server using a virtual display + KVM.
 
@@ -185,7 +238,51 @@ configure DNS on a network by network basis, meaning your custom DNS service wil
 
 ## Installation
 
-If you've been following along so far, you may have noticed a significant lack of code snippets and
+If you've been following along so far (or skipped ahead), you may have noticed a significant lack of code snippets or
+instructions for how to get this all setup.
+
+You're in luck. All the steps required to customize a CoreOS based Home Media Server as I've described are codified in an Ignition project.
+
+<div class="github-widget" data-repo="mediadepot/ignition"></div>
+
+
+If you're not familiar with Ignition, its the official configuration management solution for CoreOS.
+You can take the [configuration I wrote](https://github.com/mediadepot/ignition) and customize it for your needs. In addition the Ignition configuration references each feature
+separately, so you can disable any features that are irrelevant to your installation.
+
+It's all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I'm open to PR's.
+
+With that all out of the way, lets get into the installation steps.
+
+1. Download bootable CoreOS image from https://coreos.com/os/docs/latest/booting-with-iso.html
+2. Create bootable USB/CD with contents of CoreOS image
+3. Start server and boot from CoreOS USB/CD.
+4. Determine the OS installation disk
+    ```bash
+    sudo fdisk -l
+
+    # note, the boot disk will probably be /dev/loop0
+    ```
+5. Copy the ignition remote config bootstrap file to the file system
+    ```bash
+    curl -O https://mediadepot.github.io/ignition/ignition-remote.json
+    ```
+6. Begin CoreOS installation on specified disk, **NOTE: specified disk will be reformatted**
+    ```bash
+    sudo coreos-install -d /dev/sda -C stable -i ignition-remote.json
+    ```
+
+7. On installation completion, remove bootable USB/CD
+8. Restart server
+9. Wait for CoreOS to start and `cloud-init` process to complete.
+10. Go to `http://admin.depot.lan` to see Portainer dashboard and begin setup.
+
+
+
+
+
+
+
 
 
 I've been drinking the Docker kool-aid for years, and as a configuration management & deployment tool it's only gotten better and more popular over the years.

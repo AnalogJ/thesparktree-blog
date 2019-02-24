@@ -21,7 +21,16 @@
         });
 
         GHRepos.create('.github-widget')
+
+        $('.lightgallery').lightGallery({
+            thumbnail:true,
+            animateThumb: false,
+            showThumbByDefault: false
+        });
     });
+
+
+
 
     // Arctic Scroll by Paul Adam Davis
     // https://github.com/PaulAdamDavis/Arctic-Scroll
