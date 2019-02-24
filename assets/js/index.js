@@ -22,7 +22,7 @@
 
         GHRepos.create('.github-widget')
 
-        var gallery = $('.lightgallery')
+        var gallery = $('.img-gallery')
         gallery.justifiedGallery({
             lastRow : 'nojustify',
             rowHeight : 100,

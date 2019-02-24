@@ -42,7 +42,7 @@ one part of the solution. Software (OS & Applications) determine the functionali
 Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.
 
 
-<div class="lightgallery">
+<div class="img-gallery">
   <a href="{{ site.url }}/assets/images/mediadepot_software/1_heimdall.png">
       <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall screenshot" />
   </a>
