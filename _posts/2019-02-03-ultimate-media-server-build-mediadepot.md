@@ -119,7 +119,7 @@ Given that our goal of building the **"The Ultimate Media Server"** is pretty ha
 The first two items on the list are already done. The hardware chosen in [Part 1](https://blog.thesparktree.com/ultimate-media-server-build-hardware) was only for a single server.
 The headless requirement (**#2**) is solved by the IPMI functionality built into our SuperMicro X11SSL-CF motherboard.
 
-<img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png" alt="IPMI" style="max-height: 500px;"/>
+<img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi_kvm.png" alt="IPMI" style="max-height: 500px;"/>
 
 IPMI provides us with the ability to remotely manage the server, including the ability to see what’s "running" on the server using a virtual display + KVM.
 
