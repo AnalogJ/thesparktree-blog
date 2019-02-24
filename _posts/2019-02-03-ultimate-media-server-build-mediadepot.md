@@ -42,57 +42,57 @@ one part of the solution. Software (OS & Applications) determine the functionali
 Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.
 
 
-<div id="lightgallery">
+<div class="lightgallery">
   <a href="{{ site.url }}/assets/images/mediadepot_software/1_heimdall.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall image" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/2_portainer.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer image" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/3_filerun.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun image" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/4_duplicati.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/5_tautulli.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli image" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/6_sickchill.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/8_jackett.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/10_plex.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/11_netdata.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/16_app_data.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data screenshot" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba image" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba screenshot" />
   </a>
 </div>
 
@@ -285,4 +285,4 @@ With that all out of the way, lets get into the installation steps.
 
 
 
-I've been drinking the Docker kool-aid for years, and as a configuration management & deployment tool it's only gotten better and more popular over the years.
+I've been drinking the Docker kool-aid for years, and as a configuration management & deployment tool it's only gotten better and more popular.
