@@ -285,4 +285,4 @@ With that all out of the way, lets get into the installation steps.
 
 
 
-I've been drinking the Docker kool-aid for years, and as a configuration management & deployment tool it's only gotten better and more popular over the years.
+I've been drinking the Docker kool-aid for years, and as a configuration management & deployment tool it's only gotten better and more popular.

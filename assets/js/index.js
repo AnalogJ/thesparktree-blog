@@ -22,10 +22,17 @@
 
         GHRepos.create('.github-widget')
 
-        $('.lightgallery').lightGallery({
-            thumbnail:true,
-            animateThumb: false,
-            showThumbByDefault: false
+        var gallery = $('.lightgallery')
+        gallery.justifiedGallery({
+            lastRow : 'nojustify',
+            rowHeight : 100,
+            margins : 1
+        }).on('jg.complete', function () {
+            gallery.lightGallery({
+                thumbnail:true,
+                animateThumb: false,
+                showThumbByDefault: false
+            });
         });
     });
 
