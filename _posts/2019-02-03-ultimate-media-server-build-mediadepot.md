@@ -44,55 +44,55 @@ Before we dive into the details, let’s start with a bit of a teaser showing of
 
 <div id="lightgallery">
   <a href="{{ site.url }}/assets/images/mediadepot_software/1_heimdall.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall_thumb.png" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/2_portainer.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/2_portainer_thumb.png" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/3_filerun.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/3_filerun_thumb.png" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/4_duplicati.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/4_duplicati_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/5_tautulli.png">
-      <img src="{{ site.url }}/assets/images/mediadepot_software/5_tautulli_thumb.png" />
+      <img src="{{ site.url }}/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/6_sickchill.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/6_sickchill_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/8_jackett.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/8_jackett_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/10_plex.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/10_plex_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/11_netdata.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/11_netdata_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/13_ipmi.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/16_app_data.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/16_app_data_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data image" />
   </a>
   <a href="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares.png">
-    <img src="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares_thumb.png" />
+    <img src="{{ site.url }}/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba image" />
   </a>
 </div>
 
