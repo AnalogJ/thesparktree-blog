@@ -2167,3 +2167,9 @@ body:not(.post-template) .post-title {
     padding-left: 12px;
     border-left: #d5dbde 1px solid;
 }
+
+.post-content .img-gallery img {
+    -webkit-transform: inherit;
+    -ms-transform: inherit;
+    transform: inherit;
+}
