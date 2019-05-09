@@ -26,7 +26,8 @@
         gallery.justifiedGallery({
             lastRow : 'nojustify',
             rowHeight : 100,
-            border: 6
+            border: 6,
+            waitThumbnailsLoad: true
         }).on('jg.complete', function () {
             gallery.lightGallery({
                 thumbnail:true,
