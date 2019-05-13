@@ -28,7 +28,7 @@ This series will be broken up into multiple parts
 
 - **[Part 1 - Hardware](/ultimate-media-server-build-hardware)**
 - [Part 2 - Build Log](/ultimate-media-server-build-log)
-- Part 3 - MediaDepot/CoreOS Configuration
+- [Part 3 - MediaDepot/CoreOS Configuration](/ultimate-media-server-build-mediadepot)
 - Part 4 - Application Docker Containers
 
 This is **Part 1**, where we'll be talking about the Hardware. Specifically the hardware I chose to build my server, the

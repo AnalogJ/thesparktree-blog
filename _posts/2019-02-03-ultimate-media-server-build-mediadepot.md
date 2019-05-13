@@ -15,7 +15,6 @@ tags:
 navigation: True
 logo: '/assets/logo.png'
 categories: 'analogj'
-hidden: true
 ---
 
 I've referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
@@ -27,7 +26,7 @@ This series will be broken up into multiple parts
 
 - [Part 1 - Hardware](/ultimate-media-server-build-hardware)
 - [Part 2 - Build Log](/ultimate-media-server-build-log)
-- **[Part 3 - MediaDepot/CoreOS Configuration](/ultimate-media-server-build-log)**
+- **[Part 3 - MediaDepot/CoreOS Configuration](/ultimate-media-server-build-mediadepot)**
 - Part 4 - Application Docker Containers
 
 This is **Part 3**, where I'll be discussing the software I use to run my ultimate media server, specifically focusing on installing and
@@ -245,12 +244,19 @@ You're in luck. All the steps required to customize a CoreOS based Home Media Se
 
 <div class="github-widget" data-repo="mediadepot/ignition"></div>
 
+It's all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I'm open to PR's.
 
 If you're not familiar with Ignition, its the official configuration management solution for CoreOS.
-You can take the [configuration I wrote](https://github.com/mediadepot/ignition) and customize it for your needs. In addition the Ignition configuration references each feature
+You can take the [configuration I wrote](https://github.com/mediadepot/ignition/blob/master/ignition.yaml) and customize it for your needs. In addition the Ignition configuration references each feature
 separately, so you can disable any features that are irrelevant to your installation.
 
-It's all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I'm open to PR's.
+Once you've modified the ignition.yaml file, you'll need to "transpile" it to a JSON format that ignition actually understands.
+To do that, you'll need to install the [Container Linux Config Transpiler](https://github.com/coreos/container-linux-config-transpiler/),
+but we'll just use a simple Docker image with the Config Transpiler pre-installed.
+
+```
+docker run --rm -v $(pwd):/data keinos/coreos-transpiler ct -strict -pretty -in-file /data/ignition.yaml -out-file /data/ignition.json -files-dir=/data/files/  -platform=custom
+```
 
 With that all out of the way, lets get into the installation steps.
 
@@ -263,13 +269,10 @@ With that all out of the way, lets get into the installation steps.
 
     # note, the boot disk will probably be /dev/loop0
     ```
-5. Copy the ignition remote config bootstrap file to the file system
-    ```bash
-    curl -O https://mediadepot.github.io/ignition/ignition-remote.json
-    ```
+5. Copy the ignition.json config bootstrap file that you created earlier to the file system (using CURL, or another USB)
 6. Begin CoreOS installation on specified disk, **NOTE: specified disk will be reformatted**
     ```bash
-    sudo coreos-install -d /dev/sda -C stable -i ignition-remote.json
+    sudo coreos-install -d /dev/sda -C stable -i ignition.json
     ```
 
 7. On installation completion, remove bootable USB/CD
