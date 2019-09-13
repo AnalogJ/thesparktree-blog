@@ -78,4 +78,18 @@ docker build -f ubuntu/Dockerfile --build-arg software_version=v3.7 -t v3-ubuntu
 ```
 
 # Docker Hub Hook Scripts
-Looks great so far, but Docker Hub doesn't support 
+Looks great so far, but Docker Hub doesn't support configuring Build Arguments though their web ui. So we'll need to use the
+"Advanced options for Autobuild" documentation to override it.
+
+Lets say your project repository looks something like this:
+
+```
+project/
+├── ubuntu/
+│   └── Dockerfile
+├── centos6/
+│   └── Dockerfile
+├── centos7/
+│   └── Dockerfile
+...
+```
