@@ -81,7 +81,7 @@ docker build -f ubuntu/Dockerfile --build-arg software_version=v2.1 -t v2-ubuntu
 docker build -f ubuntu/Dockerfile --build-arg software_version=v3.7 -t v3-ubuntu .
 ```
 
-# Docker Hub Hook Scripts
+## Project Structure
 Looks great so far, but Docker Hub doesn't support configuring Build Arguments though their web ui. So we'll need to use the
 "Advanced options for Autobuild" documentation to override it.
 
@@ -129,7 +129,7 @@ project/
 
 Now that we have our project organized in a way that Docker Hub expects, lets populate our override scripts
 
-# Hook Override Scripts
+## Docker Hub Hook Override Scripts
 
 
 Docker Hub provides the following environmental variables which are available to us in the logic of our scripts.
@@ -203,13 +203,13 @@ v3.7
 This file is then read line-by-line, and each line is passed into a docker build command via `--build-arg`. It's also used as the
 version component in the Docker image build tag.
 
-# Docker Hub Configuration
+## Docker Hub Configuration
 
 The final component necessary to successfully build these images is to configure the Docker Hub project correctly.
 
 <img src="{{ site.url }}/assets/images/docker-hub/docker-hub-configuration.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
-# Fin
+## Fin
 
 Again, here's the Github repo with working code (using `jq` as our example software tool to be installed):
 
