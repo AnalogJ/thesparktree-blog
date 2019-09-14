@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Docker Hub - Matrix Builds and Tagging using Build Args'
-date: '19-09-2512T01:19:33-08:00'
+date: '19-09-12T01:19:33-08:00'
 cover: '/assets/images/cover_docker_hub.png'
 subclass: 'post tag-post'
 tags:
