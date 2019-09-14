@@ -209,7 +209,6 @@ The final component necessary to successfully build these images is to configure
 
 <img src="{{ site.url }}/assets/images/docker-hub/docker-hub-configuration.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
-
 # Fin
 
 Again, here's the Github repo with working code (using `jq` as our example software tool to be installed):
