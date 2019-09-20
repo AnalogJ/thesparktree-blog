@@ -54,7 +54,7 @@ jobs:
         # Must be relative path from root
         paths:
           - dist
-    # Add content to algolia index. 
+    # Add content to algolia index.
     - run: bundle exec jekyll algolia
 
   deploy:
