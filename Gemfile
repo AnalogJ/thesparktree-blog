@@ -9,3 +9,7 @@ gem "github-pages", "~> 130"
 gem "rake", "~> 10.1.1"
 gem "jekyll-minimagick"
 gem 'html-proofer'
+
+group :jekyll_plugins do
+  gem 'jekyll-algolia'
+end

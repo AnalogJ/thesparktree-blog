@@ -83,3 +83,7 @@ exclude:
   - "*.Rmd"
   - vendor
   - .travis.yml
+
+algolia:
+  application_id: VGUF5D0Q9L
+  index_name: thesparktree-blog
