@@ -38,7 +38,7 @@ As always, here's a Github repo with working code if you want to skip ahead:
 So what's the point? If Docker Hub works fine for most people, what's an actual use case for these Advanced Options?
 
 Lets say you have developed a tool, and you would like to distribute it as a Docker image. The first problem is that you'd
-like to provide Docker images based on a handful of different OS's. `ubunut`, `centos6`, `centos7` `alpine` and `windows-nano`.
+like to provide Docker images based on a handful of different OS's. `ubuntu`, `centos6`, `centos7` and `alpine`
 Simple enough, just write a handful of Dockerfiles, and use the `FROM` instruction.
 But lets say that you also need to provide multiple versions of your tool, and each of those must also be distributed as a
 Docker Image based on different OS's.
@@ -48,11 +48,11 @@ be perfect for a "Matrix Project".
 
 Here's what our Docker naming scheme might look like:
 
-|      | ubuntu    | centos6    | centos7    | alpine    | windows-nano    |
-|------|-----------|------------|------------|-----------|-----------------|
-| v1.x | v1-ubuntu | v1-centos6 | v1-centos7 | v1-alpine | v1-windows-nano |
-| v2.x | v2-ubuntu | v2-centos6 | v2-centos7 | v2-alpine | v2-windows-nano |
-| v3.x | v3-ubuntu | v3-centos6 | v3-centos7 | v3-alpine | v3-windows-nano |
+|      | ubuntu    | centos6    | centos7    | alpine    |
+|------|-----------|------------|------------|-----------|
+| v1.x | v1-ubuntu | v1-centos6 | v1-centos7 | v1-alpine |
+| v2.x | v2-ubuntu | v2-centos6 | v2-centos7 | v2-alpine |
+| v3.x | v3-ubuntu | v3-centos6 | v3-centos7 | v3-alpine |
 
 As our software grows, you could image other axises being added: architectures, software runtimes, etc.
 
@@ -112,17 +112,17 @@ project/
 ├── ubuntu/
 │   ├── hooks/
 │   │   ├── build (symlink)
-│   │   └── push (symlink
+│   │   └── push (symlink)
 │   └── Dockerfile
 ├── centos6/
 │   ├── hooks/
 │   │   ├── build (symlink)
-│   │   └── push (symlink
+│   │   └── push (symlink)
 │   └── Dockerfile
 ├── centos7/
 │   ├── hooks/
 │   │   ├── build (symlink)
-│   │   └── push (symlink
+│   │   └── push (symlink)
 │   └── Dockerfile
 ...
 ```
