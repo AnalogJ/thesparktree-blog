@@ -6,6 +6,6 @@ gem "jekyll", "~> 3.4.3"
 #gem 'kramdown', '~> 1.8'
 #gem 'rouge', '~> 1.10', '>= 1.10.1'
 gem "github-pages", "~> 130"
-gem "rake", "~> 10.1.1"
+gem "rake", "~> 12.3.3"
 gem "jekyll-minimagick"
 gem 'html-proofer'
