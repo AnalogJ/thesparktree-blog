@@ -197,7 +197,7 @@ It's available on docker hub: [jenkins/inbound-agent](https://hub.docker.com/r/j
 
 To use it, we'll configure a Pod Template, to look like the following:
 
-![jenkins-pod-template-java.png](/Users/jason/Dropbox/Blog Posts/Jenkins Slaves on Demand using Kubernetes/jenkins-pod-template-java.png)
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-java.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
 The fields to pay attention to are the following
 
