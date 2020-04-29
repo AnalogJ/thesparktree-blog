@@ -143,7 +143,7 @@ The Kubernetes plugin is fairly complicated at first glance. There's a handful o
 
 The first thing we're going to need to do is add store our generated `client.pfx` file as a Jenkins Certificate Credential, so we can reference it in the Kubernetes plugin configuration.
 
-![jenkins-certificate-credential.png](/Users/jason/Dropbox/Blog Posts/jenkins-certificate-credential.png)
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-certificate-credential.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
 > Note: You must specify the same `SECRET_PASSPHRASE` you used when generating your `*.pfx` file above.
 
@@ -153,7 +153,7 @@ Now we can finally start configuring our Jenkins server to communicate with our 
 
 > Note: If your security posture (and feature-set)  allows it, use a managed Kubernetes cluster like EKS or AKS. It'll make your life much easier.
 
-![jenkins-kubernetes-configure.png](/Users/jason/Dropbox/Blog Posts/Jenkins Slaves on Demand using Kubernetes/jenkins-kubernetes-configure.png)
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
 > Note: in the screenshot above, I've disabled the "https certificate check" for testing. You'll want to make sure thats enabled in production. When you do so, you'll need to specify your Kubernetes server CA Certificate key in the box above.
 
@@ -209,7 +209,8 @@ The fields to pay attention to are the following
 
 - Optional - **ImagePullSecrets** - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the **Docker Registry Authentication** section above.
 
-  ![jenkins-pod-template-secret.png](/Users/jason/Dropbox/Blog Posts/Jenkins Slaves on Demand using Kubernetes/jenkins-pod-template-secret.png)
+    <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="docker hub configuration" style="max-height: 500px;"/>
+
 
 #### Custom Agent Images
 
@@ -267,9 +268,7 @@ Though Jenkins has a multitude of different job types, they're all fundamentally
 
 Lets look at freestyle jobs first. They've been around the longest, and most other job types can be configured in the same way.
 
-![jenkins-freestyle-job.png](/Users/jason/Dropbox/Blog Posts/Jenkins Slaves on Demand using Kubernetes/jenkins-freestyle-job.png)
-
-
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
 Unfortunately with Freestyle Job (and other legacy job types) you cannot configure your Kubernetes pod per job. You're limited to the global pod templates you've pre-configured.
 
