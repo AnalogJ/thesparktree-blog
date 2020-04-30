@@ -54,7 +54,7 @@ amount of flexibility and extensibility to Jenkins users.
 
 The two are both fundamentally the same Pipeline sub-system underneath. They are both durable implementations of "Pipeline as code." 
 They are both able to use steps built into Pipeline or provided by plugins. Both are able utilize Shared Libraries 
-(a topic we'll dive into in Part 4 *(Coming soon)*).
+(a topic we'll dive into in a future ost).
 
 Where they differ however is in syntax and flexibility. Declarative limits what is available to the user with a more 
 strict and pre-defined structure, making it an ideal choice for simpler continuous delivery pipelines. Scripted provides 
@@ -110,7 +110,7 @@ non-serializable parameters or return or store non-serializable values.
 	```
 
 - Use `implements Serializable` for any classes that you define yourself. Only really applicable in Shared Libraries 
-(detailed in You Don't Know Jenkins - Part 4 *(Coming soon)*)
+(detailed in a future post)
 
 	```groovy
 	class Utilities implements Serializable {
@@ -146,7 +146,7 @@ credentials, trigger deployments, delete build artifacts and cause havoc in any 
 - Whitelist each and every method that you use. If you make heavy use of Groovy shortcut methods in `DefaultGroovyMethods` 
 (like `.any` `.each`, `.find`) you'll want to take a look at my [Jenkins init.d script](https://github.com/AnalogJ/you-dont-know-jenkins-init/blob/master/5000.script-approval.groovy#L15-L23) 
 that automatically whitelists them all.
-- Global Shared Libraries. I'll talk about this more in Part 4 *(Coming soon)*, but Global Pipeline Libraries are assumed 
+- Global Shared Libraries. I'll talk about this more in a future post, but Global Pipeline Libraries are assumed
 to be trusted, and as such any methods (no matter how dangerous) are not subject to the Jenkins security sandbox.
 
 ---
@@ -198,7 +198,7 @@ Jenkins Manage page, and then import it in your Pipeline script
 @Library('somelib')
 import com.mycorp.pipeline.somelib.UsefulClass
 ```
-I'll be talking about Shared Pipelines more in Part 4 *(Coming soon)* of this series, with much more detail.
+I'll be talking about Shared Pipelines more in a future post of this series, with much more detail.
 
 ---
 
@@ -276,13 +276,13 @@ so you can build a Pipeline that works for you.
 
 Having said that, Pipeline scripts are only one half of the solution.
 
-**Part 4 - Advanced Techniques - Pipeline Testing, Shared Libraries** *(Coming soon)*
+**Part X - Advanced Techniques - Pipeline Testing, Shared Libraries** *(Coming soon)*
 
-In Part 4 we'll talk about how you can actually start testing your Pipeline scripts. As you start writing more orchestration 
+In a future post we'll talk about how you can actually start testing your Pipeline scripts. As you start writing more orchestration
 code you'll find that, unlike application code, orchestration code is incredibly difficult to write and test effectively.
 
 In addition, any discussion about Pipelines wouldn't be complete without mentioning Shared Libraries. I've touched on them 
-a couple times in this guide, but in Part 4, I'll be writing a complex & testable Shared Library, step by step so you can follow along.
+a couple times in this guide, but in a future post, I'll be writing a complex & testable Shared Library, step by step so you can follow along.
 
 ### Additional References
 - https://jenkins.io/solutions/pipeline/
