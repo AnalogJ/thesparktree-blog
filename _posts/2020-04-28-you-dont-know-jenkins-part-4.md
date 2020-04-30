@@ -14,6 +14,7 @@ tags:
 categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: True
+hidden: true
 ---
 
 
