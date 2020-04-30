@@ -13,7 +13,7 @@ tags:
 - automation
 categories: 'analogj'
 logo: '/assets/logo-dark.png'
-navigation: False
+navigation: True
 hidden: true
 ---
 
@@ -37,7 +37,7 @@ This post is part of a series is all about solving common problems using new Jen
 
 - [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
 - [Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)
-- [Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)**
+- [Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)
 - **[Part 4 - Kubernetes Slave Cluster](https://blog.thesparktree.com/you-dont-know-jenkins-part-4)**
 
 ---
@@ -318,4 +318,9 @@ podTemplate(containers: [
 ```
 
 For a full list of options for the `podTemplate` and `containerTemplate` functions, see the Jenkins Kubernetes Plugin [README.md](https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration)
+
+
+---
+
+# Fin.
 

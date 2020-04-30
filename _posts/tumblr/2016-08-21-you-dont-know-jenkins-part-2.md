@@ -35,7 +35,7 @@ This series is all about solving these common problems using new Jenkins feature
 - [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
 - **[Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)**
 - [Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)
-- Part 4 - Advanced DSL & Pipeline Techniques *(Coming soon)*
+- [Part 4 - Kubernetes Slave Cluster](https://blog.thesparktree.com/you-dont-know-jenkins-part-4)
 
 This is **Part 2 - Maintainable Jenkins Jobs using Job DSL**. If you haven't read [Part 1](http://blog.thesparktree.com/you-dont-know-jenkins-part-1), you'll want to do that first, as we'll be referring to some concepts defined there.
 
