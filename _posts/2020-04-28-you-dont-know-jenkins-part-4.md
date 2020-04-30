@@ -13,8 +13,7 @@ tags:
 - automation
 categories: 'analogj'
 logo: '/assets/logo-dark.png'
-navigation: False
-hidden: true
+navigation: True
 ---
 
 
@@ -318,4 +317,9 @@ podTemplate(containers: [
 ```
 
 For a full list of options for the `podTemplate` and `containerTemplate` functions, see the Jenkins Kubernetes Plugin [README.md](https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration)
+
+
+---
+
+# Fin.
 
