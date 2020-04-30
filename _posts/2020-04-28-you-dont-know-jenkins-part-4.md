@@ -33,7 +33,7 @@ in the queue, delaying your builds & tests.
 Adding Docker & Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.
 
 
-This post is part of a series is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
+This post is part of a series that is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
 
 - [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
 - [Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)
@@ -71,6 +71,7 @@ I'm assuming that you already have a working (and accessible):
 - Jenkins server (v2.199+)
   - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
+If you don't have a kubernetes cluster handy, o
 
 ## Configure your Kubernetes Cluster
 
