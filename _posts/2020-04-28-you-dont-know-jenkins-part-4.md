@@ -60,7 +60,7 @@ This post is part of a series that is all about solving common problems using ne
   - Pipeline Jobs
 
 
-## Assumptions
+## Requirements
 
 I'm assuming that you already have a working (and accessible):
 
@@ -72,11 +72,12 @@ I'm assuming that you already have a working (and accessible):
 - Jenkins server (v2.199+)
   - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
-If you want to follow along at home, without spinning up a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
+If you want to follow along at home, but you don't have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
 environment by following the documentation on the following repo.
 
 <div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves"></div>
 
+Once you've completed the steps in that README, just come back here and follow along.
 
 ## Configure your Kubernetes Cluster
 
