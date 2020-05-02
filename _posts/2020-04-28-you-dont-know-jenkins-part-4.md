@@ -33,7 +33,7 @@ in the queue, delaying your builds & tests.
 Adding Docker & Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.
 
 
-This post is part of a series is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
+This post is part of a series that is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
 
 - [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
 - [Part 2 - Maintainable Jenkins Jobs using Job DSL](https://blog.thesparktree.com/you-dont-know-jenkins-part-2)
@@ -59,18 +59,24 @@ This post is part of a series is all about solving common problems using new Jen
   - Freestyle Jobs
   - Pipeline Jobs
 
-
-## Assumptions
+## Requirements
 
 I'm assuming that you already have a working (and accessible):
 
 - Kubernetes cluster
+  - A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.
   - `master` nodes/API needs to be accessible via Jenkins
   - `kubectl` should be configured to communicate with your cluster
 
 - Jenkins server (v2.199+)
   - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
+If you want to follow along at home, but you don't have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
+environment by following the documentation on the following repo.
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves"></div>
+
+Once you've completed the steps in that README, just come back here and follow along.
 
 ## Configure your Kubernetes Cluster
 
@@ -83,6 +89,8 @@ server from other workloads running on our cluster.
 
 ```
 $ kubectl create namespace jenkins-kube-slaves
+
+namespace/jenkins-kube-slaves created
 ```
 
 > Note: If you're planning on sharing this Kubernetes cluster with different Jenkins servers, you should probably use a unique namespace for each.
@@ -114,17 +122,29 @@ rather than the standard `kubectl` config file format (`~/.kube/config`).
 You can generate a `*.pkf` file by running the following commands
 
 ```bash
+$ mkdir -p /tmp/kube-certs
+$ cd /tmp/kube-certs
+
 $ grep 'client-certificate-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.crt
 $ grep 'client-key-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.key
 
-# generate pkf file
+# generate pfx file
 $ openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.pfx -name "kubernetes-client" -passout pass:SECRET_PASSPHRASE
+
+# you should now have 3 files in your /tmp/kube-certs directory
+$ ls
+client.crt	client.key	client.pfx
 ```
 
-You can validate that your generated `*.pkf` file worked by querying the kubernetes cluster API with it.
+You can validate that your generated `*.pfx` file worked by querying the kubernetes cluster API with it.
 
 ```bash
-curl --cert client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+
+# first we'll verify that the cert and key were extracted correctly
+curl --insecure --cert client.crt --key client.key  https://kubernetes.docker.internal:6443/api/v1
+
+# next we'll validate that the .pfx file that Jenkins will use is correctly encoded.
+curl --insecure --cert-type P12 --cert client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
 ```
 
 > Note: the `SECRET_PASSPHRASE` value above should be replaced and treated as a password. The `*.pfx` passphrase is used
@@ -150,12 +170,13 @@ so we can reference it in the Kubernetes plugin configuration.
 
 Now we can finally start configuring our Jenkins server to communicate with our Kubernetes cluster.
 
-> Note: If your security posture (and feature-set)  allows it, use a managed Kubernetes cluster like EKS or AKS. It'll make your life much easier.
-
 <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="kubernetes configure" style="max-height: 900px;"/>
 
 > Note: in the screenshot above, I've disabled the "https certificate check" for testing. You'll want to make sure that's
 enabled in production. When you do so, you'll need to specify your Kubernetes server CA Certificate key in the box above.
+
+> Note: if you're using my [AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves](https://github.com/AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves) repo,
+> you will need to set the Jenkins Url to "http://localhost:8080" (not https://)
 
 ### Configure Global Pod Templates
 
@@ -319,8 +340,8 @@ podTemplate(containers: [
 
 For a full list of options for the `podTemplate` and `containerTemplate` functions, see the Jenkins Kubernetes Plugin [README.md](https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration)
 
-
 ---
 
-# Fin.
+## Fin.
 
+That's it. You should now have a working Jenkins server that builds its
