@@ -8,7 +8,7 @@ tags:
 - jenkins
 - devops
 - groovy
-- chef
+- kubernetes
 - dsl
 - automation
 categories: 'analogj'
