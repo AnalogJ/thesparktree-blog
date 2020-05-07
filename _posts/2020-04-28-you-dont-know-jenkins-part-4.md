@@ -17,7 +17,6 @@ navigation: True
 hidden: true
 ---
 
-
 Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
 source code management systems and tools via plugins maintained by its active community.
 
@@ -32,7 +31,6 @@ in the queue, delaying your builds & tests.
 
 Adding Docker & Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.
 
-
 This post is part of a series that is all about solving common problems using new Jenkins features, modern automation & configuration-as-code practices.
 
 - [Part 1 - Automated Jenkins Install using Chef](https://blog.thesparktree.com/you-dont-know-jenkins-part-1)
@@ -41,7 +39,6 @@ This post is part of a series that is all about solving common problems using ne
 - **[Part 4 - Kubernetes Slave Cluster](https://blog.thesparktree.com/you-dont-know-jenkins-part-4)**
 
 ---
-
 
 ## Table of Contents
 
@@ -52,9 +49,13 @@ This post is part of a series that is all about solving common problems using ne
 - Configure Kubernetes Jenkins Plugin
   - Add Jenkins Certificate Credential
   - Add Kubernetes Cloud
-  - Configure Pod Templates
-    - Official Jenkins Docker Agent Image
+  - Testing
+- Configure Template Configuration
+  - Jenkins Agent Recap
+  - The Problem
+  - The Solution 
     - Custom Agent Images
+    - Configure Global Pod Templates
 - Configure Jobs
   - Freestyle Jobs
   - Pipeline Jobs
@@ -64,11 +65,13 @@ This post is part of a series that is all about solving common problems using ne
 I'm assuming that you already have a working (and accessible):
 
 - Kubernetes cluster
+  
   - A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.
   - `master` nodes/API needs to be accessible via Jenkins
   - `kubectl` should be configured to communicate with your cluster
 
 - Jenkins server (v2.199+)
+  
   - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
 If you want to follow along at home, but you don't have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
@@ -133,7 +136,7 @@ $ openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.p
 
 # you should now have 3 files in your /tmp/kube-certs directory
 $ ls
-client.crt	client.key	client.pfx
+client.crt    client.key    client.pfx
 ```
 
 You can validate that your generated `*.pfx` file worked by querying the kubernetes cluster API with it.
@@ -148,7 +151,7 @@ curl --insecure --cert-type P12 --cert client.pfx:SECRET_PASSPHRASE https://KUBE
 ```
 
 > Note: the `SECRET_PASSPHRASE` value above should be replaced and treated as a password. The `*.pfx` passphrase is used
-to encrypt the `*.pfx` file contents before storing them on disk.
+> to encrypt the `*.pfx` file contents before storing them on disk.
 
 Now that we've configured our Kubernetes cluster, its time to setup Jenkins
 
@@ -173,15 +176,14 @@ Now we can finally start configuring our Jenkins server to communicate with our 
 <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="kubernetes configure" style="max-height: 900px;"/>
 
 > Note: in the screenshot above, I've disabled the "https certificate check" for testing. You'll want to make sure that's
-enabled in production. When you do so, you'll need to specify your Kubernetes server CA Certificate key in the box above.
+> enabled in production. When you do so, you'll need to specify your Kubernetes server CA Certificate key in the box above.
 
 > Note: if you're using my [AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves](https://github.com/AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves) repo,
 > you will need to set the Jenkins Url to "http://localhost:8080" (not https://)
 
-### Configure Global Pod Templates
+### Testing
 
-The Kubernetes plugin (when referenced in a Jenkins Pipeline job) is highly customizable. You can dynamically specify your
-pod configuration in the job, using syntax like the following:
+A this point we have finished configuring the Kubernetes plugin, and we can test it out by creating a simple Jenkins Pipeline job, with the following script. 
 
 ```groovy
 podTemplate(containers: [
@@ -197,45 +199,63 @@ podTemplate(containers: [
 }
 ```
 
-We'll discuss this in depth later. The issue using this syntax is that upgrading/changing the image means you have to
-edit each job that uses that image, which can be a hassle.
+This method allows you to define your pod and containers on demand, **however it does not work with older Jenkins Freestyle jobs.** 
 
-Personally, I find it more useful to setup a handful of "global" pod templates, that are usable everywhere, and reserve
-the Pipeline script synax for custom/one-off jobs.
 
-So how do we configure Global Pod Templates?
 
-#### Official Jenkins Docker Agent Image
+## Global Template Configuration
 
-Jenkins communicates with its slaves using a Jenkins Agent. The logic for this Agent is packaged into a jar and
+Before discuss how to get the Jenkins Kubernetes plugin working with Freestyle jobs, we should first recap how the Jenkins slave agents work.
+
+
+
+### Jenkins Agent Recap
+
+Jenkins communicates with its slaves using a Jenkins agent (using a protocol called `jnlp`). The logic for this agent is packaged into a jar and
 automatically installed on your Jenkins slave node when you register the slave with the Jenkins master.
 
-This Agent software is also required for the dynamic Kubernetes slaves, however in this case it's baked into the docker image that you run.
+This agent software is also required for the dynamic Kubernetes slaves, however in this case it's baked into the docker
+image that is automatically included in every pod you run.
 
-The Jenkins developers have provided us with an image that has the Agent preconfigured so that it will work out of the box.
-It's based on Debian, but Alpine and Windows Nanoserver flavors exist as well.
+The default agent (based on the [jenkins/inbound-agent](https://hub.docker.com/r/jenkins/inbound-agent) image) can be
+customized by adding it to the template:
 
-It's available on docker hub: [jenkins/inbound-agent](https://hub.docker.com/r/jenkins/inbound-agent)
+```groovy
+containerTemplate(name: 'jnlp', image: 'jenkins/inbound-agent:3.35-5-alpine', args: '${computer.jnlpmac} ${computer.name}'),
+```
 
-To use it, we'll configure a Pod Template, to look like the following:
+This default agent image is based on Debian, but Alpine and Windows Nanoserver flavors exist as well.
 
-<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-java.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
-The fields to pay attention to are the following
 
-- **Namespace**  - this determines the namespace that Jenkins uses when it creates slaves on demand.
-- **Label** - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We'll call ours `kube-slave-java`.
-- **Docker Image** - as mentioned above, `jenkins/inbound-agent` is a prebuilt image. In the next section we'll add custom Docker images (that include additional language runtimes like python/node/go/etc.)
-- Optional - **ImagePullSecrets** - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the **Docker Registry Authentication** section above.
-    <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="docker hub configuration" style="max-height: 500px;"/>
+### The Problem
+
+While Pipeline jobs are flexible and have a syntax to configure the Kubernetes pod used in the job, there's no equivalent
+in for Freestyle jobs. The naiive solution would be to use the a global Pod Template, and reference it via a job "label"
+
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job-label.png" alt="freestyle job
+configuration label" style="max-height: 500px;"/>
+
+**However this is not usable for most Freestyle jobs.**
+
+
+When used with a Freestyle job, the Kubernetes plugin will **run the job steps in the default Pod container, the `jnlp`
+slave agent container.** Which is where we run into the main issue: **The jnlp slave agent container is based on a minimal
+image with no language runtimes.**
+
+
+
+### The Solution
 
 #### Custom Agent Images
 
-Now that you have a Pod Template configured using the official Jenkins Agent image, you might be thinking about all the custom software you've installed on your Jenkins server & slaves -- language runtimes, tools, fonts, etc.
+The solution is to customize the `jnlp` slave image container with the custom software your jobs require -- language
+runtimes, tools, fonts, etc.
 
-Since  `jenkins/inbound-agent` is just a standard Docker image, you can customize it like you would any other Docker image.
+Since `jenkins/inbound-agent` is just a standard Docker image, you can customize it like you would any other Docker image.
 
-Here's an example `Dockerfile` adding the Go language runtime to the `jenkins/inbound-agent` image, so you can use `go build` in your Jenkins jobs
+Here's an example `Dockerfile` adding the Go language runtime to the `jenkins/inbound-agent` image, so you can use `go build`
+in your Jenkins jobs
 
 ```dockerfile
 FROM jenkins/inbound-agent
@@ -243,17 +263,17 @@ FROM jenkins/inbound-agent
 # the jenkins/inbound-agent is configured to run as the `jenkins` user. To install new software & packages, we'll need to change back to `root`
 USER root
 
-# lets download & install the latest Go language runtime and tools.
-# since this is a debian machine, we can also install standard packages using `apt-get`
+
+# lets download & install the latest Go language runtime and tools.# since this is a debian machine, we can also install standard packages using `apt-get`
 RUN curl -O --silent --location https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz && \
     mkdir -p /usr/local/go && \
-    tar -xvf go1.13.10.linux-amd64.tar.gz -C /usr/local/go --strip 1 && \
-    rm -f go1.13.10.linux-amd64.tar.gz
-
+    tar -xvf go1.13.10.linux-amd64.tar.gz -C /usr/local/go --strip 1 && \
+    rm -f go1.13.10.linux-amd64.tar.gz
+    
 # lets setup some Go specific environmental variables
 ENV GOROOT="/usr/local/go" \
- GOPATH="/home/jenkins/go"
-
+    GOPATH="/home/jenkins/go"
+    
 # next, we'll customize the PATH env variable to add the `go` binary, and ensure that binaries on the GOROOT and GOPATH are also available.
 ENV PATH="$PATH:/usr/local/go/bin:$GOROOT/bin:$GOPATH/bin"
 
@@ -262,16 +282,35 @@ USER jenkins
 
 # finally, we'll setup the `go` cache directory (GOPATH), and test that the go binary is installed correctly.
 RUN mkdir /home/jenkins/go && \
- go version 
+    go version 
 ```
 
-Once you push this up to your Docker registry, you can reference it in a new Pod template, with a label like
-`kube-slave-go` or maybe `kube-slave-go1.13` if you care about the specific version of the language runtime.
+Once you push this up to your Docker registry, you we can reference it in a global Pod Template, with a label like `kube-slave-go` or maybe `kube-slave-go1.13` if you care about the specific version of the language runtime.
 
-While you could go off and build custom Docker images for all the languages you use, I've already created
-`jenkins/inbound-agent` based Docker images for most popular languages (go, ruby, node, python). Feel free to use them if you'd like.
+While you could go off and build custom Docker images for all the languages you use, I've already created `jenkins/inbound-agent` based Docker images for most popular languages (go, ruby, node, python). Feel free to use them if you'd like.
 
 <div class="github-widget" data-repo="AnalogJ/docker-jenkins-inbound-agent-runtimes"></div>
+
+
+#### Configure Global Pod Templates
+
+To use our customized `jnlp` slave images with Freestyle jobs, we'll configure a handful of global Pod Templates, to look like the following:
+
+<img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-ruby.png" alt="pod template configuration" style="max-height: 500px;"/>
+
+The fields to pay attention to are the following
+
+- **Namespace**  - this determines the namespace that Jenkins uses when it creates slaves on demand.
+
+- **Label** - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We'll call ours `kube-slave-ruby`.
+
+- **Container Template - Name** - this must be `jnlp` to tell Jenkins to override the default *minimal* slave agent image. 
+
+- **Docker Image** - as mentioned above, `analogj/jenkins-inbound-agent-runtimes:latest-ruby2.7` is customized version of the `jenkins/inbound-agent` image with Ruby installed. Replace with your customized image with the tools you need.
+
+- Optional - **ImagePullSecrets** - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the **Docker Registry Authentication** section above.
+  
+  <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="pod template secret" style="max-height: 500px;"/>
 
 ### Configure Jobs
 
@@ -288,9 +327,7 @@ Lets look at freestyle jobs first. They've been around the longest, and most oth
 
 <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job.png" alt="docker hub configuration" style="max-height: 500px;"/>
 
-Unfortunately with Freestyle Job (and other legacy job types) you cannot configure your Kubernetes pod per job. You're limited to the global pod templates you've pre-configured.
-
-
+As mentioned above, with Freestyle Jobs (and other legacy job types) you cannot configure your Kubernetes pod per job. You're limited to the global pod templates you've pre-configured.
 
 #### Pipeline Jobs
 
