@@ -65,14 +65,12 @@ This post is part of a series that is all about solving common problems using ne
 I'm assuming that you already have a working (and accessible):
 
 - Kubernetes cluster
-  
   - A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.
   - `master` nodes/API needs to be accessible via Jenkins
   - `kubectl` should be configured to communicate with your cluster
 
 - Jenkins server (v2.199+)
-  
-  - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
+  - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
 If you want to follow along at home, but you don't have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
 environment by following the documentation on the following repo.
@@ -301,13 +299,9 @@ To use our customized `jnlp` slave images with Freestyle jobs, we'll configure a
 The fields to pay attention to are the following
 
 - **Namespace**  - this determines the namespace that Jenkins uses when it creates slaves on demand.
-
 - **Label** - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We'll call ours `kube-slave-ruby`.
-
-- **Container Template - Name** - this must be `jnlp` to tell Jenkins to override the default *minimal* slave agent image. 
-
+- **Container Template - Name** - this must be `jnlp` to tell Jenkins to override the default *minimal* slave agent image.
 - **Docker Image** - as mentioned above, `analogj/jenkins-inbound-agent-runtimes:latest-ruby2.7` is customized version of the `jenkins/inbound-agent` image with Ruby installed. Replace with your customized image with the tools you need.
-
 - Optional - **ImagePullSecrets** - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the **Docker Registry Authentication** section above.
   
   <img src="{{ site.url }}/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="pod template secret" style="max-height: 500px;"/>
