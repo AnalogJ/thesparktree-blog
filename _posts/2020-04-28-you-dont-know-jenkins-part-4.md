@@ -15,7 +15,7 @@ categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: True
 hidden: true
-toc: True
+toc: true
 ---
 
 Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
