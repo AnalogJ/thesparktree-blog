@@ -1,7 +1,7 @@
 ---
 layout: post
 title: You Don't Know Jenkins - Part 4 - Kubernetes Slaves
-date: '2017-11-13T22:37:09-07:00'
+date: '2020-04-28T22:37:09-07:00'
 cover: '/assets/images/cover_jenkins_docker.png'
 subclass: 'post tag-post'
 tags:
