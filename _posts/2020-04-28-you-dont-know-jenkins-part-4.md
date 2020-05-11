@@ -14,7 +14,6 @@ tags:
 categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: True
-hidden: true
 toc: true
 ---
 
@@ -122,9 +121,9 @@ You can validate that your generated `*.pfx` file worked by querying the kuberne
 ```bash
 
 # first we'll verify that the cert and key were extracted correctly
-curl --insecure --cert client.crt --key client.key  https://kubernetes.docker.internal:6443/api/v1
+curl --insecure --cert client.crt --key client.key  https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
 
-# next we'll validate that the .pfx file that Jenkins will use is correctly encoded.
+# next we'll validate that the generated .pfx file that Jenkins will use is correctly encoded.
 curl --insecure --cert-type P12 --cert client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
 ```
 
@@ -228,7 +227,7 @@ image with no language runtimes.**
 #### Custom Agent Images
 
 The solution is to customize the `jnlp` slave image container with the custom software your jobs require -- language
-runtimes, tools, fonts, etc.
+runtimes, tools, packages, fonts, etc.
 
 Since `jenkins/inbound-agent` is just a standard Docker image, you can customize it like you would any other Docker image.
 
@@ -355,4 +354,10 @@ For a full list of options for the `podTemplate` and `containerTemplate` functio
 
 ## Fin.
 
-That's it. You should now have a working Jenkins server that builds its
+That's it. You should now have a working Jenkins server that dynamically creates slaves on demand. Jenkins Kubernetes slaves
+can be configured with all the same software you would need on a regular slave, with the added benefit of following
+configuration-as-code best practices.
+
+In addition, it's generally easier to automate scaling up your Kubernetes cluster, than it is to scale up Jenkins nodes.
+
+
