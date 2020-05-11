@@ -15,6 +15,7 @@ categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: True
 hidden: true
+toc: True
 ---
 
 Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
@@ -40,26 +41,6 @@ This post is part of a series that is all about solving common problems using ne
 
 ---
 
-## Table of Contents
-
-- Assumptions
-- Configure your Kubernetes Cluster
-  - Jenkins Namespace
-  - Convert Kubernetes Client Config to PFX
-- Configure Kubernetes Jenkins Plugin
-  - Add Jenkins Certificate Credential
-  - Add Kubernetes Cloud
-  - Testing
-- Configure Template Configuration
-  - Jenkins Agent Recap
-  - The Problem
-  - The Solution 
-    - Custom Agent Images
-    - Configure Global Pod Templates
-- Configure Jobs
-  - Freestyle Jobs
-  - Pipeline Jobs
-
 ## Requirements
 
 I'm assuming that you already have a working (and accessible):
@@ -68,7 +49,6 @@ I'm assuming that you already have a working (and accessible):
   - A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.
   - `master` nodes/API needs to be accessible via Jenkins
   - `kubectl` should be configured to communicate with your cluster
-
 - Jenkins server (v2.199+)
   - You'll also need to install the [Kubernetes Plugin for Jenkins](https://plugins.jenkins.io/kubernetes/) (v1.24.0+)
 
