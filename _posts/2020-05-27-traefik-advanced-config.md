@@ -12,6 +12,7 @@ categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: False
 toc: true
+hidden: true
 ---
 
 > Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
@@ -27,7 +28,18 @@ It doesn't help that the auto-magic configuration only works for toy examples. T
 
 This guide assumes you're somewhat familiar with Traefik, and you're interested in adding some of the advanced features mentioned in the Table of Contents.
 
+## Requirements
+
+
+
+
+
+
 ## Subdomains
+
+
+
+
 
 ## WebUI Dashboard
 
