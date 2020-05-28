@@ -30,13 +30,50 @@ This guide assumes you're somewhat familiar with Traefik, and you're interested 
 
 ## Requirements
 
+- Docker
+- A custom domain to assign to Traefik, or a [fake domain (.lan) configured for wildcard local development](https://blog.thesparktree.com/local-development-with-wildcard-dns)
+- We'll be using the following traefik docker-compose file as the base for each of our examples. All differences from this
+    config will be bolded.
+    ```
+      version: '2'
+      services:
+        traefik:
+          image: traefik:v2.0
+          ports:
+            # The HTTP port
+            - "80:80"
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+          command:
+            - --providers.docker
+            - --entrypoints.web.address=:80
+    ```
 
 
 
 
+## Automatic Subdomain Routing
 
-## Subdomains
+One of the most useful things about Traefik is its ability to dynamically route traffic to containers.
+Rather than have to explicitly assign a domain or subdomain for each container, you can tell Traefik to use the container
+name prepended to a domain name for dynamic routing. eg. `container_name.example.com`
 
+<pre><code>
+  version: '2'
+  services:
+    traefik:
+      image: traefik:v2.0
+      ports:
+        # The HTTP port
+        - "80:80"
+      volumes:
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      command:
+        - --providers.docker
+        - --entrypoints.web.address=:80
+        <b>- '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.customsubdomain.example.com`)'</b>
+
+</pre></code>
 
 
 
