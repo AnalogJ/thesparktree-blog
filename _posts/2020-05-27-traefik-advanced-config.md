@@ -149,7 +149,7 @@ docker run \
     --label 'traefik.http.services.foo.loadbalancer.server.port=80' \
     --name 'foo' \
     --network=traefik \
-    tutum/hello-world
+    containous/whoami
 
 ```
 
@@ -189,7 +189,7 @@ services:
       - traefik
 
   hellosvc:
-    image: tutum/hello-world
+    image: containous/whoami
     labels:
       <b>- traefik.enable=true</b>
     networks:
@@ -242,7 +242,7 @@ services:
       - traefik
 
   hellosvc:
-    image: tutum/hello-world
+    image: containous/whoami
     labels:
       <b>- traefik.http.routers.hellosvc.entrypoints=websecure</b>
       <b>- 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'</b>
@@ -261,6 +261,50 @@ Now we can visit our Hello World container by visiting `https://hellosvc-tmp.exa
 Note: Traefik requires additional configuration to automatically redirect HTTP to HTTPS. See the instructions in the next section.
 
 ### Automatically Redirect HTTP -> HTTPS.
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.0
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      <b>- --entrypoints.web.http.redirections.entryPoint.to=websecure</b>
+      <b>- --entrypoints.web.http.redirections.entryPoint.scheme=https</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
 
 ## 2FA/SAML/SSO
 
