@@ -58,8 +58,9 @@ services:
       # The HTTP port
       - "80:80"
     volumes:
-      # For Traefik's automated config to work, the docker socket needs to be mounted.
-      # There are some security implications to this. See https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface
+      # For Traefik's automated config to work, the docker socket needs to be
+      # mounted. There are some security implications to this.
+      # See https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface
       # and https://docs.traefik.io/providers/docker/#docker-api-access
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     command:
@@ -69,8 +70,9 @@ services:
     networks:
       - traefik
 
-# Use our previously created `traefik` docker network, so that we can route to containers that are created in
-# external docker-compose files and manually via `docker run`
+# Use our previously created `traefik` docker network, so that we can route to
+# containers that are created in external docker-compose files and manually via
+# `docker run`
 networks:
   traefik:
     external: true
@@ -143,7 +145,6 @@ networks:
 Next, lets start up a Docker container running the actual server that we want to route to.
 
 ```bash
-
 docker run \
     --rm \
     --label 'traefik.http.services.foo.loadbalancer.server.port=80' \
@@ -162,6 +163,19 @@ In this example, we've specified that the container name is `foo`, so the contai
 
 ### Override Subdomain Routing using Container Labels
 
+You can override the default routing rule (`providers.docker.defaultRule`) for your container by adding a `traefik.http.routers.*.rule` label.
+
+
+```bash
+docker run \
+    --rm \
+    --label 'traefik.http.services.foo.loadbalancer.server.port=80' \
+    --label 'traefik.http.routers.foo.rule=Host(`bar.example.com`)'
+    --name 'foo' \
+    --network=traefik \
+    containous/whoami
+
+```
 
 
 ## Restrict Scope
@@ -228,14 +242,17 @@ services:
       <b>- --entrypoints.websecure.address=:443</b>
       - --providers.docker.network=traefik
       - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
-      <b># We're going to use the DNS challenge since it allows us to generate certificates for intranet/lan sites as well</b>
+      <b># We're going to use the DNS challenge since it allows us to generate</b>
+      <b># certificates for intranet/lan sites as well</b>
       <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"</b>
-      <b># We're using cloudflare for this example, but many DNS providers are supported: https://docs.traefik.io/https/acme/#providers
+      <b># We're using cloudflare for this example, but many DNS providers are</b>
+      <b># supported: https://docs.traefik.io/https/acme/#providers </b>
       <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"</b>
       <b>- "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"</b>
       <b>- "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"</b>
     environment:
-      <b># We need to provide credentials to our DNS provider. See https://docs.traefik.io/https/acme/#providers for provider specific env vars. </b>
+      <b># We need to provide credentials to our DNS provider.</b>
+      <b># See https://docs.traefik.io/https/acme/#providers </b>
       <b>- "CF_DNS_API_TOKEN=XXXXXXXXX"</b>
       <b>- "CF_ZONE_API_TOKEN=XXXXXXXXXX"</b>
     networks:
@@ -252,6 +269,7 @@ networks:
   traefik:
     external: true
 </code></pre>
+
 
 Now we can visit our Hello World container by visiting `https://hellosvc-tmp.example.com`.
 
