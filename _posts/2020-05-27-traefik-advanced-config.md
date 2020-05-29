@@ -43,7 +43,7 @@ Before we start working with the advanced features of Traefik, lets get a simple
 We'll use this example as the base for any changes necessary to enable an advanced Traefik feature.
 
 - First, we need to create a shared Docker overlay network. Docker Compose (which we'll be using in the following examples) will create your container(s)
-but it will also create a docker overlay network speficially for containers defined in the compose file. This is fine until
+but it will also create a docker overlay network specifically for containers defined in the compose file. This is fine until
 you notice that traefik is unable to route to containers defined in other `docker-compose.yml` files, or started manually via `docker run`
 To solve this, we'll need to create a shared docker overlay network using `docker network create traefik` first.
 
@@ -83,7 +83,7 @@ networks:
 First, lets start by enabling the built in Traefik dashboard. This dashboard is useful for debugging as we enable other
 advanced features, however you'll want to ensure that it's disabled in production.
 
-<pre><code class="language-yaml">
+<pre><code class="yaml">
 version: '2'
 services:
   traefik:
@@ -121,7 +121,7 @@ One of the most useful things about Traefik is its ability to dynamically route 
 Rather than have to explicitly assign a domain or subdomain for each container, you can tell Traefik to use the container name
 (or service name in a docker-compose file) prepended to a domain name for dynamic routing. eg. `container_name.example.com`
 
-<pre><code class="language-yaml">
+<pre><code class="yaml">
 version: '2'
 services:
   traefik:
@@ -184,7 +184,7 @@ If you'd like a litte more control, you can pass the `--providers.docker.exposed
 enable routing for your containers by adding a `traefik.enable=true` label.
 
 
-<pre><code class="language-yaml">
+<pre><code class="yaml">
 version: '2'
 services:
   traefik:
@@ -223,7 +223,7 @@ The great thing about this setup is that Traefik will automatically request and 
 site is not accessible on the public internet.
 
 
-<pre><code class="language-yaml">
+<pre><code class="yaml">
 version: '2'
 services:
   traefik:
@@ -280,7 +280,7 @@ Note: Traefik requires additional configuration to automatically redirect HTTP t
 
 ### Automatically Redirect HTTP -> HTTPS.
 
-<pre><code class="language-yaml">
+<pre><code class="yaml">
 version: '2'
 services:
   traefik:
@@ -324,7 +324,73 @@ networks:
 </code></pre>
 
 
-## 2FA/SAML/SSO
+## 2FA, SSO and SAML
+
+Traefik supports using an external service to check for credentials. This external service can then be used to enable
+single sign on (SSO) for your apps, including 2FA and/or SAML.
+
+<img src="{{ site.url }}/assets/images/traefik/traefik-authforward.png" alt="Traefik external service" style="max-height: 500px;"/>
+
+In this example, I'll be using [Authelia](https://github.com/authelia/authelia) to enable SSO, but please note that Authelia does
+not support SAML, only 2FA and Forward Auth.
+
+Authelia requires HTTPS, so we'll base our Traefik configuration on the previous example.
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.0
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  authelia:
+    image: authelia/authelia
+    volumes:
+      - './authelia/configuration.yml:/etc/authelia/configuration.yml:ro'
+      - './authelia/data:/etc/authelia/data:rw'
+    environment:
+      - 'TZ=America/Los_Angeles'
+    labels:
+      - 'traefik.http.services.authelia.loadbalancer.server.port=9091'
+      - 'traefik.http.routers.authelia.rule=Host(`login.${DEPOT_DOMAIN_NAME}`)'
+      - 'traefik.http.routers.authelia.entrypoints=websecure'
+      - 'traefik.http.routers.authelia.tls.certresolver=mydnschallenge'
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
 
 
 
+networks:
+  traefik:
+    external: true
+</code></pre>
