@@ -27,7 +27,7 @@ route requests to your containers, with very little configuration.
 
 The release of Traefik v2, while adding tons of features, also completely threw away backwards compatibility, meaning that
  the documentation and guides you can find on the internet are basically useless.
-It doesn't help that the auto-magic configuration only works for toy examples. To do anything real requires real configuration.
+It doesn't help that the auto-magic configuration only works for toy examples. To do anything complicated requires some actual configuration.
 
 This guide assumes you're somewhat familiar with Traefik, and you're interested in adding some of the advanced features mentioned in the Table of Contents.
 
@@ -83,7 +83,7 @@ networks:
 First, lets start by enabling the built in Traefik dashboard. This dashboard is useful for debugging as we enable other
 advanced features, however you'll want to ensure that it's disabled in production.
 
-<pre><code class="yaml">
+<pre><code class="language-yaml">
 version: '2'
 services:
   traefik:
@@ -121,7 +121,7 @@ One of the most useful things about Traefik is its ability to dynamically route 
 Rather than have to explicitly assign a domain or subdomain for each container, you can tell Traefik to use the container name
 (or service name in a docker-compose file) prepended to a domain name for dynamic routing. eg. `container_name.example.com`
 
-<pre><code class="yaml">
+<pre><code class="language-yaml">
 version: '2'
 services:
   traefik:
@@ -184,7 +184,7 @@ If you'd like a litte more control, you can pass the `--providers.docker.exposed
 enable routing for your containers by adding a `traefik.enable=true` label.
 
 
-<pre><code class="yaml">
+<pre><code class="language-yaml">
 version: '2'
 services:
   traefik:
@@ -223,7 +223,7 @@ The great thing about this setup is that Traefik will automatically request and 
 site is not accessible on the public internet.
 
 
-<pre><code class="yaml">
+<pre><code class="language-yaml">
 version: '2'
 services:
   traefik:
@@ -280,7 +280,7 @@ Note: Traefik requires additional configuration to automatically redirect HTTP t
 
 ### Automatically Redirect HTTP -> HTTPS.
 
-<pre><code class="yaml">
+<pre><code class="language-yaml">
 version: '2'
 services:
   traefik:
