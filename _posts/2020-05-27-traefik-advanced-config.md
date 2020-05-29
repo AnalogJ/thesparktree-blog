@@ -8,6 +8,9 @@ tags:
 - devops
 - docker
 - traefik
+- letsencrypt
+- authelia
+- sso
 categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: False
@@ -45,7 +48,8 @@ you notice that traefik is unable to route to containers defined in other `docke
 To solve this, we'll need to create a shared docker overlay network using `docker network create traefik` first.
 
 - Next, lets create a new folder and a `docker-compose.yml` file. In the subsequent examples, all differences from this config will be bolded.
-    ```yaml
+
+```yaml
 version: '2'
 services:
   traefik:
@@ -70,7 +74,7 @@ services:
 networks:
   traefik:
     external: true
-    ```
+```
 
 ## WebUI Dashboard
 
@@ -128,7 +132,7 @@ services:
       - --providers.docker
       - --entrypoints.web.address=:80
       - --providers.docker.network=traefik
-      <b>- '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'</b>
+      <b>- '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'</b>
     networks:
       - traefik
 networks:
@@ -145,7 +149,7 @@ docker run \
     --label 'traefik.http.services.foo.loadbalancer.server.port=80' \
     --name 'foo' \
     --network=traefik \
-    tutum/hello-world
+    containous/whoami
 
 ```
 
@@ -153,7 +157,7 @@ Whenever a container starts Traefik will interpolate the `defaultRule` and confi
 In this example, we've specified that the container name is `foo`, so the container will be accessible at
 `foo.example.com`
 
-> Note: if your service is running in another docker-compose file, `{{ normalize .Name }}` will be interpolated as: `service_name-folder_name`,
+> Note: if your service is running in another docker-compose file, `{% raw %}{{ normalize .Name }}{% endraw %}` will be interpolated as: `service_name-folder_name`,
 > so your container will be accessible at `service_name-folder_name.example.com`
 
 ### Override Subdomain Routing using Container Labels
@@ -179,13 +183,13 @@ services:
       - --providers.docker
       - --entrypoints.web.address=:80
       - --providers.docker.network=traefik
-      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
       <b>- '--providers.docker.exposedByDefault=false'</b>
     networks:
       - traefik
 
   hellosvc:
-    image: tutum/hello-world
+    image: containous/whoami
     labels:
       <b>- traefik.enable=true</b>
     networks:
@@ -198,10 +202,110 @@ networks:
 As I mentioned earlier, `normalize .Name` will be interpolated as `service_name-folder_name` for containers started via docker-compose.
 So my Hello-World test container will be accessible as `hellosvc-tmp.example.com` on my local machine.
 
-## LetsEncrypt Integration
+## Automated SSL Certificates using LetsEncrypt DNS Integration
+Next, lets look at how to securely access Traefik managed containers over SSL using LetsEncrypt certificates.
+
+The great thing about this setup is that Traefik will automatically request and renew the SSL certificate for you, even if your
+site is not accessible on the public internet.
 
 
-## Global HTTP -> HTTPS redirect
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.0
+    ports:
+      - "80:80"
+      <b># The HTTPS port</b>
+      <b>- "443:443"</b>
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      <b># It's a good practice to persist the Letsencrypt certificates so that they don't change if the Traefik container needs to be restarted.</b>
+      <b>- "./letsencrypt:/letsencrypt"</b>
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      <b>- --entrypoints.websecure.address=:443</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
+      <b># We're going to use the DNS challenge since it allows us to generate certificates for intranet/lan sites as well</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"</b>
+      <b># We're using cloudflare for this example, but many DNS providers are supported: https://docs.traefik.io/https/acme/#providers
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"</b>
+    environment:
+      <b># We need to provide credentials to our DNS provider. See https://docs.traefik.io/https/acme/#providers for provider specific env vars. </b>
+      <b>- "CF_DNS_API_TOKEN=XXXXXXXXX"</b>
+      <b>- "CF_ZONE_API_TOKEN=XXXXXXXXXX"</b>
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      <b>- traefik.http.routers.hellosvc.entrypoints=websecure</b>
+      <b>- 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+Now we can visit our Hello World container by visiting `https://hellosvc-tmp.example.com`.
+
+<img src="{{ site.url }}/assets/images/traefik/traefik-letsencrypt.jpg" alt="letsencrypt ssl certificate" style="max-height: 500px;"/>
+
+
+Note: Traefik requires additional configuration to automatically redirect HTTP to HTTPS. See the instructions in the next section.
+
+### Automatically Redirect HTTP -> HTTPS.
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.0
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      <b>- --entrypoints.web.http.redirections.entryPoint.to=websecure</b>
+      <b>- --entrypoints.web.http.redirections.entryPoint.scheme=https</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{% raw %}{{ normalize .Name }}{% endraw %}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+
 ## 2FA/SAML/SSO
 
 
