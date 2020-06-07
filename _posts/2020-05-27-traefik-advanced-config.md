@@ -421,7 +421,7 @@ In the above `docker-compose.yml` file, under the `authelia` service, 2 config f
 `configuration.yml` is the configuration file for Authelia. Here's an example of what that file looks like. You will need ensure that
 all references to the `example.com` domain are replaced with your chosen (sub)domain.
 
-See https://github.com/authelia/authelia/blob/master/config.template.yml for a comprehensive list of options.
+See [config.template.yml on github](https://github.com/authelia/authelia/blob/master/config.template.yml) for a comprehensive list of options.
 
 ```yaml
 ###############################################################
@@ -599,7 +599,7 @@ notifier:
 
 In this example we use a hard coded user database, defined in `users_database.yml`. Authelia also supports LDAP integration.
 
-See https://docs.authelia.com/configuration/authentication/file.html#password-hash-algorithm-tuning
+See the [password-hash-algorithm-tuning](https://docs.authelia.com/configuration/authentication/file.html#password-hash-algorithm-tuning) documentation for more information.
 
 ```yaml
 users:
