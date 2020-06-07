@@ -15,7 +15,6 @@ categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: False
 toc: true
-hidden: true
 ---
 
 > Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
@@ -324,6 +323,19 @@ networks:
 </code></pre>
 
 
+Note, the `--entrypoints.web.http.redirections.entryPoint.*` `command line flags` are only available in Traefik v2.2+. If you need HTTP to HTTPS
+redirection for Traefik v2.0 or v2.1, you'll need to add the following `labels` instead:
+
+```
+traefik:
+  ....
+  labels:
+    - traefik.http.routers.https-redirect.entrypoints=web
+    - traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)
+    - traefik.http.routers.https-redirect.middlewares=https-only
+    - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+```
+
 ## 2FA, SSO and SAML
 
 Traefik supports using an external service to check for credentials. This external service can then be used to enable
@@ -371,7 +383,7 @@ services:
     image: authelia/authelia
     volumes:
       - './authelia/configuration.yml:/etc/authelia/configuration.yml:ro'
-      - './authelia/users_database.yml:/etc/authelia/data/users_database.yml:ro'
+      - './authelia/users_database.yml:/etc/authelia/users_database.yml:ro'
       - './authelia/data:/etc/authelia/data:rw'
     environment:
       - 'TZ=America/Los_Angeles'
@@ -471,7 +483,7 @@ authentication_backend:
   # more than one instance.
   #
   file:
-    path: /etc/authelia/data/users_database.yml
+    path: /etc/authelia/users_database.yml
 
 # Access Control
 #
