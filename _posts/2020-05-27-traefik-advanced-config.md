@@ -53,7 +53,7 @@ To solve this, we'll need to create a shared docker network using `docker networ
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       # The HTTP port
       - "80:80"
@@ -87,7 +87,7 @@ advanced features, however you'll want to ensure that it's disabled in productio
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       <b># The Web UI (enabled by --api.insecure=true)</b>
@@ -125,7 +125,7 @@ Rather than have to explicitly assign a domain or subdomain for each container, 
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
     volumes:
@@ -188,7 +188,7 @@ enable routing for your containers by adding a `traefik.enable=true` label.
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
     volumes:
@@ -227,7 +227,7 @@ site is not accessible on the public internet.
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       <b># The HTTPS port</b>
@@ -284,7 +284,7 @@ Note: Traefik requires additional configuration to automatically redirect HTTP t
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       # The HTTPS port
@@ -340,7 +340,7 @@ Authelia requires HTTPS, so we'll base our Traefik configuration on the previous
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       # The HTTPS port
