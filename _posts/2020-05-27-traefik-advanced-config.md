@@ -42,10 +42,10 @@ This guide assumes you're somewhat familiar with Traefik, and you're interested 
 Before we start working with the advanced features of Traefik, lets get a simple example working.
 We'll use this example as the base for any changes necessary to enable an advanced Traefik feature.
 
-- First, we need to create a shared Docker overlay network. Docker Compose (which we'll be using in the following examples) will create your container(s)
-but it will also create a docker overlay network specifically for containers defined in the compose file. This is fine until
+- First, we need to create a shared Docker network. Docker Compose (which we'll be using in the following examples) will create your container(s)
+but it will also create a docker network specifically for containers defined in the compose file. This is fine until
 you notice that traefik is unable to route to containers defined in other `docker-compose.yml` files, or started manually via `docker run`
-To solve this, we'll need to create a shared docker overlay network using `docker network create traefik` first.
+To solve this, we'll need to create a shared docker network using `docker network create traefik` first.
 
 - Next, lets create a new folder and a `docker-compose.yml` file. In the subsequent examples, all differences from this config will be bolded.
 
@@ -371,7 +371,7 @@ services:
     image: authelia/authelia
     volumes:
       - './authelia/configuration.yml:/etc/authelia/configuration.yml:ro'
-      - './authelia/users_database.yml:/etc/authelia/users_database.yml:ro'
+      - './authelia/users_database.yml:/etc/authelia/data/users_database.yml:ro'
       - './authelia/data:/etc/authelia/data:rw'
     environment:
       - 'TZ=America/Los_Angeles'
@@ -380,6 +380,8 @@ services:
       - 'traefik.http.routers.authelia.rule=Host(`login.example.com`)'
       - 'traefik.http.routers.authelia.entrypoints=websecure'
       - 'traefik.http.routers.authelia.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
 
   hellosvc:
     image: containous/whoami
@@ -514,7 +516,7 @@ access_control:
   rules:
     # Rules applied to everyone
 
-    - domain: "*.example.com
+    - domain: "*.example.com"
       policy: one_factor
 
 # Configuration of session cookies
