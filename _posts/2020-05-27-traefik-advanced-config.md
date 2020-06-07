@@ -15,7 +15,6 @@ categories: 'analogj'
 logo: '/assets/logo-dark.png'
 navigation: False
 toc: true
-hidden: true
 ---
 
 > Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
@@ -42,10 +41,10 @@ This guide assumes you're somewhat familiar with Traefik, and you're interested 
 Before we start working with the advanced features of Traefik, lets get a simple example working.
 We'll use this example as the base for any changes necessary to enable an advanced Traefik feature.
 
-- First, we need to create a shared Docker overlay network. Docker Compose (which we'll be using in the following examples) will create your container(s)
-but it will also create a docker overlay network specifically for containers defined in the compose file. This is fine until
+- First, we need to create a shared Docker network. Docker Compose (which we'll be using in the following examples) will create your container(s)
+but it will also create a docker network specifically for containers defined in the compose file. This is fine until
 you notice that traefik is unable to route to containers defined in other `docker-compose.yml` files, or started manually via `docker run`
-To solve this, we'll need to create a shared docker overlay network using `docker network create traefik` first.
+To solve this, we'll need to create a shared docker network using `docker network create traefik` first.
 
 - Next, lets create a new folder and a `docker-compose.yml` file. In the subsequent examples, all differences from this config will be bolded.
 
@@ -53,7 +52,7 @@ To solve this, we'll need to create a shared docker overlay network using `docke
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       # The HTTP port
       - "80:80"
@@ -87,7 +86,7 @@ advanced features, however you'll want to ensure that it's disabled in productio
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       <b># The Web UI (enabled by --api.insecure=true)</b>
@@ -125,7 +124,7 @@ Rather than have to explicitly assign a domain or subdomain for each container, 
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
     volumes:
@@ -188,7 +187,7 @@ enable routing for your containers by adding a `traefik.enable=true` label.
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
     volumes:
@@ -227,7 +226,7 @@ site is not accessible on the public internet.
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       <b># The HTTPS port</b>
@@ -284,7 +283,7 @@ Note: Traefik requires additional configuration to automatically redirect HTTP t
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       # The HTTPS port
@@ -324,6 +323,19 @@ networks:
 </code></pre>
 
 
+Note, the `--entrypoints.web.http.redirections.entryPoint.*` `command line flags` are only available in Traefik v2.2+. If you need HTTP to HTTPS
+redirection for Traefik v2.0 or v2.1, you'll need to add the following `labels` instead:
+
+```
+traefik:
+  ....
+  labels:
+    - traefik.http.routers.https-redirect.entrypoints=web
+    - traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)
+    - traefik.http.routers.https-redirect.middlewares=https-only
+    - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+```
+
 ## 2FA, SSO and SAML
 
 Traefik supports using an external service to check for credentials. This external service can then be used to enable
@@ -340,7 +352,7 @@ Authelia requires HTTPS, so we'll base our Traefik configuration on the previous
 version: '2'
 services:
   traefik:
-    image: traefik:v2.0
+    image: traefik:v2.2
     ports:
       - "80:80"
       # The HTTPS port
@@ -380,6 +392,8 @@ services:
       - 'traefik.http.routers.authelia.rule=Host(`login.example.com`)'
       - 'traefik.http.routers.authelia.entrypoints=websecure'
       - 'traefik.http.routers.authelia.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
 
   hellosvc:
     image: containous/whoami
@@ -469,7 +483,7 @@ authentication_backend:
   # more than one instance.
   #
   file:
-    path: /etc/authelia/data/users_database.yml
+    path: /etc/authelia/users_database.yml
 
 # Access Control
 #
@@ -514,7 +528,7 @@ access_control:
   rules:
     # Rules applied to everyone
 
-    - domain: "*.example.com
+    - domain: "*.example.com"
       policy: one_factor
 
 # Configuration of session cookies
