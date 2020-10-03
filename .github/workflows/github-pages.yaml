@@ -1,0 +1,31 @@
+name: Github-Pages
+# This workflow is triggered on pushes to the repository.
+on: [push]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: jekyll/builder:3.4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        env:
+          NOKOGIRI_USE_SYSTEM_LIBRARIES: true
+          LANG: C.UTF-8
+          LANGUAGE: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: |
+          apk add --no-cache imagemagick-dev
+          jekyll build --destination dist
+
+      - name: Test
+        env:
+          NOKOGIRI_USE_SYSTEM_LIBRARIES: true
+          LANG: C.UTF-8
+          LANGUAGE: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: |
+          bundle exec htmlproofer dist --check-html --disable-external --assume-extension
