@@ -2173,3 +2173,7 @@ body:not(.post-template) .post-title {
     -ms-transform: inherit;
     transform: inherit;
 }
+
+.homepage-header-content {
+    background-color: rgba(0,0,0, 0.7)
+}
