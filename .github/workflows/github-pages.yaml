@@ -2,6 +2,12 @@ name: Github-Pages
 # This workflow is triggered on pushes to the repository.
 on: [push]
 
+env:
+  NOKOGIRI_USE_SYSTEM_LIBRARIES: true
+  LANG: C.UTF-8
+  LANGUAGE: C.UTF-8
+  LC_ALL: C.UTF-8
+
 jobs:
   build:
     name: Build
@@ -12,20 +18,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
-        env:
-          NOKOGIRI_USE_SYSTEM_LIBRARIES: true
-          LANG: C.UTF-8
-          LANGUAGE: C.UTF-8
-          LC_ALL: C.UTF-8
         run: |
           apk add --no-cache imagemagick-dev
           jekyll build --destination dist
 
       - name: Test
-        env:
-          NOKOGIRI_USE_SYSTEM_LIBRARIES: true
-          LANG: C.UTF-8
-          LANGUAGE: C.UTF-8
-          LC_ALL: C.UTF-8
         run: |
           bundle exec htmlproofer dist --check-html --disable-external --assume-extension
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: workspace-artifact
+          path: dist
+
+  # only run deployment if build step completes successfully, and for master branch.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: workspace-artifact
+          path: dist
+#      - name: Deploy
+#        run: |
+#          cd dist
+#          git init
+#          git checkout -b gh-pages
+#          git add -A
+#          git commit -m "Automated deployment to GitHub Pages: ${CIRCLE_SHA1}" --allow-empty
+#          git remote add origin git@github.com:AnalogJ/thesparktree-blog.git
+#          git push --force origin gh-pages:gh-pages
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: "Automated deployment to GitHub Pages: ${{ github.event.after }}"
