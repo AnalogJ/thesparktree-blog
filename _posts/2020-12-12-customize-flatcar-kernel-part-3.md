@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 'Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift'
-date: '19-01-02T01:19:33-08:00'
+date: '20-12-12T01:19:33-08:00'
 cover: '/assets/images/cover_flatcar.png'
 subclass: 'post tag-post'
 tags:
@@ -16,8 +16,8 @@ categories: 'analogj'
 ---
 
 It's been a while since I discussed building kernel modules for CoreOS (in [Part 1](https://blog.thesparktree.com/customize-coreos-kernel-part-1) and [Part 2](https://blog.thesparktree.com/customize-coreos-kernel-part-2))
-and lot's has changed in the CoreOS world. [CoreOS was acquired by RedHat](https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership) and eventually sunset by
-[CoreOS Fedora](https://docs.fedoraproject.org/en-US/fedora-coreos/faq/) but the original project lives on in [FlatCar linux](https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/)
+and lot's has changed in the CoreOS world. [CoreOS was acquired by RedHat](https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership) and eventually replaced by
+[CoreOS Fedora](https://docs.fedoraproject.org/en-US/fedora-coreos/faq/) but the original project lives on in [FlatCar linux](https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/),
 a fork of CoreOS.
 
 Since those last posts, I've also started using a dedicated GPU to do hardware transcoding of video files. Unfortunately
@@ -39,7 +39,7 @@ curl https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt -o v
 cat version.txt
 export $(cat version.txt | xargs)
 
-echo "=========================== Download Developer Container ==========================="
+echo "Download Developer Container"
 curl -L https://stable.release.flatcar-linux.net/amd64-usr/${FLATCAR_VERSION}/flatcar_developer_container.bin.bz2 -o flatcar_developer_container.bin.bz2
 bunzip2 -k flatcar_developer_container.bin.bz2
 mkdir ${FLATCAR_VERSION}
@@ -84,7 +84,7 @@ RUN emerge -gKq --jobs 4 --load-average 4 coreos-sources || echo "failed to down
 RUN cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/.config /usr/src/linux/ \
     && make -C /usr/src/linux modules_prepare \
     && cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/Module.symvers /usr/src/linux/
-``
+```
 
 # Pre-Compiling Nvidia Kernel Driver
 
@@ -95,7 +95,8 @@ definitely running a kernel that is different from the kernel we'll be running o
 
 <div class="github-widget" data-repo="mediadepot/docker-flatcar-nvidia-driver"></div>
 
-```
+```bash
+
 ./nvidia-installer -s -n \
   --kernel-name="${KERNEL_VERSION}" \
   --kernel-source-path=/usr/src/linux \
@@ -104,6 +105,7 @@ definitely running a kernel that is different from the kernel we'll be running o
   --no-distro-scripts \
   --kernel-install-path="/$PWD" \
   --log-file-name="$PWD"/nvidia-installer.log || true
+
 ```
 
 The important flags for compiling the Nvidia driver for a different kernel are the following:
