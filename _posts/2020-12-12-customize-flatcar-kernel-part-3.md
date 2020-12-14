@@ -11,7 +11,7 @@ tags:
 - kernel
 
 navigation: True
-logo: '/assets/logo-dark.png'
+logo: '/assets/logo.png'
 categories: 'analogj'
 ---
 
