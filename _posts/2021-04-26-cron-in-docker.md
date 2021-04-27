@@ -30,7 +30,7 @@ periodically at fixed times, dates, or intervals. It typically automates system 
 general-purpose nature makes it useful for things like downloading files from the Internet and downloading email at regular
 intervals.
 
-https://en.wikipedia.org/wiki/Cron
+[https://en.wikipedia.org/wiki/Cron](https://en.wikipedia.org/wiki/Cron)
 
 Basically it's a language/platform/distro agnostic tool for scheduling tasks/scripts to run automatically at some interval.
 
@@ -107,9 +107,9 @@ As mentioned earlier, `cron` is designed to work in a multi-user environment, wh
 make assumptions about the runtime environment (process environmental variables, etc). The way `cron` enforces this is
 by starting each job with a custom environment, using an implementation specific environmental variables file (usually `/etc/environment`)
 
-Since environmental variables a common configuration mechanism for Docker containers, we need a way to ensure the current
-Docker container environment is passed into the cron sub-processes. The best way to do this is just creating a custom
-entrypoint script, before starting `cron` in the foreground.
+Since using environmental variables is a common configuration mechanism for Docker containers, we need a way to ensure the current
+Docker container environment is passed into the cron sub-processes. The best way to do this is by creating a custom
+entrypoint script which dumps the environment to the `cron` environment file, before starting `cron` in the foreground.
 
 Create the following `/entrypoint.sh` script in your Docker image.
 
@@ -132,24 +132,21 @@ before your script: `* * * * * root . /etc/environment; date`
 
 If you've been following along so far, you might be wondering why you're not seeing any output from `date` in your
 terminal. That's because even though `cron` is running in the foreground, the output from its child processes is designed
-to go to a log file traditionally at `/var/log/cron`. Again, this might be fine on a standard linux host, but it's
+to go to a log file (traditionally at `/var/log/cron`). Again, this might be fine on a standard linux host, but it's
 sub-optimal for a Docker container.
 
 Let's use some shell redirect magic to redirect the `STDOUT` and `STDERR` from our `cron` jobs, to the `cron` process
 (running as the primary process in the Docker container, with [PID 1](https://en.wikipedia.org/wiki/Process_identifier)).
 
 ```
-# Example of job definition:
-# .---------------- minute (0 - 59)
-# |  .------------- hour (0 - 23)
-# |  |  .---------- day of month (1 - 31)
-# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
-# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
-# |  |  |  |  |
-# *  *  *  *  * user-name command to be executed
+# >/proc/1/fd/1 redirects STDOUT from the `date` command to PID1's STDOUT
+# 2>/proc/1/fd/2 redirects STDERR from the `date` command to PID1's STDERR
 
 * * * * * root date >/proc/1/fd/1 2>/proc/1/fd/2
 ```
+
+While `>/proc/1/fd/1 2>/proc/1/fd/2` may look intimidating, it's the most consistent way to pass `cronjob` logs to the container's
+STDOUT, without leveraging clunky solutions like `crond && tail -f /var/log/cron`
 
 > NOTE: this is unnecessary in Alpine, as long as you start cron with the following command:
 > - Alpine: `crond -f -l 2`
@@ -227,6 +224,20 @@ Create a `crontab`
 
 # An empty line is required at the end of this file for a valid cron file.
 
+```
+
+Build the Dockerfile and run it with `--init` (package `tini` or `s6-overlay` for containers in production)
+
+```bash
+docker build -t analogj/cron .
+docker run --rm --name cron -e CUSTOM_ENV_VAR=foobar -v `pwd`/crontab:/etc/crontab analogj/cron
+```
+
+You should see output like the following:
+
+```
+foobar
+Tue Apr 27 14:31:00 UTC 2021
 ```
 
 # Fin
