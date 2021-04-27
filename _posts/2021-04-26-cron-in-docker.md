@@ -124,9 +124,15 @@ exec "cron -f"
 
 > NOTE:
 >
-> - Centos: unfortunately `cronie` doesn't read variables from `/etc/environment`. You'll need to manually source it
-before your script: `* * * * * root . /etc/environment; date`
-
+> - Centos: unfortunately `cronie` doesn't read variables from `/etc/environment`.
+>   - You'll need to manually source it before your script: `* * * * * root . /etc/environment; date`
+>   - If you have multiple entries in your `crontab`, you can change the default `SHELL` for your `crontab` file, and make use of `BASH_ENV`
+>
+>        ```
+>        SHELL=/bin/bash
+>        BASH_ENV=/etc/environment
+>        * * * * * root echo "${CUSTOM_ENV_VAR}"
+>        ```
 
 ## STDOUT/STDERR
 
@@ -248,3 +254,4 @@ I've put together a working example of dockerized `cron` for multiple distros:
 
 ## References
 - https://hynek.me/articles/docker-signals/
+- https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container
