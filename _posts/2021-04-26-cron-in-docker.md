@@ -78,7 +78,7 @@ Let's create/update a file called `/etc/crontab`
 * * * * * root date
 ```
 
-This file will configure `cron` to run the `date` command every second. We'll talk about the output for this command in a later section.
+This file will configure `cron` to run the `date` command every minute. We'll talk about the output for this command in a later section.
 
 > NOTE:
 >
