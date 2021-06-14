@@ -2,7 +2,7 @@
 layout: post
 title: 'OpenLDAP using STARTTLS & LetsEncrypt'
 date: '21-06-13T01:19:33-08:00'
-cover: '/assets/images/cover_ldap.jpg'
+cover: '/assets/images/cover_ldap.png'
 subclass: 'post tag-post'
 tags:
 - ldap
@@ -52,6 +52,8 @@ I am trying to replicate a production-like environment, which means real, truste
 short-lived trusted certificates provided by LetsEncrypt to secure our test OpenLDAP server.
 
 # Generate LetsEncrypt Certificate
+
+<div class="github-widget" data-repo="matrix-org/docker-dehydrated"></div>
 
 The [matrix.org](https://matrix.org/) team provide a simple [Docker image](https://github.com/matrix-org/docker-dehydrated#behaviour)
 that you can use to generate LetsEncrypt certificates using the DNS-01 challenge. All you need is a custom domain, and a
@@ -112,7 +114,7 @@ data
 └── domains.txt
 ```
 
-Let's leave these files alone for now, and continue to standing up and configuring our OpenLDAP serve.
+Let's leave these files alone for now, and continue to standing up and configuring our OpenLDAP server.
 
 
 # Deploying OpenLDAP via Docker
@@ -120,14 +122,14 @@ Let's leave these files alone for now, and continue to standing up and configuri
 Since we're not actually deploying a production instance (with HA/monitoring/security hardening/etc) we can take
 some short-cuts and use an off-the-shelf Docker image.
 
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
 The [analogj/docker-openldap-starttls](https://github.com/AnalogJ/docker-openldap-starttls) image we're using in the
 example below is based on the  [rroemhild/test-openldap](https://github.com/rroemhild/docker-test-openldap/) Docker image,
  which provies a vanilla install of OpenLDAP, and adds Futurama characters as test users.
 
 I've customized it to add support for custom Domains, dynamic configuration & the ability to enforce StartTLS on the
 serverside (which is great for testing).
-
-
 
 Before we start the OpenLDAP container, lets rename and re-organize our LetsEncrypt certificates in a folder structure that the container expects:
 
@@ -160,7 +162,7 @@ ghcr.io/analogj/docker-openldap-starttls:master
 >
 > Pay attention to the `LDAP_BASEDN` and `LDAP_BINDDN` variables, they should match your Domain root as well.
 >
-> `LDAP_FORCE_STARTTLS=true` is optional, you can use it to conditionally start your LDAP server with  StartTLS enforced.
+> `LDAP_FORCE_STARTTLS=true` is optional, you can use it to conditionally start your LDAP server with StartTLS enforced.
 
 
 
@@ -201,11 +203,12 @@ PING ldap.example.com (192.168.0.123): 56 data bytes
 64 bytes from 192.168.0.123: icmp_seq=0 ttl=64 time=0.045 ms
 ```
 
-
+> NOTE: Remember, DNS updates can take a while to propagate. You'll want to set a low TTL for the new record if your IP will
+> be changing constantly (DHCP). You may also need to flush your DNS cache if the changes do not propagate correctly.
 
 # Testing
 
-You can test that the container is up and running with some handy `ldapsearch` commands:
+You can test that the container is up and running (and accessible via our custom domain) with some handy `ldapsearch` commands:
 
 ```
 # List all Users (only works with LDAP_FORCE_STARTTLS=false)
@@ -219,10 +222,10 @@ ldapsearch -H ldap://ldap.example.com:10389 -x -b "ou=people,dc=example,dc=com" 
 ldapsearch -H ldap://ldap.example.com:10389 -Z -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
 
 # Enforce StartTLS (only works with LDAP_FORCE_STARTTLS=true)
-ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=planetexpress,dc=com" -D "cn=admin,dc=planetexpress,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+ldapsearch -H ldap://example:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
 
-# Enforce StartTLS with self-signed cert
-LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=planetexpress,dc=com" -D "cn=admin,dc=planetexpress,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+# Query Open LDAP using Localhost url, also works with self-signed certs (-ZZ forces StartTLS)
+LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
 ```
 
 
@@ -260,6 +263,8 @@ Other than my changes that allow you to customize the domain, there are only 2 m
   ```
 
 # Fin
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
 
 Getting all the details right took some time, but it was worth it. With this containerized setup, its easy to start
 up a fresh "trusted" OpenLDAP image for testing, and conditionally enforce StartTLS.
