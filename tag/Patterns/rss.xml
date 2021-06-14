@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Incredible Javascript Patterns Resource</title>
+	  <link>/incredible-javascript-patterns-resource</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-09-21T02:00:00-05:00</pubDate>
+	  <guid>/incredible-javascript-patterns-resource</guid>
+	  <description><![CDATA[
+	     <p>http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript</p>
+
+<p><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript">http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript</a></p>
+
+<ul>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#whatisapattern">What is a Pattern?</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#patternity">‘Pattern’-ity Testing, Proto-Patterns &amp; The Rule Of Three</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternstructure">The Structure Of A Design Pattern</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#writingdesignpatterns">Writing Design Patterns</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#antipatterns">Anti-Patterns</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#categoriesofdesignpatterns">Categories Of Design Pattern</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjavascript">Design Patterns in JavaScript</a>
+    <ul>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#creationalpatternjavascript">Creational Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#constructorpatternjavascript">Constructor Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#singletonpatternjavascript">Singleton Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#modulepatternjavascript">Module Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript">Revealing Module Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#observerpatternjavascript">Observer Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#prototypepatternjavascript">Prototype Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#commandpatternjavascript">Command Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#drypatternjavascript">DRY Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#facadepatternjavascript">Facade Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#factorypatternjavascript">Factory Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#mixinpatternjavascript">Mixin Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#decoratorpatternjavascript">Decorator Pattern</a></li>
+    </ul>
+  </li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjquery">A High-level View Of Design Patterns in jQuery</a>
+    <ul>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#modulepatternjquery">Module Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#lazyinitialisationjquery">Lazy Initialisation</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#compositepatternjquery">Composite Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#wrapperpatternjquery">Wrapper Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#facadepatternjquery">Facade Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#observerpatternjquery">Observer Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#iteratorpatternjquery">Iterator Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#strategypatternjquery">Strategy Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#proxypatternjquery">Proxy Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#builderpatternjquery">Builder Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#prototypepatternjquery">Prototype Pattern</a></li>
+      <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#flyweightpatternjquery">Flyweight Pattern</a></li>
+    </ul>
+  </li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#conclusions">Conclusions</a></li>
+  <li><a href="http://addyosmani.com/resources/essentialjsdesignpatterns/book/#references">References</a></li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

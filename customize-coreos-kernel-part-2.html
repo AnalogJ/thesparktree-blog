@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Customize the CoreOS Kernel - Part 2 - Kernel SDK</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Customize the CoreOS Kernel - Part 2 - Kernel SDK" />
+    <meta name="twitter:description" content="After running into a roadblock while attempting to build the Intel I915 driver as a kernel module for CoreOS, it became clear that we would need..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/customize-coreos-kernel-part-2" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_coreos.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Customize the CoreOS Kernel - Part 2 - Kernel SDK" />
+    <meta property="og:description" content="After running into a roadblock while attempting to build the Intel I915 driver as a kernel module for CoreOS, it became clear that we would need..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/customize-coreos-kernel-part-2" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_coreos.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/customize-coreos-kernel-part-2",
+        "image": "https://blog.thesparktree.com/assets/images/cover_coreos.png",
+        "description": "After running into a roadblock while attempting to build the Intel I915 driver as a kernel module for CoreOS, it became clear that we would need..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_coreos.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Customize the CoreOS Kernel - Part 2 - Kernel SDK</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2019-01-02">02 Jan 2019</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/coreos'>Coreos</a>,
+                    
+                
+                    
+                       <a href='/tag/github'>Github</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/kernel'>Kernel</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>After running into a roadblock while attempting to <a href="./customize-coreos-kernel-part-1">build the Intel I915 driver as a kernel module</a> for CoreOS,
+it became clear that we would need to build a completely custom CoreOS kernel with the drivers and features we need enabled.</p>
+
+<p>Thankfully the CoreOS developers have provided us with a set of tools and documentation to help make this process a bit easier:</p>
+
+<p><a href="https://coreos.com/os/docs/latest/sdk-modifying-coreos.html">CoreOS Container Linux developer SDK</a></p>
+
+<p>CoreOS is all open source and made up of a couple dozen git repositories, which are then glued together and compiled by the tools included in the
+SDK.</p>
+
+<p>The SDK tools are meant to be installed on a computer running Linux, however to make things easier for myself I created a CentOS VM using a
+simple Vagrantfile:</p>
+
+<pre><code class="language-vagrantfile">
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+
+    config.vm.provider "virtualbox" do |v|
+        v.name = "coreos_builder"
+        v.memory = 11264
+        v.cpus = 4
+    end
+
+    config.vm.provision "shell", path: "provisioner.sh"
+end
+
+</code></pre>
+
+<p>You’ll want to give as much CPU and RAM as you can, as the build and compilation steps are time consuming (I’m talking multiple hours here).</p>
+
+<h1 id="building-vanilla-coreos">Building Vanilla CoreOS</h1>
+
+<p>The first thing I want to do is build a vanilla version of CoreOS without any changes. To do this we’ll create a <code class="highlighter-rouge">provisioner.sh</code> script
+and populate it as follows:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/usr/bin/env bash</span>
+
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+whoami
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create
+
+cork enter
+grep NAME /etc/os-release
+
+./set_shared_user_password.sh mediadepot
+./setup_board
+./build_packages
+./build_image
+
+EOF
+
+</span></code></pre>
+</div>
+
+<p>As you can see the <code class="highlighter-rouge">Prerequsites</code> section is pretty straight forward, we download &amp; install the SDK dependencies as listed
+in their documentation and download the <code class="highlighter-rouge">cork</code> tool.</p>
+
+<p>Then the script gets a bit interesting. We tell Vagrant to execute the following commands as the <code class="highlighter-rouge">vagrant</code> user, rather than
+the default <code class="highlighter-rouge">root</code> user used during provisioning. This is due to the fact that the <code class="highlighter-rouge">cork</code> tool <a href="https://github.com/coreos/mantle/issues/958">expects to be run as a regular user
+not root</a>.</p>
+
+<p>So we’ll verify that we’re running as <code class="highlighter-rouge">vagrant</code> using <code class="highlighter-rouge">whoami</code>, then configure the <code class="highlighter-rouge">git</code> tool</p>
+
+<p>Then we’ll go back to the steps mentioned in the SDK guide, creating a folder for the SDK to manage, and finally running the <code class="highlighter-rouge">cork</code>
+commands.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">cork create</code> will download and unpack the SDK into the current directory</li>
+  <li><code class="highlighter-rouge">cork enter</code> will enter a <a href="https://wiki.archlinux.org/index.php/chroot"><code class="highlighter-rouge">chroot</code></a> with additional SDK tools that we can then use to
+download &amp; compile our coreos image</li>
+</ul>
+
+<p>Now that we have a <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code> script, we can verify our VM configuration and run <code class="highlighter-rouge">vagrant up</code> to build and provision
+our VM.</p>
+
+<p><code class="highlighter-rouge">vagrant up</code> took more than 4 hours to complete on my machine (how long did it take you?). Once complete, you should be greeted with a success
+message that looks like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete.png" alt="sdk complete" /></p>
+
+<p>At this point we’ve verified that our base tooling is installed correctly, and that we can build CoreOS images. Now we need to start
+our kernel customizations.</p>
+
+<h1 id="forking-coreos-source-repos">Forking CoreOS Source Repos</h1>
+
+<p>As I mentioned earlier, CoreOS is broken up into a couple dozen git repos, but the primary repo is called <a href="https://github.com/coreos/manifest"><code class="highlighter-rouge">coreos/manifest</code></a>.</p>
+
+<p>Looking at the <a href="https://github.com/coreos/manifest/blob/master/master.xml">master.xml</a> makes it clear why <code class="highlighter-rouge">manifest</code> is so
+important: <strong>It references all the other git repos that are used when building CoreOS</strong></p>
+
+<p>The first thing we’re going to do is fork and clone repo so that we can customize the repos used to ones that contain our changes.</p>
+
+<p>I forked <code class="highlighter-rouge">coreos/manifest</code> to <a href="https://github.com/mediadepot/coreos-manifest">mediadepot/coreos-manifest</a> and then ran
+<code class="highlighter-rouge">git clone git@github.com:mediadepot/coreos-manifest.git</code></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-manifest"></div>
+
+<p>You may have noticed that there’s a ton of branches in this repo. These branches are all prefixed with <code class="highlighter-rouge">build-</code>. These <code class="highlighter-rouge">build-</code> branches
+are how CoreOS manages versioning and directly matches the major version specified in <a href="https://coreos.com/releases/">https://coreos.com/releases/</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/build_branches.png" alt="build branches" /></p>
+
+<p>In my case I want to build my custom image off of the current CoreOS Stable version which is <code class="highlighter-rouge">1911.4.0</code>.</p>
+
+<p>To do this, I’ll checkout the <code class="highlighter-rouge">build-1911</code> branch, and then create a new branch ontop of that:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+</code></pre>
+</div>
+
+<p>Now you’ll have a branch built off the latest stable release that’s ready to work with.</p>
+
+<p>Now we’ll want to look at the master.xml file and determine the referenced repos that we need to fork.
+Since we only to customize the CoreOS kernel, there’s only a couple of repos that are relevant, we can leave the rest unchanged.</p>
+
+<ul>
+  <li><a href="https://github.com/coreos/coreos-overlay">coreos/coreos-overlay</a> - contains Container Linux specific packages and Gentoo packages that differ from their upstream Gentoo versions.
+This is also where the CoreOS kernel customizations are contained.</li>
+  <li><a href="https://github.com/coreos/init">coreos/init</a> - contains <code class="highlighter-rouge">coreos_installer</code> script which is executed from bootable ISO. Needs to be modified to point to our custom image webhost.</li>
+  <li><strong>(OPTIONAL)</strong> <a href="https://github.com/coreos/scripts">coreos/scripts</a> - contains various scripts used for packaging/maintaining CoreOS. We only care about this repo because we can use
+it to change the release version file that gets written to the server after installation, which is great for validation</li>
+</ul>
+
+<p>As with coreos/manifest, we’ll fork these repos, and create a new branch that is based on the build-1911 branch.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone git@github.com:mediadepot/coreos-overlay.git
+cd coreos-overlay
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-init.git
+cd coreos-init
+git checkout master
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from master"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-scripts.git
+cd coreos-scripts
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+</code></pre>
+</div>
+
+<h1 id="modify-the-manifest">Modify the Manifest</h1>
+
+<p>At this point we’ve forked our target repos, but the manifest doesn’t know about them. It’s time to remedy that.</p>
+
+<p>We’re going to modify <code class="highlighter-rouge">master.xml</code> so that references to <code class="highlighter-rouge">coreos/scripts</code> and <code class="highlighter-rouge">coreos/coreos-overlay</code> point to our new
+repos and branches</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## HOST ##
+cat coreos-manifest/master.xml
+
+&lt;project path="src/scripts"
+    name="mediadepot/coreos-scripts"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+
+...
+  &lt;project path="src/third_party/init"
+    name="mediadepot/coreos-init"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+...
+&lt;project path="src/third_party/coreos-overlay"
+    name="mediadepot/coreos-overlay"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+</code></pre>
+</div>
+
+<p>Note the changes to the <code class="highlighter-rouge">name</code> attribute and the addition of the <code class="highlighter-rouge">revision="mediadepot"</code> attribute.</p>
+
+<h1 id="making-changes">Making Changes</h1>
+<p>Before we go further, lets list all the changes we need to make to the CoreOS source.</p>
+
+<ol>
+  <li>Customize the linux kernel options to enable the <code class="highlighter-rouge">i915</code> driver</li>
+  <li>Customization of <code class="highlighter-rouge">coreos_install</code> script to point to our custom image storage</li>
+  <li>Customize the OS_NAME in <code class="highlighter-rouge">/etc/lsb_release</code>, for easy verification</li>
+  <li><strong>(OPTIONAL)</strong> Sign up for Google Cloud Platform, create a storage bucket and service account</li>
+</ol>
+
+<h2 id="custom-kernel">Custom Kernel</h2>
+<p>Let’s start by making changes to the <code class="highlighter-rouge">coreos-overlay</code> since that’s where the linux kernel customization code for CoreOS exists.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-overlay"></div>
+
+<p>The file containing the kernel config options for our CoreOS build can be found in
+<a href="https://github.com/mediadepot/coreos-overlay/blob/mediadepot/sys-kernel/coreos-modules/files/amd64_defconfig-4.14">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</a></p>
+
+<p>However we still need to determine the kernel options that we need to enable.</p>
+
+<p>Once again we go back to the <code class="highlighter-rouge">coreos_developer_container</code> that we used in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1#configure-kernel-options">Customize CoreOS Kernel - Part 1</a></p>
+
+<p>We’ll run <code class="highlighter-rouge">make menuconfig</code> in the <code class="highlighter-rouge">usr/src/linux</code> directory to select all our kernel options, follow the remaining steps in the previous post,
+ and then we’ll run a new command: <code class="highlighter-rouge">scripts/diffconfig .config.old .config</code></p>
+
+<p>The output from this command is basically a diff listing all the changes necessary to enable your selected kernel customizations from the base CoreOS kernel.</p>
+
+<p>We’ll need to massage the output a bit by removing <code class="highlighter-rouge">+</code> characters, transitions and prefixing each line with <code class="highlighter-rouge">CONFIG_</code>. We’ll end up with something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CONFIG_AGP=y
+CONFIG_BACKLIGHT_CLASS_DEVICE=m
+CONFIG_DMA_SHARED_BUFFER=y
+CONFIG_DRM=m
+CONFIG_FB_SYS_COPYAREA=y
+CONFIG_FB_SYS_FILLRECT=y
+CONFIG_FB_SYS_FOPS=y
+CONFIG_FB_SYS_IMAGEBLIT=y
+CONFIG_I2C=y
+CONFIG_I2C_ALGOBIT=y
+CONFIG_LOGO=y
+CONFIG_REGMAP_I2C=y
+CONFIG_RTC_I2C_AND_SPI=y
+CONFIG_SYNC_FILE=y
+CONFIG_ACPI_I2C_OPREGION=y
+CONFIG_ACPI_VIDEO=m
+CONFIG_BACKLIGHT_GENERIC=m
+CONFIG_DRM_BRIDGE=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_DRM_FBDEV_OVERALLOC=100
+CONFIG_DRM_I915=m
+CONFIG_DRM_I915_CAPTURE_ERROR=y
+CONFIG_DRM_I915_COMPRESS_ERROR=y
+CONFIG_DRM_I915_USERPTR=y
+CONFIG_DRM_KMS_FB_HELPER=y
+CONFIG_DRM_KMS_HELPER=y
+CONFIG_DRM_MIPI_DSI=y
+CONFIG_DRM_PANEL=y
+CONFIG_DRM_PANEL_BRIDGE=y
+CONFIG_HDMI=y
+CONFIG_INTEL_GTT=m
+CONFIG_INTERVAL_TREE=y
+CONFIG_LOGO_LINUX_CLUT224=y
+CONFIG_LOGO_LINUX_MONO=y
+CONFIG_LOGO_LINUX_VGA16=y
+</code></pre>
+</div>
+
+<p>We can now paste this content at the bottom of our <code class="highlighter-rouge">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</code> file and commit
+the change to our branch.</p>
+
+<p>We’ll also want to customize the <code class="highlighter-rouge">coreos-base/coreos-init/coreos-init-9999.ebuild</code> file, pointing this package to our forked repo:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CROS_WORKON_PROJECT="mediadepot/coreos-init"
+CROS_WORKON_LOCALNAME="init"
+CROS_WORKON_REPO="git://github.com"
+
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+else
+	CROS_WORKON_COMMIT="mediadepot"
+	KEYWORDS="amd64 arm arm64 x86"
+fi
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-overlay/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-overlay</code> repo</a></p>
+
+<h2 id="iso-installer-custom-hosting">ISO Installer Custom Hosting</h2>
+<p>If you’ve been following along so far, you may think that creating a custom <code class="highlighter-rouge">.bin</code> file is enough, but I learned the hard way that’s incorrect.</p>
+
+<p>The <code class="highlighter-rouge">build_image</code> command in the <code class="highlighter-rouge">provisioner.sh</code> script will build a <code class="highlighter-rouge">.bin</code> file for us, but we need a bootable <code class="highlighter-rouge">.iso</code>.
+Thankfully the CoreOS devs created a tool called <code class="highlighter-rouge">image_to_vm.sh</code> which (confusingly) can be used to create bootable <code class="highlighter-rouge">.iso</code> images.</p>
+
+<p>Not so fast.</p>
+
+<p><strong>While we now have a bootable <code class="highlighter-rouge">.iso</code> that uses our custom kernel, the <code class="highlighter-rouge">coreos-install</code> script in the <code class="highlighter-rouge">.iso</code> actually
+downloads a vanilla <code class="highlighter-rouge">.bin</code> file from the public CoreOS mirror and installs that <code class="highlighter-rouge">.bin</code> to the host machine.</strong></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-init"></div>
+
+<p>We’ll need open our fork of <code class="highlighter-rouge">coreos/init</code>: <a href="https://github.com/mediadepot/coreos-init"><code class="highlighter-rouge">mediadepot/coreos-init</code></a> and update the <a href="https://github.com/mediadepot/coreos-init/blob/mediadepot/bin/coreos-install"><code class="highlighter-rouge">coreos-install</code></a> script:</p>
+
+<ul>
+  <li>to point to our custom BASE_URL (where we’ll be hosting our images)</li>
+  <li>remove some GPG signing requirements (I know, I know, we’ll add them back later)</li>
+</ul>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-init/compare/master...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-init</code> repo</a></p>
+
+<h2 id="customize-coreos-release">Customize CoreOS Release</h2>
+<p>This next change is optional, but was a nice indicator to verify that the custom kernel build and installation is working
+as intended. We’ll modify our <code class="highlighter-rouge">coreos-scripts</code> repo, changing the OS_NAME from “Container Linux by CoreOS” to
+“MediaDepot CoreOS”. This simple change will allow us to verify that our customized image (with our kernel changes)
+was correctly installed on our server.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-scripts"></div>
+
+<p>We’ll make this change in <code class="highlighter-rouge">build_library/set_lsb_release</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat coreos-scripts/build_library/set_lsb_release
+
+...
+
+OS_NAME="MediaDepot CoreOS"
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-scripts/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-scripts</code> repo</a></p>
+
+<h1 id="hosting-coreos-images">Hosting CoreOS images</h1>
+<p>Once we build our custom <code class="highlighter-rouge">.bin</code> and <code class="highlighter-rouge">.iso</code> files, we’ll need to get them off our VM and onto a webserver
+that we can use to host our images.</p>
+
+<p>The <code class="highlighter-rouge">coreos_install</code> script expects your <code class="highlighter-rouge">.bin</code> file to exist in a specific folder structure:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>${BASE_URL}/${COREOS_VERSION}/coreos_production_image.bin.bz2
+${BASE_URL}/current/version.txt
+</code></pre>
+</div>
+<p><code class="highlighter-rouge">${BASE_URL}/current/version.txt</code> should be the <code class="highlighter-rouge">version.txt</code> generated for the most recent build. Its how <code class="highlighter-rouge">coreos_installer</code> knows which is the current version.</p>
+
+<h2 id="automatic-deployment-to-gcp-storage">Automatic Deployment to GCP Storage</h2>
+
+<p>While we could just manually upload these files to our webserver, the CoreOS developers have added built in support for GCP
+hosting into their scripts. All we need to do is provide the credentials to our GCP account.</p>
+
+<p>We’ll need to do the following:</p>
+
+<ol>
+  <li>Create a GCP Account</li>
+  <li><a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new GCP Project</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/creating-buckets">Create a Storage Bucket</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/access-control/making-data-public#buckets">Make sure the Bucket is Publically Readable</a></li>
+  <li><a href="https://cloud.google.com/iam/docs/creating-managing-service-accounts">Create a new Service Account</a>
+    <ul>
+      <li>Make sure you give it the <code class="highlighter-rouge">Storage Account Admin</code> role (it will need permissions to upload and overwrite files)</li>
+      <li>Create a Private Key, and export as JSON.</li>
+    </ul>
+  </li>
+  <li>Rename your Private Key JSON file on your host machine, and move it to the following path <code class="highlighter-rouge">~/.config/gcloud/application_default_credentials.json</code></li>
+</ol>
+
+<p>Once you’ve done that setup, we’ll need to pass this key file from your host machine into Vagrant, and then update the <code class="highlighter-rouge">provisioner.sh</code> script to handle the credentials.
+We’ll do that in the next section:</p>
+
+<h1 id="building-our-customized-coreos-image">Building our customized CoreOS Image</h1>
+<p>Now we’re finally ready to build our custom CoreOS images, lets look at our updated <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code></p>
+
+<div class="github-widget" data-repo="mediadepot/vagrant-coreos-kernel-builder"></div>
+
+<h2 id="vagrantfile">Vagrantfile</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat Vagrantfile
+
+Vagrant.configure<span class="o">(</span><span class="s2">"2"</span><span class="o">)</span> <span class="k">do</span> |config|
+    config.vm.box <span class="o">=</span> <span class="s2">"centos/7"</span>
+    config.vm.provider <span class="s2">"virtualbox"</span> <span class="k">do</span> |v|
+        v.name <span class="o">=</span> <span class="s2">"coreos_builder"</span>
+        v.memory <span class="o">=</span> 11264
+        v.cpus <span class="o">=</span> 4
+    end
+
+    <span class="c"># create the gsutil config file. It'll be created on the Host and copied into the VM, where it'll be parsed and a boto file will be created in the chroot.</span>
+    config.vm.provision <span class="s2">"file"</span>, <span class="nb">source</span>: <span class="s2">"~/.config/gcloud/application_default_credentials.json"</span>, destination: <span class="s2">"/home/vagrant/.config/gcloud/application_default_credentials.json"</span>
+
+    config.vm.provision <span class="s2">"shell"</span>, path: <span class="s2">"provisioner.sh"</span>
+end
+
+</code></pre>
+</div>
+
+<p>Note the change copying the <code class="highlighter-rouge">application_default_credentials.json</code> from the Host into the VM above.</p>
+
+<h2 id="provisionersh">Provisioner.sh</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat provisioner.sh
+
+<span class="c">#!/usr/bin/env bash</span>
+<span class="nb">set</span> -e
+<span class="nb">set</span> -o pipefail
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html=</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+set -e
+set -o pipefail
+whoami
+
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create --manifest-url=https://github.com/mediadepot/coreos-manifest.git --manifest-branch=mediadepot
+#
+cork enter
+grep NAME /etc/os-release
+env
+
+./set_shared_user_password.sh mediadepot &amp;&amp; \
+./setup_board --board 'amd64-usr' &amp;&amp; \
+./build_packages --board 'amd64-usr' &amp;&amp; \
+./build_image --board 'amd64-usr' prod --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+./image_to_vm.sh --from=../build/images/amd64-usr/developer-latest --format=iso --board=amd64-usr --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+
+# mark this current build as the latest.
+gsutil cp ../build/images/amd64-usr/developer-latest/version.txt "gs://mediadepot-coreos/boards/amd64-usr/current/version.txt"
+
+cat ../build/images/amd64-usr/developer-latest/version.txt
+EOF
+
+
+
+</span></code></pre>
+</div>
+
+<p>The primary change we made was to add <code class="highlighter-rouge">--manifest-url</code> and <code class="highlighter-rouge">--manifest-branch</code> flags to to the <code class="highlighter-rouge">cork create</code> command, specifying
+our forked repo and branch.</p>
+
+<p>You’ll also note the following changes:</p>
+<ul>
+  <li><code class="highlighter-rouge">./setup_board</code> and <code class="highlighter-rouge">--board</code> -  <strong>when building a custom CoreOS manifest, you need to specify a board otherwise your build will fail</strong>. While I’m not quite clear why its necessary, running <code class="highlighter-rouge">setup_board</code> and passing a <code class="highlighter-rouge">--board 'amd64-usr'</code> parameter to subsequent commands seemed to fix the issues.</li>
+  <li><code class="highlighter-rouge">--upload</code> and <code class="highlighter-rouge">--upload_root</code> - this informs the relevant scripts that they should check for boto credentials and upload the completed files to the specified GCP storage bucket (with the correct folder structure)</li>
+  <li><code class="highlighter-rouge">gsutil cp</code> - this command will copy a file to the storage bucket, specifying that the “current” version is the one that we just uploaded.</li>
+</ul>
+
+<p>All that left now is to run <code class="highlighter-rouge">vagrant destroy -f &amp;&amp; vagrant up</code>.</p>
+
+<p><code class="highlighter-rouge">vagrant destroy -f</code> will completely destroy our existing VM, the one we used to build our vanilla CoreOS source. Then we’ll
+go rebuild a new VM and provision it with our new script using <code class="highlighter-rouge">vagrant up</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete_custom.png" alt="sdk complete custom" /></p>
+
+<h1 id="installing-our-custom-image">Installing our custom Image</h1>
+
+<p>Now that we’ve created our custom <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files, and made them accessible by our servers, it’s time to create a bootable USB drive or CD, and install CoreOS on our server.</p>
+
+<p>We’ll be creating a bootable USB key.
+My favorite tools for doing this are <a href="https://www.balena.io/etcher/">balenaEtcher</a> (macOS, Windows, Linux) and <a href="https://rufus.ie/en_IE.html">Rufus</a> (Windows).
+First we’ll the <code class="highlighter-rouge">coreos_production_iso_image.iso</code> from the GCP storage bucket, and then follow the instructions for our chosen tool, making sure to select our <code class="highlighter-rouge">.iso</code> as the base image.</p>
+
+<h2 id="create-an-ignitionjson-file">Create an ignition.json file.</h2>
+<p>As part of CoreOS’s headless and security decisions, password authentication is disabled by default. This means that without adding an SSH key for the <code class="highlighter-rouge">core</code> user, we won’t be able to login
+to our new server.</p>
+
+<p>CoreOS supports a couple of methods for configuration management, but the current recommended one is <code class="highlighter-rouge">ignition</code>. Since all we want to do is SSH onto our server and
+verify that our custom CoreOS install is working, lets create a barebones <code class="highlighter-rouge">ignition.json</code> file on our computer.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat ignition.json
+{
+  "ignition": {
+    "config": {},
+    "security": {
+      "tls": {}
+    },
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEA0QIsn450XjpKdoAicWqu6pgoc7h+lUokibTF75NcLVhrhnOn8aVpV+MemlE6kt6wjZDK7WyTEX1+/4dIFwH92+TJwBRKG8Yd0aTFHjWZg7K/dZAak041sF21D9K+7R0PtZK/B6szbdN9bZtwss2ebuzMu9Pxw3Rzq/PsPfl9nzs="
+        ]
+      }
+    ]
+  },
+  "storage": {
+  },
+  "systemd": {
+  }
+}
+</code></pre>
+</div>
+
+<p>You’ll want to ensure that you replace my ssh public key in <code class="highlighter-rouge">sshAuthorizedKeys</code> with yours (check <code class="highlighter-rouge">~/.ssh/id_rsa.pub</code>)</p>
+
+<p>After that we’ll want to place it somewhere accessible to the server we’ll be installing CoreOS on. <a href="https://transfer.sh/">https://transfer.sh/</a> works in a pinch.</p>
+
+<p><code class="highlighter-rouge">curl --upload-file ./ignition.json https://transfer.sh/ignition.json</code></p>
+
+<h2 id="boot-our-server-from-usb">Boot our Server from USB</h2>
+
+<p>Next we’ll boot our server from this USB. There’s many ways to do this, so you’ll need to figure this out on your own, usually there’s an option in your BIOS to boot from a specific disk/USB.</p>
+
+<p>Once we’ve booted into CoreOS from the USB, it’s time to download our <code class="highlighter-rouge">ignition.json</code> file and run the CoreOS installer.
+This should install our customized version of CoreOS, if everything worked correctly.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+# replace the URL below with your transfer.sh url.
+curl -O -L https://transfer.sh/vteIu/ignition.json
+
+cat ignition.json # make sure the public key here matches the public key on your host machine
+
+# determine the correct hard disk to install CoreOS on
+sudo fdisk -l
+
+# start the CoreOS installer
+# make sure you replace `/dev/sda` with the correct hard disk for your machine.
+# YOU WILL LOSE DATA IF YOU SELECT THE WRONG DISK
+
+sudo coreos-install -d /dev/sda -V current -i ignition.json
+</code></pre>
+</div>
+
+<p>Once <code class="highlighter-rouge">coreos-install</code> completes, you’ll need to eject your USB drive and restart your server. On startup the config from
+the <code class="highlighter-rouge">ignition.json</code> file we specified will be used to configure the Server, allowing us to ssh as the <code class="highlighter-rouge">core</code> user.</p>
+
+<h2 id="validate-custom-coreos-install">Validate Custom CoreOS install</h2>
+
+<p>After we ssh onto our server (<code class="highlighter-rouge">ssh core@{{SERVER_IP}}</code>) we can verify that our custom CoreOS image has been installed:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+cat /etc/lsb-release
+
+DISTRIB_ID="MediaDepot CoreOS"
+DISTRIB_RELEASE=1911.4.0+2018-12-22-0018
+DISTRIB_CODENAME="Rhyolite"
+DISTRIB_DESCRIPTION="MediaDepot CoreOS 1911.4.0+2018-12-22-0018 (Rhyolite)"
+</code></pre>
+</div>
+
+<h1 id="automatic-custom-coreos-builds">Automatic Custom CoreOS Builds</h1>
+
+<p>In Part 3 of this series I’ll discuss the steps required to re-enable the automatic CoreOS kernel updates,
+including GPG signing &amp; validation of the <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files.</p>
+
+<h1 id="fin">Fin</h1>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Customize the CoreOS Kernel - Part 2 - Kernel SDK&amp;url=https://blog.thesparktree.com/customize-coreos-kernel-part-2"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/customize-coreos-kernel-part-2"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/customize-coreos-kernel-part-2"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/customize-coreos-kernel-part-2" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/customize-coreos-kernel-part-2'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Customize the CoreOS Kernel - Part 2 - Kernel SDK';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-hardware">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 1 - Hardware</h2>
+                <p>I've referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_coreos.png)" href="/customize-coreos-kernel-part-1">
+            <section class="post">
+                <h2>Customize the CoreOS Kernel - Part 1 - Kernel Modules</h2>
+                <p>Story Time As a Devops &amp; Infrastructure guy, I’m pretty comfortable with jumping into the...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

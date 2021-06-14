@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>API Design Best Practices</title>
+	  <link>/api-design-best-practices</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-03-25T02:00:00-05:00</pubDate>
+	  <guid>/api-design-best-practices</guid>
+	  <description><![CDATA[
+	     <p>Or how to stop third party developers from hating you.</p>
+
+<p>As web developers most of us are accustomed to using APIs. Most of the time all we do is use libraries that abstract away the pain of working with someone elses code, and let us build our products on top.</p>
+
+<p>While working on our cloud ebook manager <a href="http://www.quietthyme.com">QuietThyme</a>, we recognized that integrating GoodReads bookshelves, reviews and comments with our users library would be a very useful feature. We immediately began delving into the GoodReads documentation to check if they had a C# library available for us to use. Unfortunately they didn’t and we began the process of creating our own open source implementation.</p>
+
+<p>This post is a summary of some of the pain points that we experienced while implementing a client for the GoodReads API. These issues are definitely not unique to GoodReads, many of the most popular APIs out there have similar issues. I decided to create this post to show API designers that they are creating a <code class="highlighter-rouge">contract</code> between themselves and their developers. By following the guidelines below they can insure that the process of implementing their API is as simple as possible.</p>
+
+<h1 id="1-every-api-should-return-a-consistent-wrapper-object">1. Every API should return a consistent wrapper object</h1>
+
+<p>Developers need to know the status of every API response. API designers need to choose a consistent way of returning state information, either by always returning the status via the HTTP headers or, the more preferred way, by creating a wrapper that includes status information as well as the API return data.</p>
+
+<p>GoodReads seems to do this by returning a Request tag inside most API responses:</p>
+
+<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;goodreadsresponse&gt;&lt;request&gt;&lt;authentication&gt;</span>true<span class="nt">&lt;/authentication&gt;&lt;key&gt;&lt;/key&gt;&lt;method&gt;&lt;/method&gt;&lt;/request&gt;</span>
+  **API RESPONSE DATA HERE**
+<span class="nt">&lt;goodreadsresponse&gt;</span>
+</code></pre>
+</div>
+
+<p>However it soon becomes apparent that when an error occurs they instead just return:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;error&gt;book not found&lt;/error&gt;
+</code></pre>
+</div>
+
+<p>or :</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Invalid Request
+</code></pre>
+</div>
+
+<p>or even an empty xml document, which throws the following error in most XML parsers:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>This page contains the following errors:
+error on line 1 at column 1: Document is empty
+</code></pre>
+</div>
+
+<p>This is not acceptable. By mixing response xml data structures, you force developers to write multiple response handlers, and then run them all until a ‘valid’ response is found. Its even worse when plain text is returned when XML is assumed.</p>
+
+<p>Instead if they had returned something like this:</p>
+
+<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;goodreadsresponse&gt;&lt;request&gt;&lt;authentication&gt;</span>true<span class="nt">&lt;/authentication&gt;&lt;key&gt;&lt;/key&gt;&lt;method&gt;&lt;/method&gt;&lt;errorcode&gt;</span>4321<span class="nt">&lt;/errorcode&gt;&lt;error&gt;</span>book not found<span class="nt">&lt;/error&gt;&lt;/request&gt;</span>
+  **API RESPONSE DATA HERE**
+<span class="nt">&lt;goodreadsresponse&gt;</span>
+</code></pre>
+</div>
+
+<p>The developer would only have to check if the errorcode field has a value, or is greater than 0, and if so display the error message, otherwise the response is known to be correct and only <strong>one</strong> response handler is required. The integration is much more stable and testable.</p>
+
+<h1 id="2-support-multiple-formats-or-dont">2. Support multiple formats, or don’t</h1>
+
+<p>Every developer has a preference for output formats, some love JSON, some love XML. API designers understand that, and for the most part they leverage the serialization support built into most modern frameworks to output both formats. However as developers we understand that for each output format you decide to support, time will need to be taken to test and ensure all your data is serialized properly. We even understand if most of your APIs support both, but a few only support one or the other. However please <strong>do not</strong> decide to mix it up and have some your API support one format, some the other, and some both. It’s inconsistent and painful to implement. Every deserialization implementation has its own quirks, which takes time.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>URL: http://www.goodreads.com/book/title?format=FORMAT
+HTTP method: GET
+Parameters:
+format: xml or json
+..
+
+URL: http://www.goodreads.com/author/list.xml
+HTTP method: GET
+Parameters:
+key: Developer key (required).
+..
+
+URL: http://www.goodreads.com/book/review_counts.json
+HTTP method: GET
+Parameters:
+format: json
+..
+</code></pre>
+</div>
+
+<p>If you can’t support the same formats on all methods of your API, please pick at least one format and make sure it can be returned by all API calls.</p>
+
+<h1 id="3-support-api-versioning">3. Support API versioning</h1>
+
+<p>Again, it’s about consistency in your API. It gives you, the API designer the freedom to deprecate methods in newer versions of your API while still giving developers using your old API time to restructure their code.</p>
+
+<p>Somewhat related to versioning is an issue I noticed with the following GoodReads API:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Get the Goodreads book ID given an ISBN. Response contains the ID without any markup.
+URL: http://www.goodreads.com/book/isbn_to_id
+HTTP method: GET
+Parameters:
+key: Developer key (required).
+isbn: The ISBN of the book to lookup.
+</code></pre>
+</div>
+
+<p>When called upon by my C# library, the GoodReads api will instead return the result for:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Get the reviews for a book given an ISBN
+Get an xml or json file that contains embed code for the iframe reviews widget that shows excerpts (first 300 characters) of the most popular reviews of a book for a given ISBN. The reviews are from all known editions of the book.
+URL: http://www.goodreads.com/book/isbn?format=FORMAT&amp;amp;isbn=ISBN
+</code></pre>
+</div>
+
+<p>I can only assume that either GoodReads has deprecated the <code class="highlighter-rouge">isbn_to_id</code> API without any notice, or they have some sort of API routing error such that isbn_to_id == isbn</p>
+
+<h1 id="4-keep-your-response-key-types-consistent">4. Keep your response key types consistent.</h1>
+<p>When returning unique identifiers such a book ids or comment ids, tweet ids or anything else, it helps if the key type is consistent across different API calls.</p>
+
+<p>If your book id is an integer then this response if fine from one api:</p>
+
+<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;bookid</span> <span class="na">type=</span><span class="s">"integer"</span><span class="nt">&gt;</span>1001<span class="nt">&lt;/bookid&gt;</span>
+</code></pre>
+</div>
+
+<p>or even this from another:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;bookid&gt;1001&lt;/bookid&gt;
+</code></pre>
+</div>
+
+<p>But please, never have another API return this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;bookid type="string"&gt;1001&lt;/bookid&gt;
+</code></pre>
+</div>
+
+<h1 id="5a-keep-your-api-parameter-handling-consistent">5a. Keep your API parameter handling consistent.</h1>
+<p>If you have multiple related APIs that all take in the same parameter, such as <code class="highlighter-rouge">name</code>, for different CRUD operations, ensure that the parameter is handled the same way across the group.</p>
+
+<p>For example, if your <code class="highlighter-rouge">name</code> parameter is case-insensitive for the Create, Update and Delete APIs, make sure it is also case insensitive for the Read API. We noticed that the GoodReads <code class="highlighter-rouge">Edit book shelf</code> and <code class="highlighter-rouge">Get the books on a members shelf</code> API calls both took a bookshelf name as a parameter, but when requesting the <code class="highlighter-rouge">Get the books on a members shelf</code> API, the bookshelf name is case sensitive, even though the <code class="highlighter-rouge">Edit book shelf</code> and other bookshelf related calls are case insensitive.</p>
+
+<h1 id="5b-keep-your-api-parameter-count-consistent">5b. Keep your API parameter count consistent.</h1>
+<p>If we see this in your developer documentation, something has gone horribly wrong:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Get the reviews for a book given an ISBN
+Get an xml or json file that contains embed code for the iframe reviews widget that shows excerpts (first 300 characters) of the most popular reviews of a book for a given ISBN. The reviews are from all known editions of the book.
+URL: http://www.goodreads.com/book/isbn?format=FORMAT&amp;amp;isbn=ISBN
+HTTP method: GET
+Parameters:
+format: xml or json
+callback: function to wrap JSON response if format=json
+**key: Developer key (required only for XML).**
+**user_id: 8488829 (required only for JSON)**
+...
+</code></pre>
+</div>
+<p>The number of parameters to use your api should be the same if its JSON or XML, the only exception being if your output is JSONP and you need a callback parameter.</p>
+
+<h1 id="6-the-api-url-matters">6. The API url matters.</h1>
+<p>Its only a minor issue, but it does make a difference. Structure your API into logical groups if possible. It helps us break up our API client along the same lines. As well, having a consistent base url makes it just a little bit easier to use your API. Something along the lines of:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>http://www.MyAwesomeSAAS.com/api/{Group}/{Action}
+</code></pre>
+</div>
+
+<p>is just a bit nicer to work with than:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>http://www.goodreads.com/user_shelves.xml
+http://www.goodreads.com/list/book.xml?id=BOOK_ID
+http://www.goodreads.com/api/auth_user
+http://www.goodreads.com/api/author_url/&lt;id&gt;
+</code></pre>
+</div>
+
+<h1 id="7-use-oauth">7. Use OAuth</h1>
+<p>Or atleast some sort of API authentication. Yes it is a bit of an investment, yes you will need to spend time and money implementing it and yes, it might break YAGNI. The problem is that if you’re going to build an API, you want developers using it, you want it to become popular. And if you wait until your API does become popular to implement OAUTH, you are creating a significant breaking change that’s going to force all the developers using your API to restructure their code. Use OAuth in your API, follow the spec. We’re comfortable using OAuth libraries, and if your API works with it out of the box, then we can jump right into implemeting your API.</p>
+
+<h1 id="8-api-documentation">8. API documentation</h1>
+<p>APIs take hours to design and develop. You will be spending enormous amounts of effort to make your API as developer friendly as possible. You should be putting the same effort into your developer documentation. As the designer of a popular API you may feel like you’re spending a huge portion of your day telling developers to RTFM, and thats never going to disappear. But if you do it right, for every developer that gets lazy and skips the documentation, you’ll have 10 that were able to integrate your API without any problems.</p>
+
+<h1 id="summary">Summary</h1>
+<p>I didn’t mean to make GoodReads the API whipping boy here, we’ve all had to deal with API integration problems before, but with the growing prevalence of SAAS, I thought you should see some of the issues that developers are facing when using your API.</p>
+
+<p><a href="http://www.quietthyme.com">QuietThyme</a>
+GoodReads integration is just one of the many third-party services we support at <a href="http://www.quietthyme.com">QuietThyme</a>. We support the usual Facebook, Twitter, LinkedIn and Google authentication as well as allowing you to store you full library on your own private DropBox while letting us manage your Ebook Metadata and Cover art. Check us out at www.quietthyme.com.</p>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

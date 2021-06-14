@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>State of the eBook ecosystem</title>
+	  <link>/state-of-the-ebook</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-08-31T04:19:33-05:00</pubDate>
+	  <guid>/state-of-the-ebook</guid>
+	  <description><![CDATA[
+	     <p>Here’s what I’m looking for.</p>
+
+<ul>
+  <li><strong>An always available library</strong>. I want my books stored in the cloud somewhere, and always available. I mostly end up reading books when I’m traveling/on flights, and being able to access my library on the go is a necessity.</li>
+  <li>I want to have control of my books; not learn to trust yet another cloud storage platform that may not be around in a couple of months/years. I want to <strong>store my books on a cloud storage platform that I already trust</strong>, like Dropbox or Google Drive.</li>
+  <li>Simple <strong>Drag &amp; Drop uploading</strong>. I don’t want to upload my books individually. I should be a able to drag and drop my library into a Dropbox folder and have them magically show up in my library. Integrate with my cloud storage provider.</li>
+  <li>Automatic metadata. I judge my books by their cover. If my ebook is missing cover art or metadata I’m less likely to read it or even remember what it’s about. When I add a book to the library it should <strong>get the books’ metadata automatically</strong>.</li>
+  <li><strong>Simple</strong>. While I love the customizability and power of Calibre, it can be a little much, especially for my Mom and Dad. I want something simple to use, that works with little to no configuration.</li>
+  <li><strong>Calibre support</strong>. Calibre is the standard ebook manager for good reason. Its incredibly powerful, and I should be able to import/export/manage my cloud library from Calibre, just like I would a physical ebook reader.</li>
+</ul>
+
+<p>Before you start mentioning Calibre Web Server, stop. I don’t want to open up ports on my home router. I don’t want to manage updates on an always-on server. I don’t think its something my Mom would be able to setup.</p>
+
+<p>Its been almost 4 years since I shut down my cloud ebook manager startup which had almost all of these features. I’ve kept hoping that someone else would come up with a viable alternative, and I could just pay them.</p>
+
+<p>These are the features I want. I’ve spending years searching for an alternative since I shut down QuietThyme, but I’ve grown impatient.</p>
+
+<p>I’ve completely re-written QuietThyme with these features at it’s core. It was always a service that I built for myself, but I don’t think I’m alone in my unhappiness with the current state of the ebook ecosystem.</p>
+
+<p>I’m looking for other ebook lovers that wish this shit just worked. If you’re willing to be a beta tester/guinea pig/developer/cofounder, <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2aknGDvbJ5J0MlLSBc4Mc9y4RPqK5In-EL--ZscwbMvcUSg/viewform?usp=sf_link">please get in touch</a>.</p>
+
+<p>-Jason</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

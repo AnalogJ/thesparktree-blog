@@ -1,0 +1,1549 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Git Mirror Anywhere using the Dumb Http Protocol</title>
+	  <link>/git-mirror-anywhere-using-dumb-http-protocol</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-08T03:19:33-06:00</pubDate>
+	  <guid>/git-mirror-anywhere-using-dumb-http-protocol</guid>
+	  <description><![CDATA[
+	     <p>Lets talk about <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git</a>. If you’ve done any professional software development, you’ve probably heard about Git.</p>
+
+<blockquote>
+  <p>Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency.</p>
+</blockquote>
+
+<p>It’s a tiny, but powerful piece of software, that most software developers use every day. Even so, under the hood there’s dozens of powerful features that most developers
+don’t even know exist. Today I hope to introduce you to one of them, the “Dumb HTTP Protocol”.</p>
+
+<hr />
+
+<p>I recently found myself in a position needing to mirror a git repo to a firewalled environment where I didn’t want to stand up a dedicated Git server.
+I had access to a blob storage account, that could be used to serve static content over HTTP, but no compute.</p>
+
+<p>While investigating the Git protocol for <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> I had previously learned about something called the “Dumb HTTP Protocol”.
+Unlike the SSH and HTTP Git protocol that most of your are aware of, the Dumb HTTP protocol expects the bare Git repository to be served like normal files from the web server.</p>
+
+<p>At first glance, this looks liked exactly what we want, however, as you read further into the <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_dumb_http">documentation</a>
+you’ll see “Basically, all you have to do is put a bare Git repository under your HTTP document root and set up a specific post-update hook, and you’re done”.</p>
+
+<p>Since we don’t want to run a server at all, a post-hook script seems like a non-starter. Thankfully this is not the case, as long as you are ok with a bit of extra work.</p>
+
+<hr />
+
+<h2 id="the-dumb-http-protocol">The Dumb HTTP Protocol</h2>
+
+<p>Before we go to the solution, lets take a moment to dive into what actually happens when you attempt to clone from a Git remote using the Dumb HTTP protocol.
+Please note, some of the following examples are copied from the Git Documentation.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone http://server/simplegit-progit.git
+</code></pre>
+</div>
+
+<p>The first thing this command does is pull down the <code class="highlighter-rouge">info/refs</code> file. This file is written by the <code class="highlighter-rouge">update-server-info</code> command in the Post hook, and does not normally exist.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/info/refs HTTP/1.0
+
+S: 200 OK
+S:
+S: 95dcfa3633004da0049d3d0fa03f80589cbcaf31	refs/heads/maint
+S: ca82a6dff817ec66f44342007202690a93763949	refs/heads/master
+S: 2cb58b79488a98d2721cea644875a8dd0026b115	refs/tags/v1.0
+S: a3c2e2402b99163d1d59756e5f207ae21cccba4c	refs/tags/v1.0^{}
+</code></pre>
+</div>
+
+<p>The returned content is a UNIX formatted text file describing each ref and its known value.
+The file should not include the default ref named HEAD.</p>
+
+<p>Now you have a list of the remote references and SHA-1s. Next, you look for what the HEAD reference is so you know what to check out when you’re finished:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/HEAD HTTP/1.0
+
+ref: refs/heads/master
+</code></pre>
+</div>
+
+<p>You need to check out the <code class="highlighter-rouge">master</code> branch when you’ve completed the process. At this point, you’re ready to start the walking process. Because your starting point is the <code class="highlighter-rouge">ca82a6</code> commit object you saw in the <code class="highlighter-rouge">info/refs</code> file, you start by fetching that:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/ca/82a6dff817ec66f44342007202690a93763949 HTTP/1.0
+
+(179 bytes of binary data)
+</code></pre>
+</div>
+
+<p>You get an object back – that object is in loose format on the server, and you fetched it over a static HTTP GET request. You can zlib-uncompress it, strip off the header, and look at the commit content:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git cat-file -p ca82a6dff817ec66f44342007202690a93763949
+tree cfda3bf379e4f8dba8717dee55aab78aef7f4daf
+parent 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+author Scott Chacon &lt;schacon@gmail.com&gt; 1205815931 -0700
+committer Scott Chacon &lt;schacon@gmail.com&gt; 1240030591 -0700
+
+Change version number
+</code></pre>
+</div>
+
+<p>Next, you have two more objects to retrieve – <code class="highlighter-rouge">cfda3b</code>, which is the tree of content that the commit we just retrieved points to; and <code class="highlighter-rouge">085bb3</code>, which is the parent commit:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/08/5bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+
+(179 bytes of data)
+</code></pre>
+</div>
+
+<p>To see what packfiles are available on this server, you need to get the objects/info/packs file, which contains a listing of them (also generated by <code class="highlighter-rouge">update-server-info</code>):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/info/packs
+P pack-816a9b2334da9953e530f27bcac22082a9f5b835.pack
+</code></pre>
+</div>
+
+<p>We’ll stop here. At this point we have a mechanism for retrieving information about the head of each branch, and a mechanism for retrieving the file content associated with a commit.</p>
+
+<h1 id="git-compatible-static-content-repository">Git Compatible Static Content Repository</h1>
+
+<p>So how do we leverage this knowledge to generate a version of our Git repository, that we can serve using a simple HTTP content server (no post-hook.sh necessary)?</p>
+
+<p>First we need to clone a bare version of our Git repository locally.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone --bare $GIT_REPO_URL
+</code></pre>
+</div>
+
+<p>Then we’ll run the <code class="highlighter-rouge">git update-server-info</code> command on our bare repository, to generate the info files that Git clients expect.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cd $REPO_DIR
+git update-server-info
+</code></pre>
+</div>
+
+<p>At this point, we can copy this directory and serve it using a simple HTTP server (eg. S3 over CloudFront, Nginx, Apache, Artifactory, etc.).</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols</li>
+  <li>https://git-scm.com/docs/http-protocol</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</title>
+	  <link>/customize-flatcar-kernel-part-3</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-12-12T03:19:33-06:00</pubDate>
+	  <guid>/customize-flatcar-kernel-part-3</guid>
+	  <description><![CDATA[
+	     <p>It’s been a while since I discussed building kernel modules for CoreOS (in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1">Part 1</a> and <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-2">Part 2</a>)
+and lot’s has changed in the CoreOS world. <a href="https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership">CoreOS was acquired by RedHat</a> and eventually replaced by
+<a href="https://docs.fedoraproject.org/en-US/fedora-coreos/faq/">CoreOS Fedora</a> but the original project lives on in <a href="https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/">FlatCar linux</a>,
+a fork of CoreOS.</p>
+
+<p>Since those last posts, I’ve also started using a dedicated GPU to do hardware transcoding of video files. Unfortunately
+using a dedicated NVidia GPU means I need to change the process I use for building kernel modules.</p>
+
+<hr />
+
+<h1 id="building-a-developer-container">Building a Developer Container</h1>
+
+<p>As with CoreOS, the first step is building a <a href="https://docs.flatcar-linux.org/os/kernel-modules/">FlatCar Development Container</a>.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-developer"></div>
+
+<p>With the help of Github Actions, I’ve created a repository that will automatically generate versioned Docker images for each
+<a href="https://www.flatcar-linux.org/releases/">FlatCar Release Channel</a></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt -o version.txt
+cat version.txt
+<span class="nb">export</span> <span class="k">$(</span>cat version.txt | xargs<span class="k">)</span>
+
+<span class="nb">echo</span> <span class="s2">"Download Developer Container"</span>
+curl -L https://stable.release.flatcar-linux.net/amd64-usr/<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>/flatcar_developer_container.bin.bz2 -o flatcar_developer_container.bin.bz2
+bunzip2 -k flatcar_developer_container.bin.bz2
+mkdir <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo mount -o ro,loop,offset<span class="o">=</span>2097152 flatcar_developer_container.bin <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo tar -cp --one-file-system -C <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span> . | docker import - mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+rm -rf flatcar_developer_container.bin flatcar_developer_container.bin.bz2
+
+docker push mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+</code></pre>
+</div>
+
+<p>While it’s useful to have the Flatcar Development Container easily accessible on Docker Hub, it’s not functional out of
+the box for building Kernel Modules. At the very least we need to provide the kernel source within the container.
+We need to be careful that the source code for the kernel matches the linux kernel deployed with the specific version of
+Flatcar.</p>
+
+<p>To do that, we’ll use a <a href="https://github.com/mediadepot/docker-flatcar-developer/blob/master/Dockerfile">Dockerfile</a>.</p>
+
+<pre><code class="language-Dockerfile">ARG FLATCAR_VERSION
+FROM mediadepot/flatcar-developer:${FLATCAR_VERSION}
+LABEL maintainer="Jason Kulatunga &lt;jason@thesparktree.com&gt;"
+ARG FLATCAR_VERSION
+ARG FLATCAR_BUILD
+
+# Create a Flatcar Linux Developer image as defined in:
+# https://docs.flatcar-linux.org/os/kernel-modules/
+
+RUN emerge-gitclone \
+    &amp;&amp; export $(cat /usr/share/coreos/release | xargs) \
+    &amp;&amp; export OVERLAY_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; export PORTAGE_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; env \
+    &amp;&amp; git -C /var/lib/portage/coreos-overlay checkout "$OVERLAY_VERSION" \
+    &amp;&amp; git -C /var/lib/portage/portage-stable checkout "$PORTAGE_VERSION"
+
+# try to use pre-built binaries and fall back to building from source
+RUN emerge -gKq --jobs 4 --load-average 4 coreos-sources || echo "failed to download binaries, fallback build from source:" &amp;&amp; emerge -q --jobs 4 --load-average 4 coreos-sources
+
+# Prepare the filesystem
+# KERNEL_VERSION is determined from kernel source, not running kernel.
+# see https://superuser.com/questions/504684/is-the-version-of-the-linux-kernel-listed-in-the-source-some-where
+RUN cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/.config /usr/src/linux/ \
+    &amp;&amp; make -C /usr/src/linux modules_prepare \
+    &amp;&amp; cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/Module.symvers /usr/src/linux/
+</code></pre>
+
+<h1 id="pre-compiling-nvidia-kernel-driver">Pre-Compiling Nvidia Kernel Driver</h1>
+
+<p>Now that we have a Docker image matching our Flatcar version, the next thing we need to do is build the Nvidia Drivers against
+the kernel source. Again, we’ll be using Github Actions to pre-build our Docker image, meaning we need to take special care
+when we compile the driver, since Docker images share a kernel with the host machine, and the Github Action server is
+definitely running a kernel that is different from the kernel we’ll be running on our actual Flatcar host.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-nvidia-driver"></div>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+./nvidia-installer -s -n <span class="se">\</span>
+  --kernel-name<span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">KERNEL_VERSION</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  --kernel-source-path<span class="o">=</span>/usr/src/linux <span class="se">\</span>
+  --no-check-for-alternate-installs <span class="se">\</span>
+  --no-opengl-files <span class="se">\</span>
+  --no-distro-scripts <span class="se">\</span>
+  --kernel-install-path<span class="o">=</span><span class="s2">"/</span><span class="nv">$PWD</span><span class="s2">"</span> <span class="se">\</span>
+  --log-file-name<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>/nvidia-installer.log <span class="o">||</span> <span class="nb">true</span>
+
+</code></pre>
+</div>
+
+<p>The important flags for compiling the Nvidia driver for a different kernel are the following:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">--kernel-name</code> - build and install the NVIDIA kernel module for the non-running kernel specified by KERNEL-NAME
+  (KERNEL-NAME should be the output of <code class="highlighter-rouge">uname -r</code> when the target kernel is actually running).</li>
+  <li><code class="highlighter-rouge">--kernel-source-path</code> - The directory containing the kernel source files that should be used when compiling the NVIDIA kernel module.</li>
+</ul>
+
+<p>Now that we can pre-compile the Nvidia driver for Flatcar, we need a way to download the drivers and install them automatically
+since Flatcar is an auto-updating OS.</p>
+
+<h1 id="forklift---auto-updating-kernel-drivers">Forklift - Auto Updating Kernel Drivers</h1>
+
+<div class="github-widget" data-repo="mediadepot/flatcar-forklift"></div>
+
+<p>Forklift is the last part of the equation. It’s a Systemd service and a simple script, which runs automatically on startup
+pulling the relevant Docker image containing a Nvidia driver and matches the version of Flatcar, caches the drivers to a specific folder, and then
+installs the kernel module.</p>
+
+<h1 id="extending-forklift">Extending Forklift</h1>
+
+<p>There’s nothing unique about this pattern, it can be used to continuously build any other kernel module (eg. wireguard), and
+contributions are welcome!</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the CoreOS Kernel - Part 2 - Kernel SDK</title>
+	  <link>/customize-coreos-kernel-part-2</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-02T03:19:33-06:00</pubDate>
+	  <guid>/customize-coreos-kernel-part-2</guid>
+	  <description><![CDATA[
+	     <p>After running into a roadblock while attempting to <a href="./customize-coreos-kernel-part-1">build the Intel I915 driver as a kernel module</a> for CoreOS,
+it became clear that we would need to build a completely custom CoreOS kernel with the drivers and features we need enabled.</p>
+
+<p>Thankfully the CoreOS developers have provided us with a set of tools and documentation to help make this process a bit easier:</p>
+
+<p><a href="https://coreos.com/os/docs/latest/sdk-modifying-coreos.html">CoreOS Container Linux developer SDK</a></p>
+
+<p>CoreOS is all open source and made up of a couple dozen git repositories, which are then glued together and compiled by the tools included in the
+SDK.</p>
+
+<p>The SDK tools are meant to be installed on a computer running Linux, however to make things easier for myself I created a CentOS VM using a
+simple Vagrantfile:</p>
+
+<pre><code class="language-vagrantfile">
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+
+    config.vm.provider "virtualbox" do |v|
+        v.name = "coreos_builder"
+        v.memory = 11264
+        v.cpus = 4
+    end
+
+    config.vm.provision "shell", path: "provisioner.sh"
+end
+
+</code></pre>
+
+<p>You’ll want to give as much CPU and RAM as you can, as the build and compilation steps are time consuming (I’m talking multiple hours here).</p>
+
+<h1 id="building-vanilla-coreos">Building Vanilla CoreOS</h1>
+
+<p>The first thing I want to do is build a vanilla version of CoreOS without any changes. To do this we’ll create a <code class="highlighter-rouge">provisioner.sh</code> script
+and populate it as follows:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/usr/bin/env bash</span>
+
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+whoami
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create
+
+cork enter
+grep NAME /etc/os-release
+
+./set_shared_user_password.sh mediadepot
+./setup_board
+./build_packages
+./build_image
+
+EOF
+
+</span></code></pre>
+</div>
+
+<p>As you can see the <code class="highlighter-rouge">Prerequsites</code> section is pretty straight forward, we download &amp; install the SDK dependencies as listed
+in their documentation and download the <code class="highlighter-rouge">cork</code> tool.</p>
+
+<p>Then the script gets a bit interesting. We tell Vagrant to execute the following commands as the <code class="highlighter-rouge">vagrant</code> user, rather than
+the default <code class="highlighter-rouge">root</code> user used during provisioning. This is due to the fact that the <code class="highlighter-rouge">cork</code> tool <a href="https://github.com/coreos/mantle/issues/958">expects to be run as a regular user
+not root</a>.</p>
+
+<p>So we’ll verify that we’re running as <code class="highlighter-rouge">vagrant</code> using <code class="highlighter-rouge">whoami</code>, then configure the <code class="highlighter-rouge">git</code> tool</p>
+
+<p>Then we’ll go back to the steps mentioned in the SDK guide, creating a folder for the SDK to manage, and finally running the <code class="highlighter-rouge">cork</code>
+commands.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">cork create</code> will download and unpack the SDK into the current directory</li>
+  <li><code class="highlighter-rouge">cork enter</code> will enter a <a href="https://wiki.archlinux.org/index.php/chroot"><code class="highlighter-rouge">chroot</code></a> with additional SDK tools that we can then use to
+download &amp; compile our coreos image</li>
+</ul>
+
+<p>Now that we have a <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code> script, we can verify our VM configuration and run <code class="highlighter-rouge">vagrant up</code> to build and provision
+our VM.</p>
+
+<p><code class="highlighter-rouge">vagrant up</code> took more than 4 hours to complete on my machine (how long did it take you?). Once complete, you should be greeted with a success
+message that looks like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete.png" alt="sdk complete" /></p>
+
+<p>At this point we’ve verified that our base tooling is installed correctly, and that we can build CoreOS images. Now we need to start
+our kernel customizations.</p>
+
+<h1 id="forking-coreos-source-repos">Forking CoreOS Source Repos</h1>
+
+<p>As I mentioned earlier, CoreOS is broken up into a couple dozen git repos, but the primary repo is called <a href="https://github.com/coreos/manifest"><code class="highlighter-rouge">coreos/manifest</code></a>.</p>
+
+<p>Looking at the <a href="https://github.com/coreos/manifest/blob/master/master.xml">master.xml</a> makes it clear why <code class="highlighter-rouge">manifest</code> is so
+important: <strong>It references all the other git repos that are used when building CoreOS</strong></p>
+
+<p>The first thing we’re going to do is fork and clone repo so that we can customize the repos used to ones that contain our changes.</p>
+
+<p>I forked <code class="highlighter-rouge">coreos/manifest</code> to <a href="https://github.com/mediadepot/coreos-manifest">mediadepot/coreos-manifest</a> and then ran
+<code class="highlighter-rouge">git clone git@github.com:mediadepot/coreos-manifest.git</code></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-manifest"></div>
+
+<p>You may have noticed that there’s a ton of branches in this repo. These branches are all prefixed with <code class="highlighter-rouge">build-</code>. These <code class="highlighter-rouge">build-</code> branches
+are how CoreOS manages versioning and directly matches the major version specified in <a href="https://coreos.com/releases/">https://coreos.com/releases/</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/build_branches.png" alt="build branches" /></p>
+
+<p>In my case I want to build my custom image off of the current CoreOS Stable version which is <code class="highlighter-rouge">1911.4.0</code>.</p>
+
+<p>To do this, I’ll checkout the <code class="highlighter-rouge">build-1911</code> branch, and then create a new branch ontop of that:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+</code></pre>
+</div>
+
+<p>Now you’ll have a branch built off the latest stable release that’s ready to work with.</p>
+
+<p>Now we’ll want to look at the master.xml file and determine the referenced repos that we need to fork.
+Since we only to customize the CoreOS kernel, there’s only a couple of repos that are relevant, we can leave the rest unchanged.</p>
+
+<ul>
+  <li><a href="https://github.com/coreos/coreos-overlay">coreos/coreos-overlay</a> - contains Container Linux specific packages and Gentoo packages that differ from their upstream Gentoo versions.
+This is also where the CoreOS kernel customizations are contained.</li>
+  <li><a href="https://github.com/coreos/init">coreos/init</a> - contains <code class="highlighter-rouge">coreos_installer</code> script which is executed from bootable ISO. Needs to be modified to point to our custom image webhost.</li>
+  <li><strong>(OPTIONAL)</strong> <a href="https://github.com/coreos/scripts">coreos/scripts</a> - contains various scripts used for packaging/maintaining CoreOS. We only care about this repo because we can use
+it to change the release version file that gets written to the server after installation, which is great for validation</li>
+</ul>
+
+<p>As with coreos/manifest, we’ll fork these repos, and create a new branch that is based on the build-1911 branch.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone git@github.com:mediadepot/coreos-overlay.git
+cd coreos-overlay
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-init.git
+cd coreos-init
+git checkout master
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from master"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-scripts.git
+cd coreos-scripts
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+</code></pre>
+</div>
+
+<h1 id="modify-the-manifest">Modify the Manifest</h1>
+
+<p>At this point we’ve forked our target repos, but the manifest doesn’t know about them. It’s time to remedy that.</p>
+
+<p>We’re going to modify <code class="highlighter-rouge">master.xml</code> so that references to <code class="highlighter-rouge">coreos/scripts</code> and <code class="highlighter-rouge">coreos/coreos-overlay</code> point to our new
+repos and branches</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## HOST ##
+cat coreos-manifest/master.xml
+
+&lt;project path="src/scripts"
+    name="mediadepot/coreos-scripts"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+
+...
+  &lt;project path="src/third_party/init"
+    name="mediadepot/coreos-init"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+...
+&lt;project path="src/third_party/coreos-overlay"
+    name="mediadepot/coreos-overlay"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+</code></pre>
+</div>
+
+<p>Note the changes to the <code class="highlighter-rouge">name</code> attribute and the addition of the <code class="highlighter-rouge">revision="mediadepot"</code> attribute.</p>
+
+<h1 id="making-changes">Making Changes</h1>
+<p>Before we go further, lets list all the changes we need to make to the CoreOS source.</p>
+
+<ol>
+  <li>Customize the linux kernel options to enable the <code class="highlighter-rouge">i915</code> driver</li>
+  <li>Customization of <code class="highlighter-rouge">coreos_install</code> script to point to our custom image storage</li>
+  <li>Customize the OS_NAME in <code class="highlighter-rouge">/etc/lsb_release</code>, for easy verification</li>
+  <li><strong>(OPTIONAL)</strong> Sign up for Google Cloud Platform, create a storage bucket and service account</li>
+</ol>
+
+<h2 id="custom-kernel">Custom Kernel</h2>
+<p>Let’s start by making changes to the <code class="highlighter-rouge">coreos-overlay</code> since that’s where the linux kernel customization code for CoreOS exists.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-overlay"></div>
+
+<p>The file containing the kernel config options for our CoreOS build can be found in
+<a href="https://github.com/mediadepot/coreos-overlay/blob/mediadepot/sys-kernel/coreos-modules/files/amd64_defconfig-4.14">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</a></p>
+
+<p>However we still need to determine the kernel options that we need to enable.</p>
+
+<p>Once again we go back to the <code class="highlighter-rouge">coreos_developer_container</code> that we used in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1#configure-kernel-options">Customize CoreOS Kernel - Part 1</a></p>
+
+<p>We’ll run <code class="highlighter-rouge">make menuconfig</code> in the <code class="highlighter-rouge">usr/src/linux</code> directory to select all our kernel options, follow the remaining steps in the previous post,
+ and then we’ll run a new command: <code class="highlighter-rouge">scripts/diffconfig .config.old .config</code></p>
+
+<p>The output from this command is basically a diff listing all the changes necessary to enable your selected kernel customizations from the base CoreOS kernel.</p>
+
+<p>We’ll need to massage the output a bit by removing <code class="highlighter-rouge">+</code> characters, transitions and prefixing each line with <code class="highlighter-rouge">CONFIG_</code>. We’ll end up with something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CONFIG_AGP=y
+CONFIG_BACKLIGHT_CLASS_DEVICE=m
+CONFIG_DMA_SHARED_BUFFER=y
+CONFIG_DRM=m
+CONFIG_FB_SYS_COPYAREA=y
+CONFIG_FB_SYS_FILLRECT=y
+CONFIG_FB_SYS_FOPS=y
+CONFIG_FB_SYS_IMAGEBLIT=y
+CONFIG_I2C=y
+CONFIG_I2C_ALGOBIT=y
+CONFIG_LOGO=y
+CONFIG_REGMAP_I2C=y
+CONFIG_RTC_I2C_AND_SPI=y
+CONFIG_SYNC_FILE=y
+CONFIG_ACPI_I2C_OPREGION=y
+CONFIG_ACPI_VIDEO=m
+CONFIG_BACKLIGHT_GENERIC=m
+CONFIG_DRM_BRIDGE=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_DRM_FBDEV_OVERALLOC=100
+CONFIG_DRM_I915=m
+CONFIG_DRM_I915_CAPTURE_ERROR=y
+CONFIG_DRM_I915_COMPRESS_ERROR=y
+CONFIG_DRM_I915_USERPTR=y
+CONFIG_DRM_KMS_FB_HELPER=y
+CONFIG_DRM_KMS_HELPER=y
+CONFIG_DRM_MIPI_DSI=y
+CONFIG_DRM_PANEL=y
+CONFIG_DRM_PANEL_BRIDGE=y
+CONFIG_HDMI=y
+CONFIG_INTEL_GTT=m
+CONFIG_INTERVAL_TREE=y
+CONFIG_LOGO_LINUX_CLUT224=y
+CONFIG_LOGO_LINUX_MONO=y
+CONFIG_LOGO_LINUX_VGA16=y
+</code></pre>
+</div>
+
+<p>We can now paste this content at the bottom of our <code class="highlighter-rouge">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</code> file and commit
+the change to our branch.</p>
+
+<p>We’ll also want to customize the <code class="highlighter-rouge">coreos-base/coreos-init/coreos-init-9999.ebuild</code> file, pointing this package to our forked repo:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CROS_WORKON_PROJECT="mediadepot/coreos-init"
+CROS_WORKON_LOCALNAME="init"
+CROS_WORKON_REPO="git://github.com"
+
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+else
+	CROS_WORKON_COMMIT="mediadepot"
+	KEYWORDS="amd64 arm arm64 x86"
+fi
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-overlay/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-overlay</code> repo</a></p>
+
+<h2 id="iso-installer-custom-hosting">ISO Installer Custom Hosting</h2>
+<p>If you’ve been following along so far, you may think that creating a custom <code class="highlighter-rouge">.bin</code> file is enough, but I learned the hard way that’s incorrect.</p>
+
+<p>The <code class="highlighter-rouge">build_image</code> command in the <code class="highlighter-rouge">provisioner.sh</code> script will build a <code class="highlighter-rouge">.bin</code> file for us, but we need a bootable <code class="highlighter-rouge">.iso</code>.
+Thankfully the CoreOS devs created a tool called <code class="highlighter-rouge">image_to_vm.sh</code> which (confusingly) can be used to create bootable <code class="highlighter-rouge">.iso</code> images.</p>
+
+<p>Not so fast.</p>
+
+<p><strong>While we now have a bootable <code class="highlighter-rouge">.iso</code> that uses our custom kernel, the <code class="highlighter-rouge">coreos-install</code> script in the <code class="highlighter-rouge">.iso</code> actually
+downloads a vanilla <code class="highlighter-rouge">.bin</code> file from the public CoreOS mirror and installs that <code class="highlighter-rouge">.bin</code> to the host machine.</strong></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-init"></div>
+
+<p>We’ll need open our fork of <code class="highlighter-rouge">coreos/init</code>: <a href="https://github.com/mediadepot/coreos-init"><code class="highlighter-rouge">mediadepot/coreos-init</code></a> and update the <a href="https://github.com/mediadepot/coreos-init/blob/mediadepot/bin/coreos-install"><code class="highlighter-rouge">coreos-install</code></a> script:</p>
+
+<ul>
+  <li>to point to our custom BASE_URL (where we’ll be hosting our images)</li>
+  <li>remove some GPG signing requirements (I know, I know, we’ll add them back later)</li>
+</ul>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-init/compare/master...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-init</code> repo</a></p>
+
+<h2 id="customize-coreos-release">Customize CoreOS Release</h2>
+<p>This next change is optional, but was a nice indicator to verify that the custom kernel build and installation is working
+as intended. We’ll modify our <code class="highlighter-rouge">coreos-scripts</code> repo, changing the OS_NAME from “Container Linux by CoreOS” to
+“MediaDepot CoreOS”. This simple change will allow us to verify that our customized image (with our kernel changes)
+was correctly installed on our server.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-scripts"></div>
+
+<p>We’ll make this change in <code class="highlighter-rouge">build_library/set_lsb_release</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat coreos-scripts/build_library/set_lsb_release
+
+...
+
+OS_NAME="MediaDepot CoreOS"
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-scripts/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-scripts</code> repo</a></p>
+
+<h1 id="hosting-coreos-images">Hosting CoreOS images</h1>
+<p>Once we build our custom <code class="highlighter-rouge">.bin</code> and <code class="highlighter-rouge">.iso</code> files, we’ll need to get them off our VM and onto a webserver
+that we can use to host our images.</p>
+
+<p>The <code class="highlighter-rouge">coreos_install</code> script expects your <code class="highlighter-rouge">.bin</code> file to exist in a specific folder structure:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>${BASE_URL}/${COREOS_VERSION}/coreos_production_image.bin.bz2
+${BASE_URL}/current/version.txt
+</code></pre>
+</div>
+<p><code class="highlighter-rouge">${BASE_URL}/current/version.txt</code> should be the <code class="highlighter-rouge">version.txt</code> generated for the most recent build. Its how <code class="highlighter-rouge">coreos_installer</code> knows which is the current version.</p>
+
+<h2 id="automatic-deployment-to-gcp-storage">Automatic Deployment to GCP Storage</h2>
+
+<p>While we could just manually upload these files to our webserver, the CoreOS developers have added built in support for GCP
+hosting into their scripts. All we need to do is provide the credentials to our GCP account.</p>
+
+<p>We’ll need to do the following:</p>
+
+<ol>
+  <li>Create a GCP Account</li>
+  <li><a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new GCP Project</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/creating-buckets">Create a Storage Bucket</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/access-control/making-data-public#buckets">Make sure the Bucket is Publically Readable</a></li>
+  <li><a href="https://cloud.google.com/iam/docs/creating-managing-service-accounts">Create a new Service Account</a>
+    <ul>
+      <li>Make sure you give it the <code class="highlighter-rouge">Storage Account Admin</code> role (it will need permissions to upload and overwrite files)</li>
+      <li>Create a Private Key, and export as JSON.</li>
+    </ul>
+  </li>
+  <li>Rename your Private Key JSON file on your host machine, and move it to the following path <code class="highlighter-rouge">~/.config/gcloud/application_default_credentials.json</code></li>
+</ol>
+
+<p>Once you’ve done that setup, we’ll need to pass this key file from your host machine into Vagrant, and then update the <code class="highlighter-rouge">provisioner.sh</code> script to handle the credentials.
+We’ll do that in the next section:</p>
+
+<h1 id="building-our-customized-coreos-image">Building our customized CoreOS Image</h1>
+<p>Now we’re finally ready to build our custom CoreOS images, lets look at our updated <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code></p>
+
+<div class="github-widget" data-repo="mediadepot/vagrant-coreos-kernel-builder"></div>
+
+<h2 id="vagrantfile">Vagrantfile</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat Vagrantfile
+
+Vagrant.configure<span class="o">(</span><span class="s2">"2"</span><span class="o">)</span> <span class="k">do</span> |config|
+    config.vm.box <span class="o">=</span> <span class="s2">"centos/7"</span>
+    config.vm.provider <span class="s2">"virtualbox"</span> <span class="k">do</span> |v|
+        v.name <span class="o">=</span> <span class="s2">"coreos_builder"</span>
+        v.memory <span class="o">=</span> 11264
+        v.cpus <span class="o">=</span> 4
+    end
+
+    <span class="c"># create the gsutil config file. It'll be created on the Host and copied into the VM, where it'll be parsed and a boto file will be created in the chroot.</span>
+    config.vm.provision <span class="s2">"file"</span>, <span class="nb">source</span>: <span class="s2">"~/.config/gcloud/application_default_credentials.json"</span>, destination: <span class="s2">"/home/vagrant/.config/gcloud/application_default_credentials.json"</span>
+
+    config.vm.provision <span class="s2">"shell"</span>, path: <span class="s2">"provisioner.sh"</span>
+end
+
+</code></pre>
+</div>
+
+<p>Note the change copying the <code class="highlighter-rouge">application_default_credentials.json</code> from the Host into the VM above.</p>
+
+<h2 id="provisionersh">Provisioner.sh</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat provisioner.sh
+
+<span class="c">#!/usr/bin/env bash</span>
+<span class="nb">set</span> -e
+<span class="nb">set</span> -o pipefail
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html=</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+set -e
+set -o pipefail
+whoami
+
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create --manifest-url=https://github.com/mediadepot/coreos-manifest.git --manifest-branch=mediadepot
+#
+cork enter
+grep NAME /etc/os-release
+env
+
+./set_shared_user_password.sh mediadepot &amp;&amp; \
+./setup_board --board 'amd64-usr' &amp;&amp; \
+./build_packages --board 'amd64-usr' &amp;&amp; \
+./build_image --board 'amd64-usr' prod --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+./image_to_vm.sh --from=../build/images/amd64-usr/developer-latest --format=iso --board=amd64-usr --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+
+# mark this current build as the latest.
+gsutil cp ../build/images/amd64-usr/developer-latest/version.txt "gs://mediadepot-coreos/boards/amd64-usr/current/version.txt"
+
+cat ../build/images/amd64-usr/developer-latest/version.txt
+EOF
+
+
+
+</span></code></pre>
+</div>
+
+<p>The primary change we made was to add <code class="highlighter-rouge">--manifest-url</code> and <code class="highlighter-rouge">--manifest-branch</code> flags to to the <code class="highlighter-rouge">cork create</code> command, specifying
+our forked repo and branch.</p>
+
+<p>You’ll also note the following changes:</p>
+<ul>
+  <li><code class="highlighter-rouge">./setup_board</code> and <code class="highlighter-rouge">--board</code> -  <strong>when building a custom CoreOS manifest, you need to specify a board otherwise your build will fail</strong>. While I’m not quite clear why its necessary, running <code class="highlighter-rouge">setup_board</code> and passing a <code class="highlighter-rouge">--board 'amd64-usr'</code> parameter to subsequent commands seemed to fix the issues.</li>
+  <li><code class="highlighter-rouge">--upload</code> and <code class="highlighter-rouge">--upload_root</code> - this informs the relevant scripts that they should check for boto credentials and upload the completed files to the specified GCP storage bucket (with the correct folder structure)</li>
+  <li><code class="highlighter-rouge">gsutil cp</code> - this command will copy a file to the storage bucket, specifying that the “current” version is the one that we just uploaded.</li>
+</ul>
+
+<p>All that left now is to run <code class="highlighter-rouge">vagrant destroy -f &amp;&amp; vagrant up</code>.</p>
+
+<p><code class="highlighter-rouge">vagrant destroy -f</code> will completely destroy our existing VM, the one we used to build our vanilla CoreOS source. Then we’ll
+go rebuild a new VM and provision it with our new script using <code class="highlighter-rouge">vagrant up</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete_custom.png" alt="sdk complete custom" /></p>
+
+<h1 id="installing-our-custom-image">Installing our custom Image</h1>
+
+<p>Now that we’ve created our custom <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files, and made them accessible by our servers, it’s time to create a bootable USB drive or CD, and install CoreOS on our server.</p>
+
+<p>We’ll be creating a bootable USB key.
+My favorite tools for doing this are <a href="https://www.balena.io/etcher/">balenaEtcher</a> (macOS, Windows, Linux) and <a href="https://rufus.ie/en_IE.html">Rufus</a> (Windows).
+First we’ll the <code class="highlighter-rouge">coreos_production_iso_image.iso</code> from the GCP storage bucket, and then follow the instructions for our chosen tool, making sure to select our <code class="highlighter-rouge">.iso</code> as the base image.</p>
+
+<h2 id="create-an-ignitionjson-file">Create an ignition.json file.</h2>
+<p>As part of CoreOS’s headless and security decisions, password authentication is disabled by default. This means that without adding an SSH key for the <code class="highlighter-rouge">core</code> user, we won’t be able to login
+to our new server.</p>
+
+<p>CoreOS supports a couple of methods for configuration management, but the current recommended one is <code class="highlighter-rouge">ignition</code>. Since all we want to do is SSH onto our server and
+verify that our custom CoreOS install is working, lets create a barebones <code class="highlighter-rouge">ignition.json</code> file on our computer.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat ignition.json
+{
+  "ignition": {
+    "config": {},
+    "security": {
+      "tls": {}
+    },
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEA0QIsn450XjpKdoAicWqu6pgoc7h+lUokibTF75NcLVhrhnOn8aVpV+MemlE6kt6wjZDK7WyTEX1+/4dIFwH92+TJwBRKG8Yd0aTFHjWZg7K/dZAak041sF21D9K+7R0PtZK/B6szbdN9bZtwss2ebuzMu9Pxw3Rzq/PsPfl9nzs="
+        ]
+      }
+    ]
+  },
+  "storage": {
+  },
+  "systemd": {
+  }
+}
+</code></pre>
+</div>
+
+<p>You’ll want to ensure that you replace my ssh public key in <code class="highlighter-rouge">sshAuthorizedKeys</code> with yours (check <code class="highlighter-rouge">~/.ssh/id_rsa.pub</code>)</p>
+
+<p>After that we’ll want to place it somewhere accessible to the server we’ll be installing CoreOS on. <a href="https://transfer.sh/">https://transfer.sh/</a> works in a pinch.</p>
+
+<p><code class="highlighter-rouge">curl --upload-file ./ignition.json https://transfer.sh/ignition.json</code></p>
+
+<h2 id="boot-our-server-from-usb">Boot our Server from USB</h2>
+
+<p>Next we’ll boot our server from this USB. There’s many ways to do this, so you’ll need to figure this out on your own, usually there’s an option in your BIOS to boot from a specific disk/USB.</p>
+
+<p>Once we’ve booted into CoreOS from the USB, it’s time to download our <code class="highlighter-rouge">ignition.json</code> file and run the CoreOS installer.
+This should install our customized version of CoreOS, if everything worked correctly.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+# replace the URL below with your transfer.sh url.
+curl -O -L https://transfer.sh/vteIu/ignition.json
+
+cat ignition.json # make sure the public key here matches the public key on your host machine
+
+# determine the correct hard disk to install CoreOS on
+sudo fdisk -l
+
+# start the CoreOS installer
+# make sure you replace `/dev/sda` with the correct hard disk for your machine.
+# YOU WILL LOSE DATA IF YOU SELECT THE WRONG DISK
+
+sudo coreos-install -d /dev/sda -V current -i ignition.json
+</code></pre>
+</div>
+
+<p>Once <code class="highlighter-rouge">coreos-install</code> completes, you’ll need to eject your USB drive and restart your server. On startup the config from
+the <code class="highlighter-rouge">ignition.json</code> file we specified will be used to configure the Server, allowing us to ssh as the <code class="highlighter-rouge">core</code> user.</p>
+
+<h2 id="validate-custom-coreos-install">Validate Custom CoreOS install</h2>
+
+<p>After we ssh onto our server (<code class="highlighter-rouge">ssh core@{{SERVER_IP}}</code>) we can verify that our custom CoreOS image has been installed:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+cat /etc/lsb-release
+
+DISTRIB_ID="MediaDepot CoreOS"
+DISTRIB_RELEASE=1911.4.0+2018-12-22-0018
+DISTRIB_CODENAME="Rhyolite"
+DISTRIB_DESCRIPTION="MediaDepot CoreOS 1911.4.0+2018-12-22-0018 (Rhyolite)"
+</code></pre>
+</div>
+
+<h1 id="automatic-custom-coreos-builds">Automatic Custom CoreOS Builds</h1>
+
+<p>In Part 3 of this series I’ll discuss the steps required to re-enable the automatic CoreOS kernel updates,
+including GPG signing &amp; validation of the <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files.</p>
+
+<h1 id="fin">Fin</h1>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the CoreOS Kernel - Part 1 - Kernel Modules</title>
+	  <link>/customize-coreos-kernel-part-1</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-12-09T03:19:33-06:00</pubDate>
+	  <guid>/customize-coreos-kernel-part-1</guid>
+	  <description><![CDATA[
+	     <h1 id="story-time">Story Time</h1>
+
+<p>As a Devops &amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code.
+With a bit of help from Google I can usually come up with a working solution, even if the end result needs a bit of polish afterwards.</p>
+
+<p>That self-assurance was checked on my latest project: <strong>building a dockerized home server.</strong></p>
+
+<p>I’ve touched on my home server a bit in the past, and I’ll be doing a follow up post on it later, but here’s a quick summary of what it does:</p>
+
+<ul>
+  <li>Its a home server, so it needed to be physically small and quiet, but easy to upgrade.</li>
+  <li>Storage space was more important than content archival, so a JBOD disk array was required</li>
+  <li>All applications should run in Docker where possible, for ease of installation, minimizing conflicts and updating.</li>
+  <li><strong>OS needed to be as minimal as possible, since all work was done in Docker containers</strong></li>
+</ul>
+
+<p>I’ve had a Home Server that checked off the first three items for a while, but not that last one. Professionally, I’ve been lucky enough to
+use (and abuse) a Kubernetes cluster which builds our Jenkins jobs. That Kubernetes cluster was built ontop of <del>CoreOS</del> Container Linux, which
+I’ve grown to love. It checks off that last requirement perfectly.</p>
+
+<p>So I did what any tinkerer would do, I started up a CoreOS VM, rebuilt my entire software stack for another OS, learned a compeletely new
+configuration management tool (<a href="https://github.com/mediadepot/ignition">Ignition</a> is pretty slick), and finally wiped my server’s OS and installed CoreOS
+&amp; my dockerized applications.</p>
+
+<p>This is where our story actually begins, which will eventually lead me down a rabbit hole of device drivers &amp; kernel modules.</p>
+
+<p><strong>The <code class="highlighter-rouge">/dev/dri</code> folder was missing on CoreOS.</strong></p>
+
+<p>I eventually got around to starting up Plex on my homeserver, and while everything looked fine, I noticed that the container was not automatically doing Hardware Transcoding
+for video, like it should be.
+After doing a bunch of debugging I determined that I needed to compile the CoreOS Kernel with a couple of extra options enabled:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)</code></li>
+  <li><code class="highlighter-rouge">Intel 8xx/9xx/G3x/G4x/HD Graphics</code></li>
+</ul>
+
+<p>Here’s <strong>Problem #1</strong>. If you’re unfamiliar with CoreOS, all you need to know is that unlike traditional OS’s the CoreOS kernel is
+continuously updated, similar to how Google Chrome is always kept up-to date. This means that <strong>any local modifications I make to the kernel
+will be completely lost on the next kernel update</strong>.</p>
+
+<p>Thankfully kernel developers have provided a way to load code into the kernel, without recompiling the whole thing: kernel modules.</p>
+
+<h1 id="compiling-coreos-kernel-modules-in-tree-or-out-of-tree">Compiling CoreOS Kernel Modules (In-Tree or Out-Of-Tree)</h1>
+<p>Here’s where we end story time and actually start coding.</p>
+
+<p>CoreOS is so minimal that it doesn’t even have a any compilers or even a package manager installed.
+In fact, it’s designed such that all real work takes place inside of containers.</p>
+
+<p>But before we can even do much work towards solving Problem #1, we run into <strong>Problem #2: the standard location for storing kernel modules <code class="highlighter-rouge">/lib/modules</code> is read-only in CoreOS.</strong>
+If you think about it, it kind of all makes sense: an OS that auto-updates its kernel needs to ensure that it controls all locations where
+kernel code is loaded from.</p>
+
+<p>We’ll solve Problem #2 first, by creating a <code class="highlighter-rouge">overlay</code> filesystem over the standard <code class="highlighter-rouge">/lib/modules</code> directory. This overlay filesystem will
+leave the underlying directory untouched, while creating a new writable directory where we can place our kernel modules.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nv">modules</span><span class="o">=</span>/opt/modules  <span class="c"># Adjust this writable storage location as needed.</span>
+sudo mkdir -p <span class="s2">"</span><span class="nv">$modules</span><span class="s2">"</span> <span class="s2">"</span><span class="nv">$modules</span><span class="s2">.wd"</span>
+sudo mount <span class="se">\</span>
+    -o <span class="s2">"lowerdir=/lib/modules,upperdir=</span><span class="nv">$modules</span><span class="s2">,workdir=</span><span class="nv">$modules</span><span class="s2">.wd"</span> <span class="se">\</span>
+    -t overlay overlay /lib/modules
+</code></pre>
+</div>
+
+<p>Next we’ll add an entry to <code class="highlighter-rouge">/etc/fstab</code> to ensure that we automatically mount the overlay when the system boots</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="gp">$ </span>cat /etc/fstab
+
+overlay /lib/modules overlay <span class="nv">lowerdir</span><span class="o">=</span>/lib/modules,upperdir<span class="o">=</span>/opt/modules,workdir<span class="o">=</span>/opt/modules.wd,nofail 0 0
+
+</code></pre>
+</div>
+
+<p>Now that Problem #2 is solved, lets go back to Problem #1: the lack of a package manager and compilation tools in CoreOS.
+Thankfully the CoreOS developers provide a <code class="highlighter-rouge">develoment container</code>, which has a bunch of tools that can be used to manipulate CoreOS (and includes a package manager).</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="c"># change to a well known location, with enough space for atleast a 3GB image</span>
+<span class="nb">cd</span> ~
+
+
+<span class="c"># read system configuration files to determine the URL of the development container that corresponds to the current Container Linux version</span>
+
+. /usr/share/coreos/release
+. /usr/share/coreos/update.conf
+<span class="nv">url</span><span class="o">=</span><span class="s2">"http://</span><span class="k">${</span><span class="nv">GROUP</span><span class="k">:-</span><span class="nv">stable</span><span class="k">}</span><span class="s2">.release.core-os.net/</span><span class="nv">$COREOS_RELEASE_BOARD</span><span class="s2">/</span><span class="nv">$COREOS_RELEASE_VERSION</span><span class="s2">/coreos_developer_container.bin.bz2"</span>
+
+<span class="c"># Download, decompress, and verify the development container image.</span>
+
+gpg2 --recv-keys 04127D0BFABEC8871FFB2CCE50E0885593D2DCB4  <span class="c"># Fetch the buildbot key if neccesary.</span>
+curl -L <span class="s2">"</span><span class="nv">$url</span><span class="s2">"</span> |
+    tee &gt;<span class="o">(</span>bzip2 -d &gt; coreos_developer_container.bin<span class="o">)</span> |
+    gpg2 --verify &lt;<span class="o">(</span>curl -Ls <span class="s2">"</span><span class="nv">$url</span><span class="s2">.sig"</span><span class="o">)</span> -
+
+</code></pre>
+</div>
+<p>Now that we’ve downloaded the developement container image (<code class="highlighter-rouge">coreos_developer_container.bin</code>) we can create a container based off of it.
+<strong>Problem #3</strong> rears its ugly head now: <strong>containers created via <code class="highlighter-rouge">systemd-nspawn</code> seem to have a diskspace limit of ~3GB.</strong> This can be fixed by
+doing a couple of additional volume mounts when starting the container:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nb">cd</span> ~
+mkdir boot src
+
+sudo systemd-nspawn <span class="se">\</span>
+--bind<span class="o">=</span>/tmp <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/boot:/boot"</span> <span class="se">\</span>
+--bind<span class="o">=</span>/lib/modules:/lib/modules <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/src:/usr/src"</span> <span class="se">\</span>
+--image<span class="o">=</span>coreos_developer_container.bin
+</code></pre>
+</div>
+
+<h2 id="inside-coreos-development-container">Inside CoreOS Development Container</h2>
+
+<p>Now that we’re inside the development container, we’ll update the package manager and download the coreos kernel source</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+emerge-gitclone
+emerge -gKv bootengine coreos-sources dracut
+update-bootengine -o /usr/src/linux/bootengine.cpio
+
+</code></pre>
+</div>
+
+<h2 id="configure-kernel-options">Configure Kernel Options</h2>
+<p>The kernel source for the current kernel will be downloaded to the following path <code class="highlighter-rouge">/usr/src/linux-$(uname -r)</code> and symlinked to <code class="highlighter-rouge">/usr/src/linux</code>.
+Lets configure the kernel options to enable the I915 driver (and it’s dependencies) to be built as a kernel module.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+<span class="nb">cd</span> /usr/src/linux  <span class="c"># remember, this is a symlink to your exact kernel source code</span>
+
+<span class="c"># lets ensure we're working from a clean copy of the source tree.</span>
+make distclean
+
+<span class="c"># lets copy over the symbols file for the current kernel</span>
+cp /lib/modules/<span class="sb">`</span>uname -r<span class="sb">`</span>/build/Module.symvers .
+
+<span class="c"># lets copy over the .config used to build the current kernel</span>
+gzip -cd /proc/config.gz &gt; /usr/src/linux/.config
+
+<span class="c"># lets backup the current config</span>
+make oldconfig
+
+<span class="c"># lets use the interactive UI to enable the options that we need to enable.</span>
+<span class="c"># remember, "m" means build as module.</span>
+make menuconfig
+
+<span class="c"># next lets prepare the source code to be built</span>
+make prepare <span class="o">&amp;&amp;</span> make modules_prepare
+make -C /usr/src/linux scripts
+
+<span class="c"># (OPTIONAL) finally, lets validate that the options we need are enabled.</span>
+cat .config | grep DRM
+diff .config.old .config
+
+</code></pre>
+</div>
+
+<h2 id="build--install-kernel-modules">Build &amp; Install Kernel Module(s)</h2>
+
+<p>Initially all I did here was build the one module I thought was necessary: <code class="highlighter-rouge">/drivers/drm</code>, but after taking a closer look
+at the output of <code class="highlighter-rouge"><span class="gh">diff .config.old .config</span></code> it’s clear that a couple of other kernel options were enabled as well, and their modules are dependencies for
+the <code class="highlighter-rouge">Intel i915 driver</code> to work correctly.</p>
+
+<p>The general form for building and installing a kernel module looks like the following:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules <span class="o">&amp;&amp;</span> make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules_install
+</code></pre>
+</div>
+
+<p>However, since there’s additional kernel modules that we need, the full build command looks like:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">make modules</code> command will build &amp; compile the <code class="highlighter-rouge">.ko</code> files, while the <code class="highlighter-rouge">make modules_install</code> command will copy them to the <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras/</code> directory.
+Lets validate that the kernel modules we require are all there:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## DEVELOPMENT CONTAINER ##
+ls -alt /lib/modules/$(uname -r)/extras/
+
+# if everything looks good, we can exit from the container back to the host
+
+exit
+
+</code></pre>
+</div>
+
+<h2 id="prepare-kernel-modules">Prepare Kernel Modules</h2>
+<p>So at this point we have a handful of kernel modules, but we’re not quite ready to load them into the kernel yet. We need to run a tool called <code class="highlighter-rouge">depmod</code> first</p>
+
+<blockquote>
+  <p>depmod creates a list of module dependencies by reading each module under <em>/lib/modules/version</em> and determining what symbols
+it exports and what symbols it needs. By default, this list is written to <em>modules.dep</em> in the same directory. If
+filenames are given on the command line, only those modules are examined (which is rarely useful unless all modules are listed).</p>
+</blockquote>
+
+<p>Lets run it on the host, to update the <code class="highlighter-rouge">modules.dep</code> file.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+depmod
+</code></pre>
+</div>
+
+<p>Well that was easy.</p>
+
+<h2 id="load-kernel-modules">Load Kernel Modules</h2>
+
+<p>Here we are at the moment of truth, lets load our kernel modules into the kernel using <code class="highlighter-rouge">modprobe</code>. If we did everything right the command should complete silently for each module.</p>
+
+<blockquote>
+  <p>modprobe intelligently adds or removes a module from the Linux kernel: note that for convenience, there is no difference between _ and - in module names. modprobe looks in the module directory /lib/modules/’uname -r’ for all the modules and other files, except for the optional /etc/modprobe.conf configuration file and /etc/modprobe.d directory (see modprobe.conf(5)). modprobe will also use module options specified on the kernel command line in the form of <module>.<option>.</option></module></p>
+</blockquote>
+
+<p>The modules in <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras</code> should be individually loaded via <code class="highlighter-rouge">modprobe</code>. Note: when using modprobe, you reference kernel modules by name, not path, ie. <code class="highlighter-rouge">modprobe i915</code> not <del><code class="highlighter-rouge">modprobe i915/i915.ko</code></del></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+modprobe acpi_ipmi
+...
+</code></pre>
+</div>
+
+<p>Once we’ve completed the dependent modules, lets load the modules we actually care about <code class="highlighter-rouge">drm</code>, <code class="highlighter-rouge">drm_kms_helper</code> and <code class="highlighter-rouge">i915</code>.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+<span class="gp">$ </span>modprobe drm_kms_helper
+modprobe: ERROR: could not insert <span class="s1">'drm_kms_helper'</span>: Unknown symbol <span class="k">in </span>module, or unknown parameter <span class="o">(</span>see dmesg<span class="o">)</span>
+</code></pre>
+</div>
+
+<p>Uh oh. Lets look at the logs in <code class="highlighter-rouge">dmesg</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[83845.709910] drm: Unknown symbol hdmi_vendor_infoframe_init (err 0)
+[83845.710508] drm: Unknown symbol dma_fence_add_callback (err 0)
+[83845.711248] drm: Unknown symbol dma_buf_attach (err 0)
+[83845.711921] drm: Unknown symbol dma_fence_default_wait (err 0)
+[83845.712474] drm: Unknown symbol dma_buf_export (err 0)
+[83845.712884] drm: Unknown symbol dma_buf_map_attachment (err 0)
+[83845.713648] drm: Unknown symbol dma_fence_remove_callback (err 0)
+[83845.714288] drm: Unknown symbol dma_buf_unmap_attachment (err 0)
+[83845.714946] drm: Unknown symbol dma_fence_context_alloc (err 0)
+[83845.715508] drm: Unknown symbol dma_fence_signal (err 0)
+[83845.716182] drm: Unknown symbol dma_buf_get (err 0)
+[83845.716762] drm: Unknown symbol dma_buf_put (err 0)
+[83845.717257] drm: Unknown symbol dma_buf_fd (err 0)
+[83845.717843] drm: Unknown symbol dma_fence_init (err 0)
+[83845.718371] drm: Unknown symbol hdmi_avi_infoframe_init (err 0)
+[83845.719094] drm: Unknown symbol dma_fence_enable_sw_signaling (err 0)
+[83845.719835] drm: Unknown symbol dma_buf_detach (err 0)
+[83845.720422] drm: Unknown symbol dma_fence_release (err 0)
+[83845.721103] drm: Unknown symbol sync_file_get_fence (err 0)
+[83845.721771] drm: Unknown symbol sync_file_create (err 0)
+</code></pre>
+</div>
+
+<p>Looks like we’ve hit <strong>Problem #4: there’s some additional dependencies that we need to enable as modules.</strong></p>
+
+<p>Lets check for <code class="highlighter-rouge">hdmi_vendor_infoframe_init</code> first. In our case we’re building off the linux kernel used by CoreOS, so
+we’ll do a search of the source code in the <code class="highlighter-rouge">github.com/coreos/linux</code> repo.</p>
+
+<p>It looks like the symbol is exported in the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/hdmi.c">drivers/video/hdmi.c</a> file.
+Now lets look at the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Makefile">Makefile in the video directory</a> to determine which kernel config flag controls this file:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>..
+<span class="c"># SPDX-License-Identifier: GPL-2.0</span>
+obj-<span class="k">$(</span>CONFIG_VGASTATE<span class="k">)</span>            +<span class="o">=</span> vgastate.o
+obj-<span class="k">$(</span>CONFIG_HDMI<span class="k">)</span>                +<span class="o">=</span> hdmi.o
+
+obj-<span class="k">$(</span>CONFIG_VT<span class="k">)</span>		  +<span class="o">=</span> console/
+..
+</code></pre>
+</div>
+
+<p>Looks like the <code class="highlighter-rouge">CONFIG_HDMI</code> option controls the inclusion of the <code class="highlighter-rouge">hdmi.c</code> file. Perfect.</p>
+
+<p>Now lets check the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Kconfig"><code class="highlighter-rouge">Kconfig</code> file</a> for more information about the <code class="highlighter-rouge">CONFIG_HDMI</code> option.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+config HDMI
+	bool
+
+</code></pre>
+</div>
+
+<p>After looking at the <code class="highlighter-rouge">Kconfig</code> file and the <code class="highlighter-rouge">Makefile</code> closely, it seems that there is no configuration available to build <code class="highlighter-rouge">hdmi.c</code>
+file into a kernel module. This is confirmed when we run <code class="highlighter-rouge">make menuconfig</code>, press <code class="highlighter-rouge">/</code> to search, and enter <code class="highlighter-rouge">HDMI</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/make_menuconfig.png" alt="make menuconfig" /></p>
+
+<p>Looks like we’ve hit a dead end.</p>
+
+<p><strong>While we can create kernel modules for the <code class="highlighter-rouge">i915</code> and <code class="highlighter-rouge">drm</code> drivers, the <code class="highlighter-rouge">hdmi.c</code> file cannot be compiled as a module, only included
+directly in the kernel as a built-in. In our case <code class="highlighter-rouge">CONFIG_HDMI</code> is set to <code class="highlighter-rouge">n</code> in the CoreOS kernel build.</strong></p>
+
+<h1 id="fin">Fin</h1>
+
+<p>While it looks like I may have to scrap this work and start over from scratch, hopefully your <code class="highlighter-rouge">kernel module</code> does not have any
+dependencies that are unavailable as modules.</p>
+
+<p>If you were lucky enough to build a CoreOS kernel module and load it without any issues, you’ll want to look at
+<a href="https://gist.github.com/dm0-/0db058ba3a85d55aca99c93a642b8a20">automatically building and loading your kernel modules via a service</a>.
+I obviously never got that far.</p>
+
+<p>In Part 2 of this series I’ll walk though the steps as I attempt to build a full custom CoreOS kernel.</p>
+
+<h1 id="special-thanks">Special Thanks</h1>
+
+<p>I’d like to give a special thanks to the following people:</p>
+
+<ul>
+  <li>Abylay Ospan</li>
+  <li>David Michael</li>
+  <li>Ayan Halder</li>
+  <li>Mathieu Levallois</li>
+</ul>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver</li>
+  <li>https://coreos.com/os/docs/latest/kernel-modules.html - Initial instructions for building a Kernel module</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Drawbridge - SSH Config management for Jump/Bastion hosts</title>
+	  <link>/drawbridge-ssh-config-management</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-04-30T04:19:33-05:00</pubDate>
+	  <guid>/drawbridge-ssh-config-management</guid>
+	  <description><![CDATA[
+	     <p>In our architecture we have many environments (test/stage/prod/etc), and each environment can have one or more shards, usually broken up by datacenter/avaliablity zone (us-east-1, us-west-2, etc). Each of our shards are protected by Jump/Bastion hosts, auditing and restricting SSH access to internal components.</p>
+
+<p>For ease of use, tunneling into bastion host protected stacks is usually done by adding entries into your <code class="highlighter-rouge">~/.ssh/config</code> file, however when you start adding dozens of entries, it can be confusing and time consuming.</p>
+
+<p>A while back I made a post on <a href="https://www.reddit.com/r/devops/comments/8aasuw/tools_for_interacting_withmaintaining_configs_for/">/r/devops</a> asking for help finding a tool that would manage/generate ssh config files for all our jump/bastion hosts.</p>
+
+<p>There was some interest (and great discussion), however no-one submitted a tool that solved the actual problem.</p>
+
+<p>Since that post, I’ve worked on an open source tool that implents everything required to work with Bastion/Jump hosts efficiently as a Developer or member of Operations. Its available now on github: <a href="https://github.com/AnalogJ/drawbridge">Drawbridge</a></p>
+
+<h2 id="here-are-some-of-its-features">Here are some of its features:</h2>
+
+<ul>
+  <li>Single binary (available for macOS and linux), only depends on <code class="highlighter-rouge">ssh</code>, <code class="highlighter-rouge">ssh-agent</code> and <code class="highlighter-rouge">scp</code></li>
+  <li>Uses customizable templates to ensure that Drawbridge can be used by any organization, in any configuraton</li>
+  <li>Helps organize your SSH config files and PEM files</li>
+  <li>Generates SSH Config files for your servers spread across multiple environments and stacks.
+    <ul>
+      <li>multiple ssh users/keypairs</li>
+      <li>multiple environments</li>
+      <li>multiple stacks per environment</li>
+      <li>etc..</li>
+    </ul>
+  </li>
+  <li>Can be used to SSH directly into an internal node, routing though bastion, leveraging SSH-Agent</li>
+  <li>Able to download files from internal hosts (through the jump/bastion host) using SCP syntax</li>
+  <li>Supports HTTP proxy to access internal stack urls.</li>
+  <li>Lists all managed config files in a heirarchy that makes sense to your organization</li>
+  <li>Custom templated files can be automatically generated when a new SSH config is created.
+    <ul>
+      <li>eg. Chef knife.rb configs, Pac/Proxy files, etc.</li>
+    </ul>
+  </li>
+  <li>Cleanup utility is built-in</li>
+  <li><code class="highlighter-rouge">drawbridge update</code> lets you update the binary inplace.</li>
+  <li>Pretty colors. The CLI is all colorized to make it easy to skim for errors/warnings</li>
+</ul>
+
+<hr />
+
+<p>You can read more &amp; download it from Github [https://github.com/AnalogJ/drawbridge]</p>
+
+<p>I’m always open to PR’s and feature requests. I’d also love to hear any feedback you guys may have</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Jenkins Dockerized Slave Cluster - Premise</title>
+	  <link>/jenkins-dockerized-slave-cluster</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-03-25T04:19:33-05:00</pubDate>
+	  <guid>/jenkins-dockerized-slave-cluster</guid>
+	  <description><![CDATA[
+	     <p>Here’s the premise, we have one or more Jenkins masters running our various jobs, and the server is bottlenecking: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources.</p>
+
+<p>Wouldn’t it be nice if we could share slave nodes between the masters? Create a cluster of slave nodes and have the various Jenkins masters run their jobs without needing to worry about scheduling or the underlying utilization of the hardware?</p>
+
+<p>Enter buzzword heaven. In the next few posts I’ll be going through all the steps required to build a Dockerized Jenkins slave cluster.</p>
+
+<ul>
+  <li>Part 1 - Our cloud provider will be OpenStack, however we’ll be using Terraform for provisioning, so you could easily migrate my tutorial onto Azure/AWS/GCE or Bare Metal. Our foundation will be a half-dozen vanilla CoreOS machines, which you can resize to your needs.</li>
+  <li>Part 2 - On top of that we’ll use kubeadm to bootstrap a best-practice Kubernetes cluster in an easy, reasonably secure and extensible way. No complex configuration-management required.</li>
+  <li>Part 3 - Finally, we’ll configure our Jenkins masters to communicate with a single Kubernetes cluster. The Jenkins masters will run jobs in a “cloud” that will transparently spin up Docker containers on demand. Once the job finishes the container is destroyed automatically, freeing up those resources for other masters and their jobs.</li>
+</ul>
+
+<p>My goal with these posts are to:</p>
+
+<ol>
+  <li>Aggregate all the steps in one place. There’s alot of smart people out there who’ve written various guides doing each of these things individually. I want to aggregate all the steps into one, easy to follow along tutorial</li>
+  <li>Break each stage up into comprehendible chunks, and clearly explain how they interact with each other. This allows you to modify my tutorial to suit your needs, while still being able to follow along.</li>
+  <li>Provide a real code repository, not just snippets out of context. Sometimes the “obvious” glue code isn’t so obvious. A repo you can grep can save a lot of time.</li>
+  <li>Write a continiously updated/evergreen guide following modern best practices. Like code, content also rots – especially quick in the devops &amp; docker world. I’ll be keeping this guide as up-to-date as possible. In addition it’s hosted on Github, so you can submit edits to make each post better.</li>
+</ol>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Devops for Startups & Small Teams</title>
+	  <link>/devops-for-startups</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-09-13T04:19:33-05:00</pubDate>
+	  <guid>/devops-for-startups</guid>
+	  <description><![CDATA[
+	     <p>When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.</p>
+
+<p>The following are the quick and dirty Devops patterns &amp; procedures that I put in place before working on any new system.
+I primarily focus on free tools and services because of how cheap I am, so feel free to replace them comparable tools of your choice,
+you big spender, you.</p>
+
+<h1 id="before-your-first-line">Before your first line</h1>
+<ul>
+  <li><strong>Store your code in Git</strong> - <a href="https://github.com/">Github</a> <em>[free open source]</em>/<a href="https://bitbucket.org/">Bitbucket</a>
+<em>[free private]</em>/<a href="https://www.gitlab.com">GitLab</a> <em>[free private]</em>  -
+there shouldn’t be more to say here other than, store your source in a VCS from day 1.</li>
+  <li>Design your app with <strong>multiple environments</strong> in mind. You should be able to switch between Local/Stage/Production development
+with no code changes, just configuration changes (via environmental variables or a config file). I love <a href="https://github.com/indexzero/nconf">nconf</a>
+for NodeJS, but most languages have something similar.</li>
+  <li><strong>Isolate your configuration.</strong> Its probably not necessary to move your configuration into a compeltely separate system yet,
+but make sure you can easily if you scale. Sprinkling your configuration in multiple places is just asking for an application re-write.</li>
+  <li><strong>Follow a branching pattern.</strong> At it’s simplest it could just be 2 branches, “master” and “develop” or you could go nuts
+and follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">gitflow</a>. It doesn’t matter, as long as you follow
+the damn thing, and don’t just commit directly to master. Setup branch protection to disable commits to “master”.
+This is going to be important later when you start doing Continuous Integration (CI). Bad habits are hard to break.</li>
+  <li><strong>Setup CI</strong>. You don’t need to go full throttle with a standalone Jenkins server. Just make sure your code is compiling
+in a clean-room environment, that doesn’t include the dozens of apps and libraries you already have installed on your
+dev machine. <a href="https://travis-ci.org/">TravisCI</a> <em>[free]</em> and <a href="https://circleci.com">CircleCI</a> <em>[free]</em> are great, and integrate
+with Github/Bitbucket. At a bare minimum build your artifacts inside a clean Docker container.</li>
+  <li>Setup an <strong>issue tracker/project management board</strong>. <a href="https://waffle.io">Waffle.io</a> <em>[free]</em> is great and integrates with Github,
+but you may be able to just get away with <a href="https://help.github.com/articles/creating-a-project-board/">Github Project Boards</a> <em>[free]</em> to start</li>
+  <li>Make some Architecture decisions:
+    <ul>
+      <li>Decide if you can get away with a <a href="https://github.com/myles/awesome-static-generators">static frontend</a> or SPA
+  architecture for your front end. If you can, you’ll get infinite scaling of your front-end for almost free.
+  Distributing static files is a solved problem–CDN’s have been doing it for years. <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em>
+  is your <del>cheapest</del> best friend. Pairing it with Github pages [free] is a poor developer’s dream.</li>
+      <li>Can you go Serverless/FAAS for your backend? You no longer need to maintain or monitor hardware, you get infinite*
+  scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="before-your-first-staging-environment-deploy">Before your first staging environment deploy</h1>
+<ul>
+  <li>Have a <strong>unit test suite</strong> - Yeah yeah, TDD. But be honest, when’s the last time you started a project with TDD? Still, you’ll thank
+yourself when you come back to your code after 2 weeks, or even just a couple of days. It’s also a pre-req for some of the next points.</li>
+  <li><strong>Code Coverage/Code Quality</strong> tools - When I feel that I have an application that can actually run on a server is when I
+know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
+cold water, they help stifle that feeling of euphoria that stops you from really digging into your code. A nice UI really helps
+and I’m a big fan of <a href="https://coveralls.io/">Coveralls.io</a> <em>[free open source]</em> and <a href="https://codecov.io/">CodeCov</a> <em>[free open source]</em>,
+both have great integration with SCM’s and CI platforms.</li>
+  <li><strong>Forward your logs</strong> to a centralized logging system (Cloud-watch is fine, if you don’t plan on actually debugging your app.)
+<a href="https://www.loggly.com">Loggly</a> <em>[free]</em> is great. Make sure you forward environment data and user data to your log aggregator as well, to give your
+logs context.</li>
+  <li><strong>Use a CDN</strong> like <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em> in front of your site if you haven’t already. You definitely don’t have the traffic yet
+that requires it, but don’t wait until you’re ready to launch. Its time-consuming, error prone and can cause DNS downtime,
+even if you don’t misconfigure something. It’s not something you want to leave to the last minute.</li>
+  <li><strong>Write documentation/setup instructions</strong> as you start building your Stage environment. Your documentation should always
+be relative to Stage, <strong>NOT</strong> Production. You will forget. You will copy and paste from your docs, and you will run a
+destructive operation against your production database. <a href="https://np.reddit.com/r/cscareerquestions/comments/6ez8ag/accidentally_destroyed_production_database_on/">Cough..</a>
+    <ul>
+      <li>List all the weird/one-off configuration you had to do to get your staging server working. New accounts on 3rd
+  party services, ip whitelisting, database population, you’ll need this checklist when you spin up Production, and
+  finding out whats different between Prod and Stage is going to be a huge pain without it. Infrastructure-as-code/Configuration Management
+   is your friend here, but may not be enough by itself.</li>
+    </ul>
+  </li>
+  <li><strong>Follow modern infrastructure practices.</strong> <a href="https://www.terraform.io/">Infrastructure-as-code</a> and <a href="https://www.chef.io/chef/">Configuration</a> <a href="https://puppet.com/">Management</a> are buzzwords for a reason.
+And they don’t have to be super complicated. You don’t need to design the Mona Lisa of Chef cookbooks. At a bare minimum
+make sure that you can spin up a whole environment with the click of a single button. Automation is the key here. You’ll
+be doing this a lot more than you’d expect, so take some time and do it right. When you find yourself under the gun, needing
+to scale your environment, you’ll be thankful.</li>
+  <li><strong>Version your code.</strong> Create releases, tag your software, its incredibly useful when debugging what software your actually
+running in different environments. It also makes it much easier to deploy previous versions when you want to do regression
+testing, or rollback a broken deployment. Check out something like <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>
+which can build, test, tag, merge branches and release your software automatically.</li>
+  <li><strong>Setup Continuous Deployments</strong> - If you’re already using a CI platform to test your code, why not automatically deploy your
+validated code to your Staging environment? Depending on your application architecture, this may be a bit complicated, but
+having your CI tested code deployed to a staging environment automatically is going to drastically improve your development
+cadence while still ensuring stability. And if your stability is being effected, prioritize your tests, they’re supposed to
+catch 90% of your errors before they even get to a staging env.</li>
+</ul>
+
+<h1 id="before-your-first-prod-deploy">Before your first prod deploy</h1>
+<ul>
+  <li><strong>Automate your backups.</strong> This is probably obvious to everyone, but a backup process without a verified restore process is
+useless. Try to setup a weekly backup and restore of your staging environment database. Use the same code/process you would in Production.</li>
+  <li>Write a script to <strong>populate your database</strong> with test data. Massive amounts of test data. <a href="https://github.com/marak/Faker.js/">Faker.js</a>
+has an API. Check how your Staging environment actually handles real data, not just the toy amounts you’ve thrown in.</li>
+</ul>
+
+<h1 id="once-your-application-is-live">Once your application is live</h1>
+<ul>
+  <li>Track the versions of your <strong>application’s dependencies, and their dependencies</strong>,
+<a href="https://en.wikipedia.org/wiki/Turtles_all_the_way_down">it’s turtles all the way down</a>. This is to ensure that you know
+what software makes up your stack, but also so you can be notified of bug fixes and security issues.</li>
+  <li>Make sure you have <strong>monitoring</strong> in place.
+    <ul>
+      <li><a href="https://www.pingdom.com/free">Pingdom</a> <em>[free]</em> will let notify you if your application is inaccessible externally.</li>
+      <li>Track system metrics like CPU and memory load on your servers. <a href="https://newrelic.com/">NewRelic</a> <em>[free]</em>,
+  <a href="https://www.librato.com/">Librato</a> <em>[free]</em> and <a href="https://cloud.google.com/stackdriver/">StackDriver</a> <em>[paid]</em> work well.</li>
+      <li>Configure a user analytics &amp; monitoring solution like <a href="https://www.google.com/analytics/">Google Analytics</a> <em>[free]</em>. Setup alerts when your traffic
+  increases or drops more than 15%.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This is just my checklist, but I’d love to hear yours. Is there any devopsy related tasks you think I’m missing?</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API</title>
+	  <link>/dropstore-ng-opensource-angularjs-bindings-for</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-12-08T22:00:00-06:00</pubDate>
+	  <guid>/dropstore-ng-opensource-angularjs-bindings-for</guid>
+	  <description><![CDATA[
+	     <p>I created an github project called <a href="https://github.com/AnalogJ/dropstore-ng">dropstore-ng</a> that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.
+The service wraps most of the Dropbox Datastore callbacks in promises, contains subscription methods for Dropbox events and provides transparent aliases for untouched library methods.</p>
+
+<p>I also created a realtime todo sample app which you can try <a href="https://dropstore-ng.herokuapp.com/">here</a></p>
+
+<p>You can access the library here:
+<a href="https://github.com/AnalogJ/dropstore-ng">https://github.com/AnalogJ/dropstore-ng</a></p>
+
+<p>or through bower</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>bower install dropstore-ng --save
+</code></pre>
+</div>
+
+<div class="github-widget" data-repo="AnalogJ/dropstore-ng"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>How to setup a Free Continuous Integration Server Using Cloudbees + Private Github</title>
+	  <link>/how-to-setup-a-free-continuous-integration-server</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-11-05T02:00:00-06:00</pubDate>
+	  <guid>/how-to-setup-a-free-continuous-integration-server</guid>
+	  <description><![CDATA[
+	     <h3 id="better-integration-between-jenkins-and-github-with-the-github-jenkins-plugin">Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)</h3>
+
+<p>The following steps will help setup your Cloudbees Jenkins Service for continuous integration via Github. Most of the documentation for this section came from here <a href="http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html">http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html</a></p>
+
+<h2 id="setup-cloudbees--jenkins--private-github">Setup Cloudbees + Jenkins + Private Github</h2>
+
+<ol>
+  <li>Go to your Jenkins instances root page.</li>
+  <li>If your Jenkins instance has security enabled, login as a user who has the <code class="highlighter-rouge">Overall | Administer</code> permission.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Jenkins</code> link on the left-hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Plugins</code> link.</li>
+  <li>On the <code class="highlighter-rouge">Available</code> tab, select the <code class="highlighter-rouge">Github Plugin</code> and click the <code class="highlighter-rouge">Download and Install</code> button at the bottom of the page (if you do not got the Git Plugin installed, do not worry, Jenkins is smart enough to install/upgrade the Git plugin, where required).</li>
+  <li>Restart Jenkins once the plugins are downloaded (Note: users of Jenkins 1.442 or newer should be aware that the plugin currently requires a restart to function correctly).</li>
+</ol>
+
+<h2 id="configure-github-push-webhook">Configure Github Push Webhook</h2>
+
+<ol>
+  <li>Goto your Jenkins instance job.</li>
+  <li>Select the <code class="highlighter-rouge">Configure</code> link on the left hand side of the screen.</li>
+  <li>
+    <p>In the <code class="highlighter-rouge">GitHub project</code> field, enter the URL of the GitHub project. If your GitHub project’s git URL looks like: <code class="highlighter-rouge">git@github.com:username/project.git</code>,</p>
+
+    <p>then the GitHub project should be: http://github.com/username/project/or if the project is private, you can get faster navigation with: https://github.com/username/project/</p>
+  </li>
+  <li>Go to your Jenkins instances root page.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Jenkins</code> link on the left hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Configure System</code> link.</li>
+  <li>In the <code class="highlighter-rouge">GitHub Web Hook</code> section select the <code class="highlighter-rouge">Let Jenkins auto-manage hook URLs</code> option.</li>
+  <li>Ensure you have provided at least one username and password for connecting to GitHub (the password is required as GitHub does not expose an API for managing the Post-Receive URLs).</li>
+</ol>
+
+<p>Once you have configured your Jenkins instance for receiving the push notifications, you can enable jobs being triggered via the push notifications:</p>
+
+<ol>
+  <li>Goto your Jenkins instance job.</li>
+  <li>Select the <code class="highlighter-rouge">Configure</code> link on the left hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Build when a change is pushed to GitHub checkbox</code> and save the configuration.</li>
+</ol>
+
+<h1 id="jenkins-build-scripts">Jenkins Build Scripts</h1>
+
+<p>Depending on your application environment you will need to run a command to start your test runners. Here are a few build scripts we use in our environments. Note: be careful when using <code class="highlighter-rouge"><span class="c">#!/bin/bash</span></code> at the beginning of the script, <a href="http://stackoverflow.com/questions/11464883/jenkins-succeed-when-unit-test-fails-rails">it may produce unintended problems</a>.</p>
+
+<h2 id="ruby-rspec">Ruby RSpec</h2>
+<p>To use Ruby on DEV@Cloud, add the following to the beginning of your shell script build step:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+</code></pre>
+</div>
+
+<p>The list of available versions is here: <a href="https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/fc17/">https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/fc17/</a></p>
+
+<p>This will:</p>
+
+<ul>
+  <li>Download and install the ruby – if needed. We cache the installation on the slave, and try to give you the same slave. But even then, it’s very fast.</li>
+  <li>Setup your $PATH and other environment variables to use this ruby</li>
+</ul>
+
+<p>You can then:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+rake spec:normal
+</code></pre>
+</div>
+
+<h1 id="ruby-gem">Ruby Gem</h1>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+rake spec:normal
+gem build &lt;gem name here&gt;.gemspec
+</code></pre>
+</div>
+
+<h2 id="ruby-on-rails">Ruby-on-rails</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+bundle <span class="nb">exec </span>rake
+</code></pre>
+</div>
+
+<h2 id="chef--berkshelf--foodcritic--test-kitchen">Chef + Berkshelf + Foodcritic + Test-Kitchen</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+gem install foodcritic
+foodcritic .
+<span class="c"># kitchen test - this command will run the Vagrant file and test the application, can take a very long time. should only be uncommented when required.</span>
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

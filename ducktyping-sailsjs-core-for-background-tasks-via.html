@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Ducktyping SailsJS Core for Background Tasks via Kue</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Ducktyping SailsJS Core for Background Tasks via Kue" />
+    <meta name="twitter:description" content="Update After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_sails.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Ducktyping SailsJS Core for Background Tasks via Kue" />
+    <meta property="og:description" content="Update After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_sails.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via",
+        "image": "https://blog.thesparktree.com/assets/images/cover_sails.jpg",
+        "description": "Update After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_sails.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Ducktyping SailsJS Core for Background Tasks via Kue</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2014-07-21">21 Jul 2014</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/kue'>Kue</a>,
+                    
+                
+                    
+                       <a href='/tag/nodejs'>Nodejs</a>,
+                    
+                
+                    
+                       <a href='/tag/javascript'>Javascript</a>,
+                    
+                
+                    
+                       <a href='/tag/sailsjs'>Sailsjs</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <h1 id="update">Update</h1>
+<p>After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure the SailsJS engine. I’ve written a new post about how to create background tasks in Sails which you can find here:</p>
+
+<p><a href="http://blog.thesparktree.com/post/104779353989/reusing-sailsjs-waterline-models-in-background">Reusing SailsJS + Waterline Models in Background Tasks</a></p>
+
+<p>I recently found myself with a common problem: my application needed to do some long running tasks, and I didn’t to block the current request/response and wait for them to finish. My application is built ontop of the SailsJS library which meant that I could use one of the many express.js libraries that add support for background tasks.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I was able to add support for the incredibly useful <a href="https://github.com/learnboost/kue">Kue</a> library by adding 2 simple files to the config folder.</p>
+
+<h2 id="kue-job-definitions">Kue Job Definitions</h2>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">kue</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="s2">"MyBackgroundTaskName"</span><span class="p">,</span><span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">)</span>
+		<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">long_running_background_task</span><span class="p">()</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">processed</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"finished job!"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">processed</span><span class="p">);</span>
+			<span class="nx">done</span><span class="p">();</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"error in job!"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+			<span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">done</span><span class="p">();</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">jobs</span> <span class="o">=</span> <span class="nx">jobs</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>##ExpressJS Middleware</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">express</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">express</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">customMiddleware</span><span class="p">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c1">// This should be password protected on your app.</span>
+
+		<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/tools/queue'</span><span class="p">,</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">).</span><span class="nx">app</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>And with those two additions, everything worked great, for a time.</p>
+
+<h1 id="component-based-architecture">Component based architecture</h1>
+
+<p>The problem I had with my application, and more importantly with Sails, is that the background jobs are tied very closely with the way that Sails worked under the hood. Sails uses a convention based system, similar to Rails, to load up the Models, Controllers, Services and Views. Any changes to my background jobs, which heavily used instance methods in my Models, would require a redeploy of the full application. My log files and error messages were all intertwined as well. My dream of running my background jobs in CoreOS/docker style containers, scalable on demand seemed almost impossible with Sails’s convention based magic.</p>
+
+<p>I started looking into the way that Sails worked under the covers, and I realized that I could duck-type the Sails environment for a standalone application, allowing me to reuse all my Models and Services, without having to run a full Sails web server for my background tasks.</p>
+
+<p>Note: As always, the full working code can be accessed on a gist <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a></p>
+
+<h2 id="global-sails-object-and-required-configuration">Global <code class="highlighter-rouge">sails</code> object and required configuration</h2>
+
+<p>As this is a simple prototype I just used the <code class="highlighter-rouge">global</code> object to define <code class="highlighter-rouge">sails</code>.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// SAILS ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">//resolve the required sails config files.</span>
+<span class="kd">var</span> <span class="nx">config_path</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'config/'</span><span class="p">)</span>
+<span class="nx">global</span><span class="p">.</span><span class="nx">sails</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">config</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="c1">//custom configuration file I use</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">constants</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="s1">'/constants.js'</span><span class="p">).</span><span class="nx">constants</span><span class="p">;</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="s1">'/log.js'</span><span class="p">).</span><span class="nx">log</span><span class="p">.</span><span class="nx">custom</span>
+</code></pre>
+</div>
+
+<h2 id="registering-services">Registering Services</h2>
+
+<p>Registering the services was simple. I just needed to require and attach them to the global object</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE SERVICES</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'api/'</span><span class="p">)</span>
+
+<span class="c1">// load services</span>
+<span class="kd">var</span> <span class="nx">services</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="s1">'/services'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">services</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">service</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Loading service: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">global</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">service</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="sailsmodels-and-waterline">sails.models and Waterline</h2>
+
+<p>Reusing the models incredibly simple as well. I just used Waterline which Sails uses under the covers. My application uses the PostgreSQL Waterline adapter, but you can use any that Waterline supports –MongoDB, Redis, MySQL, …</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">orm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Waterline</span><span class="p">();</span>
+<span class="c1">// Require any waterline adapters here</span>
+<span class="kd">var</span> <span class="nx">postgresqlAdapter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'sails-postgresql'</span><span class="p">);</span>
+
+
+<span class="c1">// Build A Config Object</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+
+	<span class="c1">// Setup Adapters</span>
+	<span class="c1">// Creates named adapters that have have been required in models</span>
+	<span class="na">adapters</span><span class="p">:</span> <span class="p">{</span>
+		<span class="s1">'sails-postgresql'</span><span class="p">:</span> <span class="nx">postgresqlAdapter</span>
+	<span class="p">},</span>
+
+	<span class="c1">// Build Connections Config</span>
+	<span class="c1">// Setup connections using the named adapter configs</span>
+	<span class="na">connections</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">qtPostgresqlServer</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">adapter</span><span class="p">:</span> <span class="s1">'sails-postgresql'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">user</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">password</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">database</span><span class="p">:</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">path</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">},</span>
+
+	<span class="na">defaults</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">migrate</span><span class="p">:</span> <span class="s1">'alter'</span>
+	<span class="p">}</span>
+
+<span class="p">};</span>
+
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE MODELS</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'api/'</span><span class="p">)</span>
+
+<span class="c1">// load models</span>
+<span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="s1">'/models'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Register model: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="s1">'qtPostgresqlServer'</span><span class="p">;</span>
+
+	<span class="p">..</span><span class="nx">snip</span><span class="p">..</span> <span class="c1">// additional socket publish methods go here. Check the Sails sockets section for more info.</span>
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE INIT</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">function</span> <span class="nx">init_waterline</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+	<span class="c1">// Start Waterline passing adapters in</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">initialize</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+		<span class="p">}</span>
+		<span class="k">else</span><span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Waterline ready"</span><span class="p">)</span>
+
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">models</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// STANDALONE APP IN SAILS-LIKE ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+
+<span class="nx">init_waterline</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">waterline_models</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+		<span class="c1">//register Waterline Models globally by name ie, User.findOne, Item.where()</span>
+		<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+			<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+			<span class="nx">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+		<span class="p">})</span>
+
+		<span class="c1">//test function</span>
+		<span class="nx">User</span><span class="p">.</span><span class="nx">find</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">users</span><span class="p">){</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"SUCCESS!"</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+			<span class="p">})</span>
+
+	<span class="p">})</span>
+</code></pre>
+</div>
+
+<h2 id="sails-sockets-advanced">Sails Sockets (Advanced)</h2>
+
+<p>At this point we have a working sails-like app. My configuration is loaded, my models are accessible via Waterline and they have access to the Sails object and my services.</p>
+
+<p>But wait, what about the Sails pub-sub functionality? One of the greatest features of Sails is its simple and easy to use socket system. Out of the box it can simply update the front-end when a Model event occurs (update, create, delete, etc). Now that we’re doing the model processing outside of Sails, how do we notify Sails and the front-end of model events?</p>
+
+<p>Sails is a production-focused framework, with out of the box support for horizontal scaling via Redis. As long as we publish events to Redis in the same format as Sails does, our socket functionality will be completely transparent.</p>
+
+<p>I initially attempted to do this part via the <a href="https://github.com/Automattic/socket.io-emitter/">socket.io-emitter</a> library, but I wasn’t able to successfully publish Sails compatible events.</p>
+
+<p>Going down to the raw Redis library was the solution.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// REDIS CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="nx">global</span><span class="p">.</span><span class="nx">redis_client</span> <span class="o">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">createClient</span><span class="p">(,</span> <span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">init_redis</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+	<span class="nx">redis_client</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">"ready"</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Redis ready"</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">);</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span><span class="nx">data</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">"name"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="s2">"args"</span><span class="p">:[{</span>
+			<span class="s2">"verb"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+			<span class="s2">"data"</span> <span class="p">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span>
+			<span class="s2">"id"</span> <span class="p">:</span> <span class="nx">model_id</span>
+		<span class="p">}]</span>
+	<span class="p">};</span>
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="s2">"/sails_model_"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="s2">"_"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="s2">":"</span><span class="o">+</span><span class="nx">action</span><span class="p">,</span>
+			<span class="s2">"5:::"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">id_associated</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span> <span class="nx">verbId</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span><span class="p">{</span>
+		<span class="s2">"verb"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+		<span class="s2">"attribute"</span> <span class="p">:</span> <span class="nx">attribute</span><span class="p">,</span>
+		<span class="s2">"id"</span> <span class="p">:</span> <span class="nx">model_id</span>
+	<span class="p">}</span>
+	<span class="nx">item</span><span class="p">[</span><span class="nx">verbId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">id_associated</span><span class="p">;</span>
+
+
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">"name"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="s2">"args"</span><span class="p">:[</span><span class="nx">item</span><span class="p">]</span>
+	<span class="p">};</span>
+
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="s2">"/sails_model_"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="s2">"_"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="s2">":"</span><span class="o">+</span><span class="nx">action</span><span class="o">+</span><span class="s2">":"</span><span class="o">+</span><span class="nx">attribute</span><span class="p">,</span>
+			<span class="s2">"5:::"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The two generate methods above help help us create socket Redis messages in a format that Sails understands. They are prototype methods right now, and may require some additional tweaking over time to fully mimic the Sails socket message structure.</p>
+
+<p>I then had to add the missing <code class="highlighter-rouge">publishCreate</code>, <code class="highlighter-rouge">publishRemove</code>, <code class="highlighter-rouge">publishAdd</code>, <code class="highlighter-rouge">publishUpdate</code> socket helpers to the Waterline models.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Register model: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="s1">'qtPostgresqlServer'</span><span class="p">;</span>
+
+	<span class="c1">//add publish methods</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishCreate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="s2">"update"</span><span class="p">,</span><span class="s2">"updated"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishUpdate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="s2">"create"</span><span class="p">,</span><span class="s2">"created"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishAdd</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"addedTo"</span><span class="p">,</span> <span class="s2">"addedId"</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishRemove</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">,</span> <span class="s2">"remove"</span><span class="p">,</span> <span class="s2">"removedFrom"</span><span class="p">,</span> <span class="s2">"removedId"</span><span class="p">))</span>
+	<span class="p">};</span>
+
+	<span class="p">..</span><span class="nx">etc</span><span class="p">..</span>
+
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>Now when we call the publish* methods in our background tasks/standalone application, it will publish socket messages just as Sails would.</p>
+
+<h2 id="kue-engine">Kue Engine</h2>
+<p>The whole reason I started this was to process background tasks outside of Sails, so lets add Kue into our app.
+The main runloop now looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">q</span><span class="p">.</span><span class="nx">spread</span><span class="p">([</span><span class="nx">init_redis</span><span class="p">(),</span><span class="nx">init_waterline</span><span class="p">()],</span><span class="kd">function</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">,</span><span class="nx">waterline_models</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+		<span class="nx">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+	<span class="p">})</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Starting kue"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="c1">//register jobs (located in seperate files)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="s1">'/jobs'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering kue handler: "</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">"Shutting down kue"</span><span class="p">)</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>Now you should be able to run your application completely outside of Sails, as long as you have the required models, services and config files. You can even mount it into a docker container, like I do.
+As I said, the final gist can be found <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a>. The code is MIT licensed so feel free to hack it apart.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Ducktyping SailsJS Core for Background Tasks via Kue&amp;url=https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/ducktyping-sailsjs-core-for-background-tasks-via" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Ducktyping SailsJS Core for Background Tasks via Kue';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_ubuntu.png)" href="/debugging-upstart-jobs-on-ubuntu-1404">
+            <section class="post">
+                <h2>Debugging Upstart Jobs on Ubuntu 14.04</h2>
+                <p>Before you begin, you should be (intimately) familiar with the [Upstart Cookbook](http://upstart.ubuntu.com/cookbook/). It's an incredible...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_docker.jpg)" href="/continuous-deployment-with-dokku-full-guide">
+            <section class="post">
+                <h2>Continuous Deployment with Dokku (Full Guide)</h2>
+                <p>So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

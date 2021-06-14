@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Docker Hub - Matrix Builds and Tagging using Build Args</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Docker Hub - Matrix Builds and Tagging using Build Args" />
+    <meta name="twitter:description" content="If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry. One of the best things about Docker..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/docker-hub-matrix-builds" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_docker_hub.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Docker Hub - Matrix Builds and Tagging using Build Args" />
+    <meta property="og:description" content="If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry. One of the best things about Docker..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/docker-hub-matrix-builds" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_docker_hub.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/docker-hub-matrix-builds",
+        "image": "https://blog.thesparktree.com/assets/images/cover_docker_hub.png",
+        "description": "If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry. One of the best things about Docker..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_docker_hub.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Docker Hub - Matrix Builds and Tagging using Build Args</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2019-09-12">12 Sep 2019</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/docker_hub'>Docker_hub</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry.
+One of the best things about Docker Hub is it’s support for Automated Builds, which is where Docker Hub will watch a
+Git repository for changes, and automatically build your Docker images whenever you make a new commit.</p>
+
+<p>This works great for most simple use cases (and even some complex ones), but occasionally you’ll wish you had a bit more control
+over the Docker Hub image build process.</p>
+
+<p>That’s where Docker’s <a href="https://docs.docker.com/docker-hub/builds/advanced/">Advanced options for Autobuild and Autotest</a>
+guide comes in. While it’s not quite a turn key solution, Docker Hub allows you to override the <code class="highlighter-rouge">test</code>, <code class="highlighter-rouge">build</code> and <code class="highlighter-rouge">push</code>
+stages completely, as well as run arbitrary code <code class="highlighter-rouge">pre</code> and <code class="highlighter-rouge">post</code> each of those stages.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+<h2 id="goal">Goal</h2>
+
+<p>So what’s the point? If Docker Hub works fine for most people, what’s an actual use case for these Advanced Options?</p>
+
+<p>Lets say you have developed a tool, and you would like to distribute it as a Docker image. The first problem is that you’d
+like to provide Docker images based on a handful of different OS’s. <code class="highlighter-rouge">ubuntu</code>, <code class="highlighter-rouge">centos6</code>, <code class="highlighter-rouge">centos7</code> and <code class="highlighter-rouge">alpine</code>
+Simple enough, just write a handful of Dockerfiles, and use the <code class="highlighter-rouge">FROM</code> instruction.
+But lets say that you also need to provide multiple versions of your tool, and each of those must also be distributed as a
+Docker Image based on different OS’s.</p>
+
+<p>Now the number of Dockerfiles you need to maintain has increased significantly. If you’re familiar with Jenkins, this would
+be perfect for a “Matrix Project”.</p>
+
+<p>Here’s what our Docker naming scheme might look like:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>ubuntu</th>
+      <th>centos6</th>
+      <th>centos7</th>
+      <th>alpine</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>v1.x</td>
+      <td>v1-ubuntu</td>
+      <td>v1-centos6</td>
+      <td>v1-centos7</td>
+      <td>v1-alpine</td>
+    </tr>
+    <tr>
+      <td>v2.x</td>
+      <td>v2-ubuntu</td>
+      <td>v2-centos6</td>
+      <td>v2-centos7</td>
+      <td>v2-alpine</td>
+    </tr>
+    <tr>
+      <td>v3.x</td>
+      <td>v3-ubuntu</td>
+      <td>v3-centos6</td>
+      <td>v3-centos7</td>
+      <td>v3-alpine</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As our software grows, you could image other axises being added: architectures, software runtimes, etc.</p>
+
+<h2 id="build-arguments">Build Arguments</h2>
+
+<p>Alright, so the first part of the solution is just making use of Dockerfile templating, also known as <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg">build arguments</a></p>
+
+<p>To keep the number of Dockerfiles to the minimum, we need to pick an axes that minimizes the number of changes required.
+In this example we’ll choose to create a separate Dockerfile for each OS, reusing it for each branch of our software.</p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu
+ARG software_version
+
+RUN apt-get update &amp;&amp; apt-get install -y &lt;dependencies&gt; \
+    ... \
+    curl -o /usr/bin/myapp https://www.company.com/${software_version}/myapp-${software_version}
+
+</code></pre>
+
+<p>Now we can reuse this single Dockerfile to build 3 Docker images, running 3 different versions of our software:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker build -f ubuntu/Dockerfile --build-arg software_version=v1.0 -t v1-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v2.1 -t v2-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v3.7 -t v3-ubuntu .
+</code></pre>
+</div>
+
+<h2 id="project-structure">Project Structure</h2>
+<p>Looks great so far, but Docker Hub doesn’t support configuring Build Arguments though their web ui. So we’ll need to use the
+“Advanced options for Autobuild” documentation to override it.</p>
+
+<p>At this point our project repository probably looks something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>project/
+├── ubuntu/
+│   └── Dockerfile
+├── centos6/
+│   └── Dockerfile
+├── centos7/
+│   └── Dockerfile
+...
+</code></pre>
+</div>
+
+<p>Docker Hub requires that the hook override directory is located as a sibling to the Dockerfile.
+To keep our repository DRY, we’ll instead create a <code class="highlighter-rouge">hook</code> directory at the top level, and symlink our <code class="highlighter-rouge">build</code> and <code class="highlighter-rouge">push</code>
+scripts into a hooks directory beside each Dockerfile. We’ll also create an empty <code class="highlighter-rouge">software-versions.txt</code> file in the project root,
+which we’ll use to store the versions of our software that needs to be automatically build. We’ll discuss this further in the next section.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>project/
+├── software-versions.txt
+├── hooks/
+│   ├── build
+│   └── push
+├── ubuntu/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos6/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos7/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+...
+</code></pre>
+</div>
+
+<p>Now that we have our project organized in a way that Docker Hub expects, lets populate our override scripts</p>
+
+<h2 id="docker-hub-hook-override-scripts">Docker Hub Hook Override Scripts</h2>
+
+<p>Docker Hub provides the following environmental variables which are available to us in the logic of our scripts.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">SOURCE_BRANCH</code>: the name of the branch or the tag that is currently being tested.</li>
+  <li><code class="highlighter-rouge">SOURCE_COMMIT</code>: the SHA1 hash of the commit being tested.</li>
+  <li><code class="highlighter-rouge">COMMIT_MSG</code>: the message from the commit being tested and built.</li>
+  <li><code class="highlighter-rouge">DOCKER_REPO</code>: the name of the Docker repository being built.</li>
+  <li><code class="highlighter-rouge">DOCKERFILE_PATH</code>: the dockerfile currently being built.</li>
+  <li><code class="highlighter-rouge">DOCKER_TAG</code>: the Docker repository tag being built.</li>
+  <li><code class="highlighter-rouge">IMAGE_NAME</code>: the name and tag of the Docker repository being built. (This variable is a combination of <code class="highlighter-rouge">DOCKER_REPO</code>:<code class="highlighter-rouge">DOCKER_TAG</code>.)</li>
+</ul>
+
+<p>The following is a simplified version of a <code class="highlighter-rouge">build</code> hook script that we can use to override the <code class="highlighter-rouge">build</code> step on Docker Hub.
+Keep in mind that this script is missing some error handling for readability reasons.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/build in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker build command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker build -f </span><span class="nv">$DOCKERFILE_PATH</span><span class="s2"> -t </span><span class="nv">$IMAGE_NAME</span><span class="s2"> ."</span>
+
+cat <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+        <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+        <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+        <span class="nb">echo</span> <span class="s2">"docker build -f Dockerfile --build-arg software_version=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2"> -t </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2"> ../"</span>
+        docker build -f Dockerfile --build-arg <span class="nv">software_version</span><span class="o">=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span> -t <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span> ../
+<span class="k">done</span>
+
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">push</code> script is similar:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/push in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker push command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker push </span><span class="nv">$IMAGE_NAME</span><span class="s2">"</span>
+
+cat <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+    <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+    <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+    <span class="nb">echo</span> <span class="s2">"docker push </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2">"</span>
+    docker push <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span>
+<span class="k">done</span>
+
+</code></pre>
+</div>
+
+<p>You should have noticed the <code class="highlighter-rouge">software-versions.txt</code> above. It’s basically a text file that just contains version numbers for
+our <code class="highlighter-rouge">myapp</code> software/binary.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>master
+v1.0
+v2.1
+v3.7
+</code></pre>
+</div>
+<p>This file is then read line-by-line, and each line is passed into a docker build command via <code class="highlighter-rouge">--build-arg</code>. It’s also used as the
+version component in the Docker image build tag.</p>
+
+<h2 id="docker-hub-configuration">Docker Hub Configuration</h2>
+
+<p>The final component necessary to successfully build these images is to configure the Docker Hub project correctly.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-hub/docker-hub-configuration.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<h2 id="fin">Fin</h2>
+
+<p>Again, here’s the Github repo with working code (using <code class="highlighter-rouge">jq</code> as our example software tool to be installed):</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Docker Hub - Matrix Builds and Tagging using Build Args&amp;url=https://blog.thesparktree.com/docker-hub-matrix-builds"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/docker-hub-matrix-builds"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/docker-hub-matrix-builds"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/docker-hub-matrix-builds" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/docker-hub-matrix-builds'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Docker Hub - Matrix Builds and Tagging using Build Args';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_jenkins_docker.png)" href="/you-dont-know-jenkins-part-4">
+            <section class="post">
+                <h2>You Don't Know Jenkins - Part 4 - Kubernetes Slaves</h2>
+                <p>Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-mediadepot">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</h2>
+                <p>I’ve referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

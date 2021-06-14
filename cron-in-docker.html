@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Running Cron in Docker</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Running Cron in Docker" />
+    <meta name="twitter:description" content="Running cron in a Docker container is incredibly difficult to do correctly. This is partially because cron was designed to run in an environment that looks..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/cron-in-docker" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Running Cron in Docker" />
+    <meta property="og:description" content="Running cron in a Docker container is incredibly difficult to do correctly. This is partially because cron was designed to run in an environment that looks..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/cron-in-docker" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/cron-in-docker",
+        "image": "https://blog.thesparktree.com/assets/images/cover_docker.jpg",
+        "description": "Running cron in a Docker container is incredibly difficult to do correctly. This is partially because cron was designed to run in an environment that looks..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_docker.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Running Cron in Docker</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2021-04-26">26 Apr 2021</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/cron'>Cron</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>Running <code class="highlighter-rouge">cron</code> in a Docker container is incredibly difficult to do correctly.
+This is partially because <code class="highlighter-rouge">cron</code> was designed to run in an environment that looks very different than a docker container,
+and partially because what we traditionally think of as <code class="highlighter-rouge">cron</code> is actually a different tool in each flavor of Linux.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="what-is-cron">What is <code class="highlighter-rouge">cron</code></h2>
+
+<blockquote>
+  <p>The software utility <strong>cron</strong> also known as <strong>cron job</strong> is a time-based job scheduler in Unix-like computer operating
+systems. Users who set up and maintain software environments use cron to schedule jobs (commands or shell scripts) to run
+periodically at fixed times, dates, or intervals. It typically automates system maintenance or administration—though its
+general-purpose nature makes it useful for things like downloading files from the Internet and downloading email at regular
+intervals.</p>
+</blockquote>
+
+<p><a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a></p>
+
+<p>Basically it’s a language/platform/distro agnostic tool for scheduling tasks/scripts to run automatically at some interval.</p>
+
+<h2 id="differences-between-various-versions">Differences between various versions</h2>
+
+<p>Though <code class="highlighter-rouge">cron</code>’s API is standardized, there are multiple implementations, which vary as the default for various distros
+(<a href="http://www.jimpryor.net/linux/dcron.html">dcron</a>, <a href="https://github.com/cronie-crond/cronie">cronie</a>,
+<a href="http://fcron.free.fr/">fcron</a> and <a href="https://directory.fsf.org/wiki/Vixie-cron">vixie-cron</a>)</p>
+
+<p>To add to the complexity, some of <code class="highlighter-rouge">cron</code>’s functionality is actually defined/provided by <code class="highlighter-rouge">anachron</code>. <code class="highlighter-rouge">anacron</code> was
+previously a stand-alone binary which was used to run commands periodically with a frequency defined in days. It works
+a little different from cron; assumes that a machine will not be powered on all the time.</p>
+
+<p>So to summarize, there are multiple <code class="highlighter-rouge">cron</code> implementations, with differing flags &amp; features, some with <code class="highlighter-rouge">anacron</code>
+functionality built-in, and some without. In the following sections I’ll call out different solutions for different
+distros/<code class="highlighter-rouge">cron</code> implementations (keep an eye out for <code class="highlighter-rouge">NOTE:</code> blocks)</p>
+
+<blockquote>
+  <p>NOTE: Installation instructions differ per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; cron</code></li>
+    <li>Alpine: <code class="highlighter-rouge">which crond</code> # comes pre-installed</li>
+    <li>Centos: <code class="highlighter-rouge">yum install -y cronie &amp;&amp; crond -V</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="config-file">Config File</h2>
+
+<p>Let’s start with a simple issue. <code class="highlighter-rouge">cron</code> is designed to run in a multi-user environment, which is great when you’re running
+<code class="highlighter-rouge">cron</code> on a desktop, but less useful when running <code class="highlighter-rouge">cron</code> in a docker container.</p>
+
+<p>Rather than creating a user specific <code class="highlighter-rouge">crontab</code> file, in our Docker container we’ll modify the system-level <code class="highlighter-rouge">crontab</code>.</p>
+
+<p>Let’s create/update a file called <code class="highlighter-rouge">/etc/crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date
+</code></pre>
+</div>
+
+<p>This file will configure <code class="highlighter-rouge">cron</code> to run the <code class="highlighter-rouge">date</code> command every minute. We’ll talk about the output for this command in a later section.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+    <li>Alpine: the crontab file should be written to <code class="highlighter-rouge">/var/spool/cron/crontabs/root</code>, also the format is slightly different (the <code class="highlighter-rouge">user</code> field should be removed).</li>
+    <li>Centos: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+  </ul>
+</blockquote>
+
+<h2 id="foreground">Foreground</h2>
+
+<p>Now that we have created a <code class="highlighter-rouge">cron</code> config file, we need to start <code class="highlighter-rouge">cron</code>. On a normal system, we would start <code class="highlighter-rouge">cron</code> as a
+daemon, a background process usually managed by service manager. In the Docker world, the convention is 1 process per container,
+ running in the foreground.</p>
+
+<p>Thankfully most <code class="highlighter-rouge">cron</code> implementations support this, even though the flags may be different.</p>
+
+<blockquote>
+  <p>NOTE: Running cron in the foreground differs per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">cron -f -l 2</code></li>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+    <li>Centos: <code class="highlighter-rouge">crond -n</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="environment">Environment</h2>
+
+<p>As mentioned earlier, <code class="highlighter-rouge">cron</code> is designed to work in a multi-user environment, which also means the <code class="highlighter-rouge">cron</code> daemon cannot
+make assumptions about the runtime environment (process environmental variables, etc). The way <code class="highlighter-rouge">cron</code> enforces this is
+by starting each job with a custom environment, using an implementation specific environmental variables file (usually <code class="highlighter-rouge">/etc/environment</code>)</p>
+
+<p>Since using environmental variables is a common configuration mechanism for Docker containers, we need a way to ensure the current
+Docker container environment is passed into the cron sub-processes. The best way to do this is by creating a custom
+entrypoint script which dumps the environment to the <code class="highlighter-rouge">cron</code> environment file, before starting <code class="highlighter-rouge">cron</code> in the foreground.</p>
+
+<p>Create the following <code class="highlighter-rouge">/entrypoint.sh</code> script in your Docker image.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># start cron in the foreground (replacing the current process)</span>
+<span class="nb">exec</span> <span class="s2">"cron -f"</span>
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Centos: unfortunately <code class="highlighter-rouge">cronie</code> doesn’t read variables from <code class="highlighter-rouge">/etc/environment</code>.
+      <ul>
+        <li>You’ll need to manually source it before your script: <code class="highlighter-rouge">* * * * * root . /etc/environment; date</code></li>
+        <li>
+          <p>If you have multiple entries in your <code class="highlighter-rouge">crontab</code>, you can change the default <code class="highlighter-rouge">SHELL</code> for your <code class="highlighter-rouge">crontab</code> file, and make use of <code class="highlighter-rouge">BASH_ENV</code></p>
+
+          <div class="highlighter-rouge"><pre class="highlight"><code>   SHELL=/bin/bash
+   BASH_ENV=/etc/environment
+   * * * * * root echo "${CUSTOM_ENV_VAR}"
+</code></pre>
+          </div>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</blockquote>
+
+<h2 id="stdoutstderr">STDOUT/STDERR</h2>
+
+<p>If you’ve been following along so far, you might be wondering why you’re not seeing any output from <code class="highlighter-rouge">date</code> in your
+terminal. That’s because even though <code class="highlighter-rouge">cron</code> is running in the foreground, the output from its child processes is designed
+to go to a log file (traditionally at <code class="highlighter-rouge">/var/log/cron</code>). Again, this might be fine on a standard linux host, but it’s
+sub-optimal for a Docker container.</p>
+
+<p>Let’s use some shell redirect magic to redirect the <code class="highlighter-rouge">STDOUT</code> and <code class="highlighter-rouge">STDERR</code> from our <code class="highlighter-rouge">cron</code> jobs, to the <code class="highlighter-rouge">cron</code> process
+(running as the primary process in the Docker container, with <a href="https://en.wikipedia.org/wiki/Process_identifier">PID 1</a>).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># &gt;/proc/1/fd/1 redirects STDOUT from the `date` command to PID1's STDOUT
+# 2&gt;/proc/1/fd/2 redirects STDERR from the `date` command to PID1's STDERR
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+</code></pre>
+</div>
+
+<p>While <code class="highlighter-rouge">&gt;/proc/1/fd/1 2&gt;/proc/1/fd/2</code> may look intimidating, it’s the most consistent way to pass <code class="highlighter-rouge">cronjob</code> logs to the container’s
+STDOUT, without leveraging clunky solutions like <code class="highlighter-rouge">crond &amp;&amp; tail -f /var/log/cron</code></p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Alpine, as long as you start cron with the following command:</p>
+  <ul>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="cron-package-installation">Cron package installation</h2>
+
+<p>Now that we have a working container with <code class="highlighter-rouge">cron</code>, we should take the time to clean up some of the unused cruft that our
+<code class="highlighter-rouge">cron</code> package installs, specifically configs for <code class="highlighter-rouge">anacron</code>.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+    <li>Alpine: <code class="highlighter-rouge">rm -rf /etc/periodic</code></li>
+    <li>Centos: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="kill">Kill</h2>
+
+<p>Finally, as you’ve been playing around, you may have noticed that it’s difficult to kill the container running <code class="highlighter-rouge">cron</code>.
+You may have had to use <code class="highlighter-rouge">docker kill</code> or <code class="highlighter-rouge">docker-compose kill</code> to terminate the container, rather than using <code class="highlighter-rouge">ctrl + C</code> or <code class="highlighter-rouge">docker stop</code>.</p>
+
+<p>Unfortunately, it seems like <code class="highlighter-rouge">SIGINT</code> is not always correctly handled by <code class="highlighter-rouge">cron</code> implementations when running in the foreground.</p>
+
+<p>After researching a couple of alternatives, the only solution that seemed to work was using a process supervisor (like
+<code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code>). Since <code class="highlighter-rouge">tini</code> was merged into Docker 1.13, technically, you can use it transparently by passing
+<code class="highlighter-rouge">--init</code> to your docker run command. In practice you often can’t because your cluster manager doesn’t support it.</p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Centos, SIGTERM works correctly with <code class="highlighter-rouge">cronie</code> in the foreground.</p>
+</blockquote>
+
+<h2 id="putting-it-all-together">Putting it all together</h2>
+
+<p>Let’s see what all of this would look like for an <code class="highlighter-rouge">ubuntu</code> base image.</p>
+
+<p>Create a <code class="highlighter-rouge">Dockerfile</code></p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu
+
+RUN apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; which cron &amp;&amp; \
+    rm -rf /etc/cron.*/*
+
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["cron","-f", "-l", "2"]
+</code></pre>
+
+<p>Create an <code class="highlighter-rouge">entrypoint.sh</code></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># execute CMD</span>
+<span class="nb">echo</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+<span class="nb">exec</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+
+</code></pre>
+</div>
+
+<p>Create a <code class="highlighter-rouge">crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+* * * * * root echo "${CUSTOM_ENV_VAR}" &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+
+# An empty line is required at the end of this file for a valid cron file.
+
+</code></pre>
+</div>
+
+<p>Build the Dockerfile and run it with <code class="highlighter-rouge">--init</code> (package <code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code> for containers in production)</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker build -t analogj/cron .
+docker run --rm --name cron -e <span class="nv">CUSTOM_ENV_VAR</span><span class="o">=</span>foobar -v <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/crontab:/etc/crontab analogj/cron
+</code></pre>
+</div>
+
+<p>You should see output like the following:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>foobar
+Tue Apr 27 14:31:00 UTC 2021
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>I’ve put together a working example of dockerized <code class="highlighter-rouge">cron</code> for multiple distros:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="references">References</h2>
+<ul>
+  <li>https://hynek.me/articles/docker-signals/</li>
+  <li>https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container</li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Running Cron in Docker&amp;url=https://blog.thesparktree.com/cron-in-docker"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/cron-in-docker"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/cron-in-docker"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/cron-in-docker" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/cron-in-docker'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Running Cron in Docker';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_ldap.png)" href="/openldap-using-starttls-and-letsencrypt">
+            <section class="post">
+                <h2>OpenLDAP using STARTTLS & LetsEncrypt</h2>
+                <p>> LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_kubernetes.jpg)" href="/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff">
+            <section class="post">
+                <h2>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</h2>
+                <p>Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

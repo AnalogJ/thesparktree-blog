@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Creating a Sails Application using Passport Authentication</title>
+	  <link>/creating-a-sails-application-using-passport</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-02-20T18:58:00-06:00</pubDate>
+	  <guid>/creating-a-sails-application-using-passport</guid>
+	  <description><![CDATA[
+	     <h1 id="creating-a-sails-application-using-passport-authentication">Creating a Sails Application using Passport Authentication</h1>
+
+<ol>
+  <li>
+    <p><code class="highlighter-rouge">$ mkdir sails-passport-authentication</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ sails new .</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ sails generate user</code></p>
+  </li>
+  <li>
+    <p>Populate the <code class="highlighter-rouge">User</code> model</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/models/User.js
+
+ module.exports = {
+
+   attributes: {
+       firstName: {
+           type: 'string'
+       },
+       lastName: {
+           type: 'string'
+       },
+       email: {
+           type: 'email'
+       },
+       provider: {
+           type: 'string'
+       },
+       provider_id:{
+       	  type: 'string'
+       },
+       password: {
+           type: 'string'
+       }
+   }
+
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create the <code class="highlighter-rouge">passport-local</code> login view</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /views/user/login.ejs
+
+ &lt;form action="/user/login" method="post"&gt;
+     &lt;div&gt;
+         &lt;label&gt;Email:&lt;/label&gt;
+         &lt;input type="text" name="email"&gt;&lt;br&gt;&lt;/div&gt;
+     &lt;div&gt;
+         &lt;label&gt;Password:&lt;/label&gt;
+         &lt;input type="password" name="password"&gt;&lt;/div&gt;
+     &lt;div&gt;
+         &lt;input type="submit" value="Submit"&gt;&lt;/div&gt;
+ &lt;/form&gt;
+</code></pre>
+    </div>
+
+    <p>At this point we could run <code class="highlighter-rouge">$ sails lift</code> and access the <code class="highlighter-rouge">passport-local</code> login page by visiting <a href="http://localhost:1337/user/login">http://localhost:1337/user/login</a></p>
+  </li>
+  <li>
+    <p>Create a test user</p>
+
+    <p>Visit <a href="http://localhost:1337/user/create?email=test@test.com&amp;password=12345">http://localhost:1337/user/create?email=test@test.com&amp;password=12345</a> in a browser to create a new user with a username of <code class="highlighter-rouge">test@test.com</code> and a password of <code class="highlighter-rouge">12345</code></p>
+  </li>
+</ol>
+
+<h1 id="enabling-passport-with-local-authentication-requires-a-few-steps">Enabling <code class="highlighter-rouge">passport</code> with local authentication requires a few steps:</h1>
+
+<ol>
+  <li>
+    <p><code class="highlighter-rouge">$ npm install passport --save</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ npm install passport-local --save</code></p>
+  </li>
+  <li>
+    <p>Creating the passport middleware configuration file.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/passport.js
+
+ var passport = require('passport'),
+ LocalStrategy = require('passport-local').Strategy;
+
+ passport.serializeUser(function(user, done) {
+     done(null, user.id);
+ });
+
+ passport.deserializeUser(function(id, done) {
+     User.findOneById(id).done(function (err, user) {
+         done(err, user);
+     });
+ });
+
+ passport.use(new LocalStrategy({
+ 		usernameField: 'email',
+ 		passwordField: 'password'
+ 		},
+     function(email, password, done) {
+     User.findOne({ email: email}).done(function(err, user) {
+   		  if (err) { return done(err); }
+   			if (!user) { return done(null, false, { message: 'Unknown user ' + email }); }
+   			if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
+   			return done(null, user);
+   		});
+   	}
+ ));
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Register the required passport connect middleware</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/express.js
+
+ var passport = require('passport');
+
+ module.exports.express = {
+     customMiddleware: function (app) {
+         app.use(passport.initialize());
+         app.use(passport.session());
+     }
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create the UserController actions</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/controllers/UserController.js
+
+ var passport = require('passport');
+ module.exports = {
+     login: function (req,res)
+     {
+         res.view();
+     },
+
+     passport_local: function(req, res)
+     {
+         passport.authenticate('local', function(err, user, info)
+         {
+             if ((err) || (!user))
+             {
+                 res.redirect('/user/login');
+                 return;
+             }
+
+             req.logIn(user, function(err)
+             {
+                 if (err)
+                 {
+                     res.redirect('/user/login');
+                     return;
+                 }
+
+                 res.redirect('/');
+                 return;
+             });
+         })(req, res);
+     },
+
+     logout: function (req,res)
+     {
+         req.logout();
+         res.redirect('/');
+     },
+
+
+
+   /**
+    * Overrides for the settings in `config/controllers.js`
+    * (specific to UserController)
+    */
+   _config: {}
+
+
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Modify routes to handle post to <code class="highlighter-rouge">/user/login</code>.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/routes.js
+
+ module.exports.routes = {
+     '/': {
+         view: 'home/index'
+     },
+     'get /user/login':{
+         controller: 'user',
+         action: 'login'
+     },
+     'post /user/login':{
+         controller: 'user',
+         action: 'passport_local'
+     }
+ }
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create policy file
+ This policy file will check that the user has been authenticated by <code class="highlighter-rouge">Passport</code> and if not it will redirect them to the login page.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/policies/isAuthenticated.js
+
+ module.exports = function(req, res, next) {
+
+     // User is allowed, proceed to the next policy,
+     // or if this is the last policy, the controller
+     // Sockets
+     if(req.isSocket)
+     {
+         if(req.session &amp;&amp;
+             req.session.passport &amp;&amp;
+             req.session.passport.user)
+         {
+             //Use this:
+
+             // Initialize Passport
+             sails.config.passport.initialize()(req, res, function () {
+                 // Use the built-in sessions
+                 sails.config.passport.session()(req, res, function () {
+                     // Make the user available throughout the frontend
+                     //res.locals.user = req.user;
+                     //the user should be deserialized by passport now;
+                     next();
+                 });
+             });
+
+             //Or this if you dont care about deserializing the user:
+             //req.user = req.session.passport.user;
+             //return next();
+
+         }
+         else{
+             res.json(401);
+         }
+
+
+     }
+     else if (req.isAuthenticated()) {
+         return next();
+     }
+     else{
+         // User is not allowed
+         // (default res.forbidden() behavior can be overridden in `config/403.js`)
+         return res.redirect('/account/login');
+     }
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Apply policy file
+ The following configuration requires all requests to be authenticated. The only exception is requests to the user controller.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/policies.js
+
+ module.exports.policies = {
+     '*': 'isAuthenticated',
+     'user': {
+         '*': true
+     }
+ }
+</code></pre>
+    </div>
+
+    <p>Running <code class="highlighter-rouge">$ sails lift</code> and attempting to access any controller other than <code class="highlighter-rouge">user</code> will redirect you to the <code class="highlighter-rouge">/user/login</code>.</p>
+
+    <p>Note:
+ Policies only apply to controllers, not views. Which means that the root ‘/’ index view will still be accessible until you put it behind a controller. <a href="https://github.com/balderdashy/sails/issues/1132">https://github.com/balderdashy/sails/issues/1132</a></p>
+  </li>
+</ol>
+
+<p>Now test your application by running <code class="highlighter-rouge">$ sails lift</code> then visiting <code class="highlighter-rouge">http://localhost:1337/user/login</code>.
+Just login with the email and password for the user we created initially:</p>
+
+<ul>
+  <li>email: test@test.com</li>
+  <li>password: 12345</li>
+</ul>
+
+<p>You should now be redirected to the homepage.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

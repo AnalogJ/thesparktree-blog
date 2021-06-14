@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</title>
+	  <link>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-28T04:19:33-05:00</pubDate>
+	  <guid>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</guid>
+	  <description><![CDATA[
+	     <p>Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal in most cases. However,
+even them most robust software can run into issues. Which brings us to the <code class="highlighter-rouge">CrashLoopBackOff</code> error. A CrashloopBackOff
+means that you have a pod starting, crashing, starting again, and then crashing again.</p>
+
+<p>Crash loops can happen for a variety of reasons, but (in my opinion) the most difficult to fix are  CrashloopBackOff errors
+associated with a corrupted PersistentVolumeClaim. In this post we’ll discuss a technique you can use to safely detach
+and repair a PersistentVolumeClaim, to fix a CrashloopBackOff error.</p>
+
+<h1 id="detach-the-volume">Detach the Volume</h1>
+
+<p>The first step is to scale our failing deployment to 0. This is because by default PVC’s have a <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"><code class="highlighter-rouge">ReadWriteOnce</code> AccessMode</a>,
+meaning the volume can be mounted as read-write by a single node. If the failing pod is binding to the corrupted volume in <code class="highlighter-rouge">write</code> mode, then our
+debugging container can’t make any changes to it. Even if your PVC is <code class="highlighter-rouge">ReadWriteMany</code>, it’s safer to ensure nothing else is writing to the volume while
+wee make our repairs.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl scale deployment failed-deployment --replicas<span class="o">=</span>0
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre>
+</div>
+
+<h1 id="debugging-pod">Debugging Pod</h1>
+
+<p>Next we’ll need to inspect the deployment config to find the PVC identifier to repair.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl get deployment -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">"{.spec.template.spec.volumes[*].persistentVolumeClaim.claimName}"</span> failed-deployment
+my-pvc-claim
+</code></pre>
+</div>
+
+<p>Now that we know the identifier for the failing PVC, we need to create a debugging pod spec which mounts the PVC.
+In this example we’ll use <code class="highlighter-rouge">busybox</code>, but you could use any debugging tools image here.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="c1"># my-pvc-debugger.yaml</span>
+
+<span class="nn">---</span>
+<span class="s">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="s">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="s">metadata</span><span class="pi">:</span>
+  <span class="s">name</span><span class="pi">:</span> <span class="s">volume-debugger</span>
+<span class="s">spec</span><span class="pi">:</span>
+  <span class="s">volumes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+      <span class="s">persistentVolumeClaim</span><span class="pi">:</span>
+       <span class="s">claimName</span><span class="pi">:</span> <span class="s">&lt;CLAIM_IDENTIFIER_HERE&gt;</span>
+  <span class="s">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">debugger</span>
+      <span class="s">image</span><span class="pi">:</span> <span class="s">busybox</span>
+      <span class="s">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">sleep'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">3600'</span><span class="pi">]</span>
+      <span class="s">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/data"</span>
+          <span class="s">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+</code></pre>
+</div>
+
+<p>Next, lets create a new pod and run a shell inside it.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl create -f /path/to/my-pvc-debugger.yaml
+pod <span class="s2">"volume-debugger"</span> created
+<span class="gp">$ </span>kubectl <span class="nb">exec</span> -it volume-debugger sh
+/ <span class="c">#</span>
+</code></pre>
+</div>
+
+<p>Now that we’re inside the container we can explore the volume which is mounted at <code class="highlighter-rouge">/data</code> and fix the issue.</p>
+
+<h1 id="restore-pod">Restore Pod</h1>
+
+<p>Once we’ve repaired the PVC volume, we can exit the shell within the container and delete the debugger pod.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>/ <span class="c"># logout</span>
+<span class="gp">$ </span>kubectl delete -f /path/to/my-pvc-debugger.yaml
+</code></pre>
+</div>
+
+<p>Next, we’ll scale our deployment back up.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl scale deployment failed-deployment --replicas<span class="o">=</span>1
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>In a perfect world we should never have to get hands on with our volumes, but occasionally bugs cause if to have to go
+and clean things up. This example shows a quick way to hop into a volume for a container which does not have any user environment.</p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://itnext.io/debugging-kubernetes-pvcs-a150f5efbe95
+    <ul>
+      <li>The guide above is a slightly modified version of Jacob Tomlinson’s work. Copied for ease of reference.</li>
+    </ul>
+  </li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

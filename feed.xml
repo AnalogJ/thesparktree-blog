@@ -1,0 +1,995 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sparktree - Articles</title>
+    <description>Devops posts &amp; guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+    <link>
+    https://blog.thesparktree.com</link>
+    
+      
+      <item>
+        <title>OpenLDAP using STARTTLS &amp; LetsEncrypt</title>
+        
+          <description>&lt;blockquote&gt;
+  &lt;p&gt;LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication.&lt;/p&gt;
+
+  &lt;p&gt;LDAP provides the communication language that applications use to
+communicate with other directory services servers. Directory services
+store the users, passwords, and computer accounts, and share that
+information with other entities on the network.&lt;/p&gt;
+
+  &lt;p&gt;&lt;strong&gt;OpenLDAP&lt;/strong&gt; is a &lt;a href=&quot;https://en.wikipedia.org/wiki/Free_software&quot;&gt;free&lt;/a&gt;,
+&lt;a href=&quot;https://en.wikipedia.org/wiki/Open-source_software&quot; title=&quot;Open-source software&quot;&gt;open-source&lt;/a&gt; implementation of the
+&lt;a href=&quot;https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol&quot; title=&quot;Lightweight Directory Access Protocol&quot;&gt;Lightweight Directory Access Protocol&lt;/a&gt;
+(LDAP) developed by the OpenLDAP Project. It is released under its own BSD-style license called the OpenLDAP Public License.&lt;a href=&quot;https://en.wikipedia.org/wiki/OpenLDAP#cite_note-4&quot;&gt;[4]&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+</description>
+        
+        <pubDate>Sun, 13 Jun 2021 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Running Cron in Docker</title>
+        
+          <description>&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;cron&lt;/code&gt; in a Docker container is incredibly difficult to do correctly.
+This is partially because &lt;code class=&quot;highlighter-rouge&quot;&gt;cron&lt;/code&gt; was designed to run in an environment that looks very different than a docker container,
+and partially because what we traditionally think of as &lt;code class=&quot;highlighter-rouge&quot;&gt;cron&lt;/code&gt; is actually a different tool in each flavor of Linux.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 26 Apr 2021 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/cron-in-docker</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/cron-in-docker</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</title>
+        
+          <description>&lt;p&gt;Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal in most cases. However,
+even them most robust software can run into issues. Which brings us to the &lt;code class=&quot;highlighter-rouge&quot;&gt;CrashLoopBackOff&lt;/code&gt; error. A CrashloopBackOff
+means that you have a pod starting, crashing, starting again, and then crashing again.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 28 Mar 2021 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Git Mirror Anywhere using the Dumb Http Protocol</title>
+        
+          <description>&lt;p&gt;Lets talk about &lt;a href=&quot;https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols&quot;&gt;Git&lt;/a&gt;. If you’ve done any professional software development, you’ve probably heard about Git.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 08 Mar 2021 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/git-mirror-anywhere-using-dumb-http-protocol</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/git-mirror-anywhere-using-dumb-http-protocol</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</title>
+        
+          <description>&lt;p&gt;It’s been a while since I discussed building kernel modules for CoreOS (in &lt;a href=&quot;https://blog.thesparktree.com/customize-coreos-kernel-part-1&quot;&gt;Part 1&lt;/a&gt; and &lt;a href=&quot;https://blog.thesparktree.com/customize-coreos-kernel-part-2&quot;&gt;Part 2&lt;/a&gt;)
+and lot’s has changed in the CoreOS world. &lt;a href=&quot;https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership&quot;&gt;CoreOS was acquired by RedHat&lt;/a&gt; and eventually replaced by
+&lt;a href=&quot;https://docs.fedoraproject.org/en-US/fedora-coreos/faq/&quot;&gt;CoreOS Fedora&lt;/a&gt; but the original project lives on in &lt;a href=&quot;https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/&quot;&gt;FlatCar linux&lt;/a&gt;,
+a fork of CoreOS.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sat, 12 Dec 2020 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/customize-flatcar-kernel-part-3</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/customize-flatcar-kernel-part-3</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Home Server - Disk Management</title>
+        
+          <description>&lt;h1 id=&quot;adding-a-new-disk-to-your-homeserver&quot;&gt;Adding a new disk to your homeserver&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Fri, 20 Nov 2020 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/disk-management</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/disk-management</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Traefik v2 - Advanced Configuration</title>
+        
+          <description>&lt;blockquote&gt;
+  &lt;p&gt;Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
+dynamic, automatic, fast, full-featured, production proven, provides metrics, and integrates with every major cluster technology
+      https://containo.us/traefik/&lt;/p&gt;
+&lt;/blockquote&gt;
+
+</description>
+        
+        <pubDate>Thu, 28 May 2020 00:37:09 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/traefik-advanced-config</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/traefik-advanced-config</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>You Don't Know Jenkins - Part 4 - Kubernetes Slaves</title>
+        
+          <description>&lt;p&gt;Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
+source code management systems and tools via plugins maintained by its active community.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 29 Apr 2020 00:37:09 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/you-dont-know-jenkins-part-4</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/you-dont-know-jenkins-part-4</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Docker Hub - Matrix Builds and Tagging using Build Args</title>
+        
+          <description>&lt;p&gt;If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry.
+One of the best things about Docker Hub is it’s support for Automated Builds, which is where Docker Hub will watch a
+Git repository for changes, and automatically build your Docker images whenever you make a new commit.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 12 Sep 2019 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/docker-hub-matrix-builds</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/docker-hub-matrix-builds</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</title>
+        
+          <description>&lt;p&gt;I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 25 Jan 2019 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/ultimate-media-server-build-mediadepot</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/ultimate-media-server-build-mediadepot</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Ultimate Media Server Build - Part 2 - Build Log</title>
+        
+          <description>&lt;p&gt;I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 25 Jan 2019 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/ultimate-media-server-build-log</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/ultimate-media-server-build-log</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Ultimate Media Server Build - Part 1 - Hardware</title>
+        
+          <description>&lt;p&gt;I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 06 Jan 2019 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/ultimate-media-server-build-hardware</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/ultimate-media-server-build-hardware</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Customize the CoreOS Kernel - Part 2 - Kernel SDK</title>
+        
+          <description>&lt;p&gt;After running into a roadblock while attempting to &lt;a href=&quot;./customize-coreos-kernel-part-1&quot;&gt;build the Intel I915 driver as a kernel module&lt;/a&gt; for CoreOS,
+it became clear that we would need to build a completely custom CoreOS kernel with the drivers and features we need enabled.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 02 Jan 2019 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/customize-coreos-kernel-part-2</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/customize-coreos-kernel-part-2</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Customize the CoreOS Kernel - Part 1 - Kernel Modules</title>
+        
+          <description>&lt;h1 id=&quot;story-time&quot;&gt;Story Time&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Sun, 09 Dec 2018 03:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/customize-coreos-kernel-part-1</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/customize-coreos-kernel-part-1</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Drawbridge - SSH Config management for Jump/Bastion hosts</title>
+        
+          <description>&lt;p&gt;In our architecture we have many environments (test/stage/prod/etc), and each environment can have one or more shards, usually broken up by datacenter/avaliablity zone (us-east-1, us-west-2, etc). Each of our shards are protected by Jump/Bastion hosts, auditing and restricting SSH access to internal components.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 30 Apr 2018 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/drawbridge-ssh-config-management</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/drawbridge-ssh-config-management</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Jenkins Dockerized Slave Cluster - Premise</title>
+        
+          <description>&lt;p&gt;Here’s the premise, we have one or more Jenkins masters running our various jobs, and the server is bottlenecking: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 25 Mar 2018 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/jenkins-dockerized-slave-cluster</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/jenkins-dockerized-slave-cluster</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>You Don't Know Jenkins - Part 3</title>
+        
+          <description>&lt;p&gt;With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly
+because Pipeline jobs are now the defacto standard for creating complex jobs, custom deployment workflows without
+additional plugins. The best part is that pipelines are basically just Groovy scripts with some Jenkins specific
+additions.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 13 Nov 2017 23:37:09 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/you-dont-know-jenkins-part-3</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/you-dont-know-jenkins-part-3</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Devops for Startups &amp; Small Teams</title>
+        
+          <description>&lt;p&gt;When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 13 Sep 2017 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/devops-for-startups</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/devops-for-startups</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>State of the eBook ecosystem</title>
+        
+          <description>&lt;p&gt;Here’s what I’m looking for.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 31 Aug 2017 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/state-of-the-ebook</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/state-of-the-ebook</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>CapsuleCD v2 Released</title>
+        
+          <description>&lt;p&gt;&lt;a href=&quot;https://github.com/AnalogJ/capsulecd&quot;&gt;CapsuleCD&lt;/a&gt; is made up of a series of scripts/commands that
+make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices:&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 06 Aug 2017 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/capsulecd-v2-released</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/capsulecd-v2-released</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>15 Lessons in Golang</title>
+        
+          <description>&lt;p&gt;Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure).
+In case you’re not familiar with it, it’s an open source language developed by Google.
+It mostly caught my interest due to the fact that it’s pitched as a statically typed, compiled modern language.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 31 Jul 2017 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/15-lessons-in-golang</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/15-lessons-in-golang</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Local Development with Wildcard DNS</title>
+        
+          <description>&lt;p&gt;The holy-grail of local development is wildcard DNS: the ability to have &lt;code class=&quot;highlighter-rouge&quot;&gt;*.local.company.com&lt;/code&gt; pointing to &lt;code class=&quot;highlighter-rouge&quot;&gt;localhost&lt;/code&gt;, your development machine.
+It doesn’t matter if you’re working on &lt;code class=&quot;highlighter-rouge&quot;&gt;website.local.company.com&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;api.local.company.com&lt;/code&gt;, there’s no additional configuration necessary as you start working on new projects.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 07 Apr 2017 04:19:33 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/local-development-with-wildcard-dns</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/local-development-with-wildcard-dns</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Custom Domains for AWS Lambda/API Gateway using Letsencrypt</title>
+        
+          <description>&lt;blockquote&gt;
+  &lt;p&gt;AWS Lambda lets you run code without provisioning or managing servers. You pay only for the compute time you consume - there is no charge when your code is not running.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+</description>
+        
+        <pubDate>Tue, 08 Nov 2016 14:41:19 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/custom-domains-for-aws-lambdaapi-gateway-using</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/custom-domains-for-aws-lambdaapi-gateway-using</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>You Don't Know Jenkins - Part 2</title>
+        
+          <description>&lt;p&gt;Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
+It doesn’t matter if you’re team has 300 developers or 3, Jenkins can still make your life a lot easier.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 22 Aug 2016 00:37:09 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/you-dont-know-jenkins-part-2</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/you-dont-know-jenkins-part-2</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>You Don't Know Jenkins - Part 1</title>
+        
+          <description>&lt;p&gt;Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
+It doesn’t matter if you’re team has 300 developers or 3, Jenkins can still make your life a lot easier.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Tue, 16 Aug 2016 16:27:07 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/you-dont-know-jenkins-part-1</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/you-dont-know-jenkins-part-1</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower, Pip, etc)</title>
+        
+          <description>&lt;p&gt;So you’re the devops/automation guy or gal on your team. You live and die by “&lt;a href=&quot;https://memegenerator.net/instance/9449708&quot;&gt;Automate all the things&lt;/a&gt;”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That’s awesome, that’s how I got here too.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Tue, 12 Apr 2016 14:13:11 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/continuous-delivery-for-versioned</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/continuous-delivery-for-versioned</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Generating Intranet and Private Network SSL Certificates using LetsEncrypt</title>
+        
+          <description>&lt;p&gt;This post is a follow up to my previous one &lt;a href=&quot;http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx&quot;&gt;Automating SSL Certificates using Nginx &amp;amp; LetsEncrypt&lt;/a&gt;. This time we’ll be generating SSL certificates for intranet and non-public networks.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Tue, 09 Feb 2016 15:19:33 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/generating-intranet-and-private-network-ssl</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/generating-intranet-and-private-network-ssl</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Automating SSL Certificates using Nginx &amp; Letsencrypt - Without the Catch 22</title>
+        
+          <description>&lt;p&gt;There’s a ton of smart people out there who’ve written guides on &lt;a href=&quot;https://sysops.forlaravel.com/letsencrypt&quot;&gt;setting&lt;/a&gt; &lt;a href=&quot;https://blog.rudeotter.com/lets-encrypt-ssl-certificate-nginx-ubuntu/&quot;&gt;up&lt;/a&gt; &lt;a href=&quot;https://davidzych.com/setting-up-ssl-with-lets-encrypt-on-ubuntu-and-nginx/&quot;&gt;Nginx&lt;/a&gt;, &lt;a href=&quot;https://community.letsencrypt.org/t/howto-easy-cert-generation-and-renewal-with-nginx/3491/2&quot;&gt;and&lt;/a&gt; &lt;a href=&quot;https://adambard.com/blog/using-letsencrypt-with-nginx/&quot;&gt;automating&lt;/a&gt; &lt;a href=&quot;https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04&quot;&gt;Letsencrypt&lt;/a&gt; —but none that setup automation and work 100% correctly out of the box. That’s the goal here, I’ll be documenting all the steps required to get your web application protected by an automatically renewing SSL certificate.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 31 Jan 2016 23:49:09 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/automating-ssl-certificates-using-nginx</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/automating-ssl-certificates-using-nginx</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>I Built That - 2015</title>
+        
+          <description>&lt;p&gt;Its 2016 now, and like many others, I thought it would be a good idea to review my accomplisments in the last year. Like most devs, I find myself scratching that itch to build by hacking on side projects in my free time.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 17 Jan 2016 02:37:54 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/i-built-that-2015</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/i-built-that-2015</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Step-By-Step Shipyard 2 Docker Cluster</title>
+        
+          <description>&lt;h1 id=&quot;step-by-step-shipyard-2-docker-cluster&quot;&gt;Step-By-Step Shipyard 2 Docker Cluster&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Thu, 16 Jul 2015 23:11:15 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Python Fails - Multipart file uploads in Python</title>
+        
+          <description>&lt;p&gt;Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 19 Mar 2015 14:38:13 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Reusing SailsJS + Waterline Models in Background Tasks</title>
+        
+          <description>&lt;p&gt;Its been a while since I first attempted to design a background tasks/workers pattern for my SailsJS app that would let me reuse my well defined models. After posting my first attempt:&lt;a href=&quot;http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via&quot;&gt;Ducktyping SailsJS Core for Background Tasks via Kue&lt;/a&gt;, I was introduced to a under-documented but more idiomatic feature that I could use to do the same thing: Sails Hooks.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Tue, 09 Dec 2014 17:09:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/reusing-sailsjs-waterline-models-in-background</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/reusing-sailsjs-waterline-models-in-background</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS</title>
+        
+          <description>&lt;h1 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Sat, 22 Nov 2014 02:04:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Debugging Upstart Jobs on Ubuntu 14.04</title>
+        
+          <description>&lt;p&gt;Before you begin, you should be (intimately) familiar with the &lt;a href=&quot;http://upstart.ubuntu.com/cookbook/&quot;&gt;Upstart Cookbook&lt;/a&gt;. It’s an incredible resource for understanding the in’s and out’s of Upstart and its configuration.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 01 Sep 2014 17:22:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/debugging-upstart-jobs-on-ubuntu-1404</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/debugging-upstart-jobs-on-ubuntu-1404</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Ducktyping SailsJS Core for Background Tasks via Kue</title>
+        
+          <description>&lt;h1 id=&quot;update&quot;&gt;Update&lt;/h1&gt;
+&lt;p&gt;After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure the SailsJS engine. I’ve written a new post about how to create background tasks in Sails which you can find here:&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 21 Jul 2014 19:32:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/ducktyping-sailsjs-core-for-background-tasks-via</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Continuous Deployment with Dokku (Full Guide)</title>
+        
+          <description>&lt;p&gt;So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it.
+You’ve heard of this cool new tool called docker, but you’re not sure if it’s that useful for you, you mostly play with web development.
+You’re a big fan of Heroku however, and wouldn’t it be cool if you could do all your prototyping and development in a Heroku-like environment using Docker?
+Dokku to the rescue.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 15 Jun 2014 15:41:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>npm errors with infinite loop</title>
+        
+          <description>&lt;p&gt;Occasionally I’ll be working with a nodejs project and when I attempt to run &lt;code class=&quot;highlighter-rouge&quot;&gt;$ npm install&lt;/code&gt; I’ll see what appears to be an infinite loop with the same package partially installing and then failing over and over.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 21 May 2014 16:35:02 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/npm-errors-with-infinite-loop</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/npm-errors-with-infinite-loop</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>API Design Best Practices - Part 2</title>
+        
+          <description>&lt;p&gt;This is a follow up to my previous API design post &lt;a href=&quot;http://blog.thesparktree.com/post/41988581166/api-design-best-practices&quot;&gt;“API Design Best Practices”&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 20 Mar 2014 12:01:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/api-design-best-practices-part-2</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/api-design-best-practices-part-2</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Creating a Sails Application using Passport Authentication</title>
+        
+          <description>&lt;h1 id=&quot;creating-a-sails-application-using-passport-authentication&quot;&gt;Creating a Sails Application using Passport Authentication&lt;/h1&gt;
+
+</description>
+        
+        <pubDate>Thu, 20 Feb 2014 18:58:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/creating-a-sails-application-using-passport</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/creating-a-sails-application-using-passport</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>AngularJS Interceptors - Globally handle 401 and other Error Messages</title>
+        
+          <description>&lt;p&gt;If you’ve built your slick new app using AngluarJS you’re probably using the common pattern of using AngluarJS as your dynamic client side MVVM framework and delegating your server side code to act as a API for the most part.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 07 Feb 2014 22:50:53 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/angularjs-interceptors-globally-handle-401-and</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/angularjs-interceptors-globally-handle-401-and</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Installing a custom version of NodeJS on Ubuntu 13.10</title>
+        
+          <description>&lt;p&gt;The following is the quickest way to install nodejs latest and specific versions node.js on Ubuntu. According to the nodejs &lt;a href=&quot;https://gist.github.com/isaacs/579814&quot;&gt;official gists&lt;/a&gt;, there are a few other ways to install node.js, and you can check out the other possibilities if you prefer.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 23 Jan 2014 15:27:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/installing-a-custom-version-of-nodejs-on-ubuntu</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/installing-a-custom-version-of-nodejs-on-ubuntu</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>AngularJS + Media Queries = matchmedia-ng</title>
+        
+          <description>&lt;p&gt;&lt;a href=&quot;https://github.com/AnalogJ/matchmedia-ng&quot;&gt;matchmedia-ng&lt;/a&gt; is a set of AngularJS bindings and helper functions for the matchMedia javascript api. With matchMedia, AngularJS and &lt;a href=&quot;https://github.com/AnalogJ/matchmedia-ng&quot;&gt;matchmedia-ng&lt;/a&gt; you can automatically respond to the orientation, browser height, width and other properties supported by CSS Media Queries.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 09 Jan 2014 15:05:05 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/angularjs-media-queries-matchmedia-ng</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/angularjs-media-queries-matchmedia-ng</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Transparently adding encrypted fields to a Rails app using Mongoid</title>
+        
+          <description>&lt;p&gt;As a software architect, you are in the business of designing new applications while balancing business requirements against future utility. Unfortunately design specifications are not as immutable as we dream they are, and sometimes significant changes must be made after the fact.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 09 Dec 2013 22:06:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/transparently-adding-encrypted-fields-to-a-rails</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/transparently-adding-encrypted-fields-to-a-rails</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API</title>
+        
+          <description>&lt;p&gt;I created an github project called &lt;a href=&quot;https://github.com/AnalogJ/dropstore-ng&quot;&gt;dropstore-ng&lt;/a&gt; that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.
+The service wraps most of the Dropbox Datastore callbacks in promises, contains subscription methods for Dropbox events and provides transparent aliases for untouched library methods.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 08 Dec 2013 22:00:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/dropstore-ng-opensource-angularjs-bindings-for</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/dropstore-ng-opensource-angularjs-bindings-for</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>How to setup a Free Continuous Integration Server Using Cloudbees + Private Github</title>
+        
+          <description>&lt;h3 id=&quot;better-integration-between-jenkins-and-github-with-the-github-jenkins-plugin&quot;&gt;Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)&lt;/h3&gt;
+
+</description>
+        
+        <pubDate>Tue, 05 Nov 2013 02:00:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/how-to-setup-a-free-continuous-integration-server</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/how-to-setup-a-free-continuous-integration-server</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>NodeJS on the Windows Azure Cloud, Start to Finish</title>
+        
+          <description>&lt;p&gt;So you want to run nodejs on a linux image on Azure, easy right?
+Well.. kinda..&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sat, 28 Sep 2013 16:43:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>API Design Best Practices</title>
+        
+          <description>&lt;p&gt;Or how to stop third party developers from hating you.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 25 Mar 2013 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/api-design-best-practices</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/api-design-best-practices</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Customize the Rich Text Editor in Sitecore</title>
+        
+          <description>&lt;p&gt;We ran into some issues at work with sitecore. It seems that by default the Rich Text Editor that Sitecore uses, Telerik’s RadEditor, will automatically convert &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;b&amp;gt;&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;i&amp;gt;&lt;/code&gt; tags to &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;strong&amp;gt;&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;em&amp;gt;&lt;/code&gt;. Our designers prefer to use the &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;i&amp;gt;&lt;/code&gt; tag for bootstrap’s icon classes so we needed a fix.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 31 Jan 2013 22:53:45 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/customize-the-rich-text-editor-in-sitecore</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/customize-the-rich-text-editor-in-sitecore</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Amazon EC2 + DotNetOpenAuth + Elastic Beanstalk = Url Rewrite Hell (fix)</title>
+        
+          <description>&lt;p&gt;This is the fix for the dotnetopenauth.aspnet module not working on an amazon ec2 instance that was published out using beanstalk. The web deploy folder + url rewriting rules that amazon places in the web config confuse the module and it dies. The following issue &lt;a href=&quot;https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35&quot;&gt;https://github.com/DotNetOpenAuth/DotNetOpenAuth/issues/35&lt;/a&gt; in github references it, but no fix is avaliable at this time.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 31 Jan 2013 22:50:25 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/amazon-ec2-dotnetopenauth-elastic-beanstalk</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/amazon-ec2-dotnetopenauth-elastic-beanstalk</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>How to get the current Item index from a databound ListView</title>
+        
+          <description>&lt;p&gt;You can use &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;%# Container.DisplayIndex %&amp;gt;&lt;/code&gt; to get your position in the current list. You can use &lt;code class=&quot;highlighter-rouge&quot;&gt;Items.Count&lt;/code&gt; on the &lt;code class=&quot;highlighter-rouge&quot;&gt;Control&lt;/code&gt; to get the total &lt;code class=&quot;highlighter-rouge&quot;&gt;Item&lt;/code&gt; count.&lt;/p&gt;
+</description>
+        
+        <pubDate>Thu, 31 Jan 2013 22:25:20 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/how-to-get-the-current-item-index-from-a-databound</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/how-to-get-the-current-item-index-from-a-databound</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Dev Blog - Day 1;</title>
+        
+          <description>&lt;p&gt;Having jumped back and forth between Coderwall and the QuietThyme blog, I’ve found that sometimes the content I want to talk about just doesn’t fit in. So I’ve created this blog on my personal site. Its mostly going to have developer related posts, but there might be a few oddball personal ones in here as well.&lt;/p&gt;
+</description>
+        
+        <pubDate>Sun, 20 Jan 2013 02:28:23 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/dev-blog-day-1</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/dev-blog-day-1</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Dropbox as a service Server 2008</title>
+        
+          <description>&lt;p&gt;&lt;strong&gt;What I did&lt;/strong&gt;
+So here are the steps that I took in order to get everything working. Quite a few steps but I wanted it detailed enough so that anyone could follow.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 28 Nov 2011 02:00:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/dropbox-as-a-service-server-2008</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/dropbox-as-a-service-server-2008</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>The breakpoint will not currently be hit. No symbols have been loaded for this document.</title>
+        
+          <description>&lt;p&gt;I’m posting this blog mostly to remind myself how to fix this if ever I run into it again, but if anyone else benefits from it, then awesome.&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Thu, 24 Nov 2011 02:00:00 -0600</pubDate>
+        <link>
+        https://blog.thesparktree.com/the-breakpoint-will-not-currently-be-hit-no</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/the-breakpoint-will-not-currently-be-hit-no</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>HyperV How to allow remote access to MMC Snap Ins</title>
+        
+          <description>&lt;p&gt;http://blogs.technet.com/b/server_core/archive/2008/01/14/configuring-the-firewall-for-remote-management-of-a-workgroup-server-core-installation.aspx&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 03 Oct 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/hyperv-how-to-allow-remote-access-to-mmc-snap-ins</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/hyperv-how-to-allow-remote-access-to-mmc-snap-ins</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Server 2008 Run Application as a Task</title>
+        
+          <description>&lt;p&gt;Task Schedule works great in WHS 2011 (free an simple)&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 02 Oct 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/server-2008-run-application-as-a-task</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/server-2008-run-application-as-a-task</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Create a Service on Server 2008</title>
+        
+          <description>&lt;p&gt;http://support.microsoft.com/kb/251192
+How to create a service from an exe on server 2008&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Sun, 02 Oct 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/create-a-service-on-server-2008</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/create-a-service-on-server-2008</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>HyperV Server Remote Management Link</title>
+        
+          <description>&lt;p&gt;Best instructions for setting up Hyper V Server&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 30 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/hyperv-server-remote-management-link</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/hyperv-server-remote-management-link</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Hyper V Server No Network Connection After External Virtual Network</title>
+        
+          <description>&lt;p&gt;Run &lt;code class=&quot;highlighter-rouge&quot;&gt;nvspscrub.js /P&lt;/code&gt; to clear all Virtual Networks&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 30 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/hyper-v-server-no-network-connection-after</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/hyper-v-server-no-network-connection-after</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Hyper-V Server Injecting Network Drivers</title>
+        
+          <description>&lt;p&gt;How to inject network drivers into HyperV Server when you see the message “No active network adapters found”&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Fri, 30 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/hyper-v-server-injecting-network-drivers</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/hyper-v-server-injecting-network-drivers</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Javascript Document.Write</title>
+        
+          <description>&lt;p&gt;document write is an antipattern,&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 21 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/javascript-documentwrite</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/javascript-documentwrite</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>Incredible Javascript Patterns Resource</title>
+        
+          <description>&lt;p&gt;http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Wed, 21 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/incredible-javascript-patterns-resource</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/incredible-javascript-patterns-resource</guid>
+      </item>
+      
+    
+      
+      <item>
+        <title>How to call a function on a databound value in ListView</title>
+        
+          <description>&lt;p&gt;Wrap your Eval call:&lt;/p&gt;
+
+</description>
+        
+        <pubDate>Mon, 12 Sep 2011 02:00:00 -0500</pubDate>
+        <link>
+        https://blog.thesparktree.com/how-to-call-a-function-on-a-databound-value-in</link>
+        <guid isPermaLink="true">https://blog.thesparktree.com/how-to-call-a-function-on-a-databound-value-in</guid>
+      </item>
+      
+    
+  </channel>
+</rss>

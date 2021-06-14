@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>OpenLDAP using STARTTLS & LetsEncrypt</title>
+	  <link>/openldap-using-starttls-and-letsencrypt</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-06-13T04:19:33-05:00</pubDate>
+	  <guid>/openldap-using-starttls-and-letsencrypt</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication.</p>
+
+  <p>LDAP provides the communication language that applications use to
+communicate with other directory services servers. Directory services
+store the users, passwords, and computer accounts, and share that
+information with other entities on the network.</p>
+
+  <p><strong>OpenLDAP</strong> is a <a href="https://en.wikipedia.org/wiki/Free_software">free</a>,
+<a href="https://en.wikipedia.org/wiki/Open-source_software" title="Open-source software">open-source</a> implementation of the
+<a href="https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol" title="Lightweight Directory Access Protocol">Lightweight Directory Access Protocol</a>
+(LDAP) developed by the OpenLDAP Project. It is released under its own BSD-style license called the OpenLDAP Public License.<a href="https://en.wikipedia.org/wiki/OpenLDAP#cite_note-4">[4]</a></p>
+</blockquote>
+
+<p>There are 2 commonly used mechanisms to secure LDAP traffic - LDAPS and StartTLS. LDAPS is deprecated in favor of Start TLS [RFC2830].</p>
+
+<p>During some recent infrastructure changes I found out the hard way that <a href="https://issues.jenkins.io/browse/JENKINS-14520">LDAP plugin for Jenkins does not support LDAP over TLS (StartTLS)</a>.
+Given that LDAPS is officially deprecated, I began work on a PR to add StartTLS support myself.</p>
+
+<p>Before I could start coding, I needed to create a local development environment with an LDAP server speaking StartTLS.
+Unfortunately, this was harder than I anticipated, as StartTLS (while officially supported since LDAPv3) is not well documented.</p>
+
+<p>In the following post ,I’ll show you how to get OpenLDAP up and running with StartTLS, using valid certificates from LetsEncrypt.</p>
+
+<p>As always, the code is Open Source and lives on Github:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<h1 id="self-signed-vs-trusted-ca-certificates">Self-Signed vs Trusted CA Certificates</h1>
+
+<p>There are two types of <strong>SSL Certificates</strong> when you’re talking about signing. There are <strong>Self-Signed SSL Certificates</strong> and certificates
+that are signed by a Trusted Certificate Authority (and are usually already trusted by your system).</p>
+
+<p>Most OpenLDAP documentation I was able to find used Self-Signed certifates. While that works fine for most development,
+I am trying to replicate a production-like environment, which means real, trusted certificates. Thankfully, we can utilize
+short-lived trusted certificates provided by LetsEncrypt to secure our test OpenLDAP server.</p>
+
+<h1 id="generate-letsencrypt-certificate">Generate LetsEncrypt Certificate</h1>
+
+<div class="github-widget" data-repo="matrix-org/docker-dehydrated"></div>
+
+<p>The <a href="https://matrix.org/">matrix.org</a> team provide a simple <a href="https://github.com/matrix-org/docker-dehydrated#behaviour">Docker image</a>
+that you can use to generate LetsEncrypt certificates using the DNS-01 challenge. All you need is a custom domain, and a
+<a href="https://github.com/AnalogJ/lexicon">DNS provider with an API</a></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>mkdir data
+
+<span class="c"># We cannot use a wildcard domain with OpenLDAP, so let's pick a simple obvious subdomain.</span>
+<span class="nb">echo</span> <span class="s2">"ldap.example.com"</span> &gt; data/domains.txt
+
+docker run --rm <span class="se">\</span>
+-v <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/data:/data <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_GENERATE_CONFIG</span><span class="o">=</span>yes <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_CA</span><span class="o">=</span><span class="s2">"https://acme-v02.api.letsencrypt.org/directory"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_CHALLENGE</span><span class="o">=</span><span class="s2">"dns-01"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_KEYSIZE</span><span class="o">=</span><span class="s2">"4096"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_HOOK</span><span class="o">=</span><span class="s2">"/usr/local/bin/lexicon-hook"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_RENEW_DAYS</span><span class="o">=</span><span class="s2">"30"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_KEY_RENEW</span><span class="o">=</span><span class="s2">"yes"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_ACCEPT_TERMS</span><span class="o">=</span>yes <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_EMAIL</span><span class="o">=</span><span class="s2">"myemail@gmail.com"</span> <span class="se">\</span>
+-e <span class="nv">PROVIDER</span><span class="o">=</span>cloudflare <span class="se">\</span>
+-e <span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span><span class="s2">"mycloudflareusername"</span> <span class="se">\</span>
+-e <span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span><span class="s2">"mycloudflaretoken"</span> <span class="se">\</span>
+docker.io/matrixdotorg/dehydrated
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: pay attention to those last 3 environmental variables. They are passed to <a href="https://github.com/AnalogJ/lexicon">lexicon</a>
+and should be changed to match your DNS provider.</p>
+</blockquote>
+
+<p>Once <code class="highlighter-rouge">dehydrated</code> prints its success messge , you should see a handful of new subfolders in <code class="highlighter-rouge">data</code>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>data
+├── accounts
+│ └── xxxxxxxxxxxxxx
+│     ├── account_id.json
+│     ├── account_key.pem
+│     └── registration_info.json
+├── certs
+│ └── ldap.example.com
+│     ├── cert-xxxxxx.csr
+│     ├── cert-xxxxxx.pem
+│     ├── cert.csr -&gt; cert-xxxxxx.csr
+│     ├── cert.pem -&gt; cert-xxxxxx.pem
+│     ├── chain-xxxxxx.pem
+│     ├── chain.pem -&gt; chain-xxxxxx.pem
+│     ├── combined.pem
+│     ├── fullchain-xxxxxx.pem
+│     ├── fullchain.pem -&gt; fullchain-xxxxxx.pem
+│     ├── privkey-xxxxxx.pem
+│     └── privkey.pem -&gt; privkey-xxxxxx.pem
+├── chains
+├── config
+└── domains.txt
+</code></pre>
+</div>
+
+<p>Let’s leave these files alone for now, and continue to standing up and configuring our OpenLDAP server.</p>
+
+<h1 id="deploying-openldap-via-docker">Deploying OpenLDAP via Docker</h1>
+
+<p>Since we’re not actually deploying a production instance (with HA/monitoring/security hardening/etc) we can take
+some short-cuts and use an off-the-shelf Docker image.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>The <a href="https://github.com/AnalogJ/docker-openldap-starttls">analogj/docker-openldap-starttls</a> image we’re using in the
+example below is based on the  <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild/test-openldap</a> Docker image,
+ which provies a vanilla install of OpenLDAP, and adds Futurama characters as test users.</p>
+
+<p>I’ve customized it to add support for custom Domains, dynamic configuration &amp; the ability to enforce StartTLS on the
+serverside (which is great for testing).</p>
+
+<p>Before we start the OpenLDAP container, lets rename and re-organize our LetsEncrypt certificates in a folder structure that the container expects:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir -p ldap
+cp data/fullchain.pem ldap/fullchain.crt
+cp data/cert.pem ldap/ldap.crt
+cp data/privkey.pem ldap/ldap.key
+</code></pre>
+</div>
+
+<p>Next, lets start the OpenLDAP Docker container:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker run --rm \
+-v `pwd`/ldap:/etc/ldap/ssl/ \
+-p 10389:10389 \
+-p 10636:10636 \
+-e LDAP_DOMAIN="example.com" \
+-e LDAP_BASEDN="dc=example,dc=com" \
+-e LDAP_ORGANISATION="Custom Organization Name, Example Inc." \
+-e LDAP_BINDDN="cn=admin,dc=example,dc=com" \
+-e LDAP_FORCE_STARTTLS="true" \
+ghcr.io/analogj/docker-openldap-starttls:master
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: the <code class="highlighter-rouge">LDAP_DOMAIN</code> should be your root domain (<code class="highlighter-rouge">example.com</code> vs <code class="highlighter-rouge">ldap.example.com</code> from your certificate).
+It’s used for test user email addresses.</p>
+
+  <p>Pay attention to the <code class="highlighter-rouge">LDAP_BASEDN</code> and <code class="highlighter-rouge">LDAP_BINDDN</code> variables, they should match your Domain root as well.</p>
+
+  <p><code class="highlighter-rouge">LDAP_FORCE_STARTTLS=true</code> is optional, you can use it to conditionally start your LDAP server with StartTLS enforced.</p>
+</blockquote>
+
+<p>If everything is correct, you should see <code class="highlighter-rouge">slapd starting</code> as your last log message.</p>
+
+<p>Lets test that the container is responding correctly, though the certificate will not match since we’re going to query it
+using <code class="highlighter-rouge">localhost:10389</code></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># LDAPTLS_REQCERT=never tells ldapsearch to skip certificate validation</span>
+<span class="c"># -Z is required if we used LDAP_FORCE_STARTTLS="true" to start the container.</span>
+
+<span class="nv">LDAPTLS_REQCERT</span><span class="o">=</span>never ldapsearch -H ldap://localhost:10389 -Z -x -b <span class="s2">"ou=people,dc=example,dc=com"</span> -D <span class="s2">"cn=admin,dc=example,dc=com"</span> -w GoodNewsEveryone <span class="s2">"(objectClass=inetOrgPerson)"</span>
+
+<span class="c"># ...</span>
+<span class="c"># search result</span>
+<span class="c"># search: 3</span>
+<span class="c"># result: 0 Success</span>
+<span class="c">#</span>
+<span class="c"># numResponses: 8</span>
+<span class="c"># numEntries: 7</span>
+</code></pre>
+</div>
+
+<h1 id="dns">DNS</h1>
+
+<p>Wiring up DNS to correctly resolve to the new container running on you host is left as a exercise for the user.</p>
+
+<p>For testing, I just setup a simple A record pointing <code class="highlighter-rouge">ldap.example.com</code> to my laptop’s private IP address <code class="highlighter-rouge">192.168.0.123</code>.
+It obviously won’t resolve correctly outside my home network, but it works fine for testing.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ping ldap.example.com
+PING ldap.example.com (192.168.0.123): 56 data bytes
+64 bytes from 192.168.0.123: icmp_seq=0 ttl=64 time=0.045 ms
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: Remember, DNS updates can take a while to propagate. You’ll want to set a low TTL for the new record if your IP will
+be changing constantly (DHCP). You may also need to flush your DNS cache if the changes do not propagate correctly.</p>
+</blockquote>
+
+<h1 id="testing">Testing</h1>
+
+<p>You can test that the container is up and running (and accessible via our custom domain) with some handy <code class="highlighter-rouge">ldapsearch</code> commands:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># List all Users (only works with LDAP_FORCE_STARTTLS=false)
+ldapsearch -H ldap://ldap.example.com:10389 -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Response:
+# ldap_bind: Confidentiality required (13)
+#	additional info: TLS confidentiality required
+
+# Request StartTLS (works with LDAP_FORCE_STARTTLS=true/false)
+ldapsearch -H ldap://ldap.example.com:10389 -Z -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Enforce StartTLS (only works with LDAP_FORCE_STARTTLS=true)
+ldapsearch -H ldap://example:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Query Open LDAP using Localhost url, also works with self-signed certs (-ZZ forces StartTLS)
+LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+</code></pre>
+</div>
+
+<h1 id="how-does-it-work">How does it work?</h1>
+
+<p>Other than my changes that allow you to customize the domain, there are only 2 main changes from <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild’s amazing work</a>.</p>
+
+<ul>
+  <li>
+    <p>A slightly modified <code class="highlighter-rouge">tls.ldif</code> file, which uses the fullchain, private key and certificate provided by LetsEncrypt</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>dn: cn=config
+changetype: modify
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ldap/ssl/fullchain.crt
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ldap/ssl/ldap.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ldap/ssl/ldap.key
+-
+replace: olcTLSVerifyClient
+olcTLSVerifyClient: never
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>A new (conditionally loaded) <code class="highlighter-rouge">force-starttls.ldif</code> file, which tells OpenLDAP to force TLS</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>dn: cn=config
+changetype:  modify
+add: olcSecurity
+olcSecurity: tls=1
+
+</code></pre>
+    </div>
+  </li>
+</ul>
+
+<h1 id="fin">Fin</h1>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>Getting all the details right took some time, but it was worth it. With this containerized setup, its easy to start
+up a fresh “trusted” OpenLDAP image for testing, and conditionally enforce StartTLS.</p>
+
+<p>Thankfully, I was able to use this local containerized OpenLDAP server to finish my work in the
+<a href="https://github.com/jenkinsci/ldap-plugin/pull/97">Jenkins LDAP-Plugin</a>, which I’ll be writing about in a future blog post.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

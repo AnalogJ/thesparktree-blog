@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Running Cron in Docker</title>
+	  <link>/cron-in-docker</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-04-26T04:19:33-05:00</pubDate>
+	  <guid>/cron-in-docker</guid>
+	  <description><![CDATA[
+	     <p>Running <code class="highlighter-rouge">cron</code> in a Docker container is incredibly difficult to do correctly.
+This is partially because <code class="highlighter-rouge">cron</code> was designed to run in an environment that looks very different than a docker container,
+and partially because what we traditionally think of as <code class="highlighter-rouge">cron</code> is actually a different tool in each flavor of Linux.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="what-is-cron">What is <code class="highlighter-rouge">cron</code></h2>
+
+<blockquote>
+  <p>The software utility <strong>cron</strong> also known as <strong>cron job</strong> is a time-based job scheduler in Unix-like computer operating
+systems. Users who set up and maintain software environments use cron to schedule jobs (commands or shell scripts) to run
+periodically at fixed times, dates, or intervals. It typically automates system maintenance or administration—though its
+general-purpose nature makes it useful for things like downloading files from the Internet and downloading email at regular
+intervals.</p>
+</blockquote>
+
+<p><a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a></p>
+
+<p>Basically it’s a language/platform/distro agnostic tool for scheduling tasks/scripts to run automatically at some interval.</p>
+
+<h2 id="differences-between-various-versions">Differences between various versions</h2>
+
+<p>Though <code class="highlighter-rouge">cron</code>’s API is standardized, there are multiple implementations, which vary as the default for various distros
+(<a href="http://www.jimpryor.net/linux/dcron.html">dcron</a>, <a href="https://github.com/cronie-crond/cronie">cronie</a>,
+<a href="http://fcron.free.fr/">fcron</a> and <a href="https://directory.fsf.org/wiki/Vixie-cron">vixie-cron</a>)</p>
+
+<p>To add to the complexity, some of <code class="highlighter-rouge">cron</code>’s functionality is actually defined/provided by <code class="highlighter-rouge">anachron</code>. <code class="highlighter-rouge">anacron</code> was
+previously a stand-alone binary which was used to run commands periodically with a frequency defined in days. It works
+a little different from cron; assumes that a machine will not be powered on all the time.</p>
+
+<p>So to summarize, there are multiple <code class="highlighter-rouge">cron</code> implementations, with differing flags &amp; features, some with <code class="highlighter-rouge">anacron</code>
+functionality built-in, and some without. In the following sections I’ll call out different solutions for different
+distros/<code class="highlighter-rouge">cron</code> implementations (keep an eye out for <code class="highlighter-rouge">NOTE:</code> blocks)</p>
+
+<blockquote>
+  <p>NOTE: Installation instructions differ per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; cron</code></li>
+    <li>Alpine: <code class="highlighter-rouge">which crond</code> # comes pre-installed</li>
+    <li>Centos: <code class="highlighter-rouge">yum install -y cronie &amp;&amp; crond -V</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="config-file">Config File</h2>
+
+<p>Let’s start with a simple issue. <code class="highlighter-rouge">cron</code> is designed to run in a multi-user environment, which is great when you’re running
+<code class="highlighter-rouge">cron</code> on a desktop, but less useful when running <code class="highlighter-rouge">cron</code> in a docker container.</p>
+
+<p>Rather than creating a user specific <code class="highlighter-rouge">crontab</code> file, in our Docker container we’ll modify the system-level <code class="highlighter-rouge">crontab</code>.</p>
+
+<p>Let’s create/update a file called <code class="highlighter-rouge">/etc/crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date
+</code></pre>
+</div>
+
+<p>This file will configure <code class="highlighter-rouge">cron</code> to run the <code class="highlighter-rouge">date</code> command every minute. We’ll talk about the output for this command in a later section.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+    <li>Alpine: the crontab file should be written to <code class="highlighter-rouge">/var/spool/cron/crontabs/root</code>, also the format is slightly different (the <code class="highlighter-rouge">user</code> field should be removed).</li>
+    <li>Centos: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+  </ul>
+</blockquote>
+
+<h2 id="foreground">Foreground</h2>
+
+<p>Now that we have created a <code class="highlighter-rouge">cron</code> config file, we need to start <code class="highlighter-rouge">cron</code>. On a normal system, we would start <code class="highlighter-rouge">cron</code> as a
+daemon, a background process usually managed by service manager. In the Docker world, the convention is 1 process per container,
+ running in the foreground.</p>
+
+<p>Thankfully most <code class="highlighter-rouge">cron</code> implementations support this, even though the flags may be different.</p>
+
+<blockquote>
+  <p>NOTE: Running cron in the foreground differs per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">cron -f -l 2</code></li>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+    <li>Centos: <code class="highlighter-rouge">crond -n</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="environment">Environment</h2>
+
+<p>As mentioned earlier, <code class="highlighter-rouge">cron</code> is designed to work in a multi-user environment, which also means the <code class="highlighter-rouge">cron</code> daemon cannot
+make assumptions about the runtime environment (process environmental variables, etc). The way <code class="highlighter-rouge">cron</code> enforces this is
+by starting each job with a custom environment, using an implementation specific environmental variables file (usually <code class="highlighter-rouge">/etc/environment</code>)</p>
+
+<p>Since using environmental variables is a common configuration mechanism for Docker containers, we need a way to ensure the current
+Docker container environment is passed into the cron sub-processes. The best way to do this is by creating a custom
+entrypoint script which dumps the environment to the <code class="highlighter-rouge">cron</code> environment file, before starting <code class="highlighter-rouge">cron</code> in the foreground.</p>
+
+<p>Create the following <code class="highlighter-rouge">/entrypoint.sh</code> script in your Docker image.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># start cron in the foreground (replacing the current process)</span>
+<span class="nb">exec</span> <span class="s2">"cron -f"</span>
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Centos: unfortunately <code class="highlighter-rouge">cronie</code> doesn’t read variables from <code class="highlighter-rouge">/etc/environment</code>.
+      <ul>
+        <li>You’ll need to manually source it before your script: <code class="highlighter-rouge">* * * * * root . /etc/environment; date</code></li>
+        <li>
+          <p>If you have multiple entries in your <code class="highlighter-rouge">crontab</code>, you can change the default <code class="highlighter-rouge">SHELL</code> for your <code class="highlighter-rouge">crontab</code> file, and make use of <code class="highlighter-rouge">BASH_ENV</code></p>
+
+          <div class="highlighter-rouge"><pre class="highlight"><code>   SHELL=/bin/bash
+   BASH_ENV=/etc/environment
+   * * * * * root echo "${CUSTOM_ENV_VAR}"
+</code></pre>
+          </div>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</blockquote>
+
+<h2 id="stdoutstderr">STDOUT/STDERR</h2>
+
+<p>If you’ve been following along so far, you might be wondering why you’re not seeing any output from <code class="highlighter-rouge">date</code> in your
+terminal. That’s because even though <code class="highlighter-rouge">cron</code> is running in the foreground, the output from its child processes is designed
+to go to a log file (traditionally at <code class="highlighter-rouge">/var/log/cron</code>). Again, this might be fine on a standard linux host, but it’s
+sub-optimal for a Docker container.</p>
+
+<p>Let’s use some shell redirect magic to redirect the <code class="highlighter-rouge">STDOUT</code> and <code class="highlighter-rouge">STDERR</code> from our <code class="highlighter-rouge">cron</code> jobs, to the <code class="highlighter-rouge">cron</code> process
+(running as the primary process in the Docker container, with <a href="https://en.wikipedia.org/wiki/Process_identifier">PID 1</a>).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># &gt;/proc/1/fd/1 redirects STDOUT from the `date` command to PID1's STDOUT
+# 2&gt;/proc/1/fd/2 redirects STDERR from the `date` command to PID1's STDERR
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+</code></pre>
+</div>
+
+<p>While <code class="highlighter-rouge">&gt;/proc/1/fd/1 2&gt;/proc/1/fd/2</code> may look intimidating, it’s the most consistent way to pass <code class="highlighter-rouge">cronjob</code> logs to the container’s
+STDOUT, without leveraging clunky solutions like <code class="highlighter-rouge">crond &amp;&amp; tail -f /var/log/cron</code></p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Alpine, as long as you start cron with the following command:</p>
+  <ul>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="cron-package-installation">Cron package installation</h2>
+
+<p>Now that we have a working container with <code class="highlighter-rouge">cron</code>, we should take the time to clean up some of the unused cruft that our
+<code class="highlighter-rouge">cron</code> package installs, specifically configs for <code class="highlighter-rouge">anacron</code>.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+    <li>Alpine: <code class="highlighter-rouge">rm -rf /etc/periodic</code></li>
+    <li>Centos: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="kill">Kill</h2>
+
+<p>Finally, as you’ve been playing around, you may have noticed that it’s difficult to kill the container running <code class="highlighter-rouge">cron</code>.
+You may have had to use <code class="highlighter-rouge">docker kill</code> or <code class="highlighter-rouge">docker-compose kill</code> to terminate the container, rather than using <code class="highlighter-rouge">ctrl + C</code> or <code class="highlighter-rouge">docker stop</code>.</p>
+
+<p>Unfortunately, it seems like <code class="highlighter-rouge">SIGINT</code> is not always correctly handled by <code class="highlighter-rouge">cron</code> implementations when running in the foreground.</p>
+
+<p>After researching a couple of alternatives, the only solution that seemed to work was using a process supervisor (like
+<code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code>). Since <code class="highlighter-rouge">tini</code> was merged into Docker 1.13, technically, you can use it transparently by passing
+<code class="highlighter-rouge">--init</code> to your docker run command. In practice you often can’t because your cluster manager doesn’t support it.</p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Centos, SIGTERM works correctly with <code class="highlighter-rouge">cronie</code> in the foreground.</p>
+</blockquote>
+
+<h2 id="putting-it-all-together">Putting it all together</h2>
+
+<p>Let’s see what all of this would look like for an <code class="highlighter-rouge">ubuntu</code> base image.</p>
+
+<p>Create a <code class="highlighter-rouge">Dockerfile</code></p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu
+
+RUN apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; which cron &amp;&amp; \
+    rm -rf /etc/cron.*/*
+
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["cron","-f", "-l", "2"]
+</code></pre>
+
+<p>Create an <code class="highlighter-rouge">entrypoint.sh</code></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># execute CMD</span>
+<span class="nb">echo</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+<span class="nb">exec</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+
+</code></pre>
+</div>
+
+<p>Create a <code class="highlighter-rouge">crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+* * * * * root echo "${CUSTOM_ENV_VAR}" &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+
+# An empty line is required at the end of this file for a valid cron file.
+
+</code></pre>
+</div>
+
+<p>Build the Dockerfile and run it with <code class="highlighter-rouge">--init</code> (package <code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code> for containers in production)</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker build -t analogj/cron .
+docker run --rm --name cron -e <span class="nv">CUSTOM_ENV_VAR</span><span class="o">=</span>foobar -v <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/crontab:/etc/crontab analogj/cron
+</code></pre>
+</div>
+
+<p>You should see output like the following:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>foobar
+Tue Apr 27 14:31:00 UTC 2021
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>I’ve put together a working example of dockerized <code class="highlighter-rouge">cron</code> for multiple distros:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="references">References</h2>
+<ul>
+  <li>https://hynek.me/articles/docker-signals/</li>
+  <li>https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower, Pip, etc)</title>
+	  <link>/continuous-delivery-for-versioned</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-04-12T14:13:11-05:00</pubDate>
+	  <guid>/continuous-delivery-for-versioned</guid>
+	  <description><![CDATA[
+	     <p>So you’re the devops/automation guy or gal on your team. You live and die by “<a href="https://memegenerator.net/instance/9449708">Automate all the things</a>”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That’s awesome, that’s how I got here too.</p>
+
+<p>If I was to ask you about your production deployments, you wouldn’t hesitate to tell me about all the automation you’ve put in place. But if I ask you about your build artifacts/libraries pipeline I’d probably get a cautious look and we would have a conversation like this:</p>
+
+<ul>
+  <li><strong>Me:</strong> How do you release new versions of your Chef cookbooks?</li>
+  <li><strong>You:</strong> We just bump up the version in the <code class="highlighter-rouge">metadata.rb</code> file and commit it.</li>
+  <li><strong>Me:</strong> But you test it right?</li>
+  <li><strong>You:</strong> Oh we have a full CI pipeline for it, every commit is tested.</li>
+  <li><strong>Me:</strong> What about handling the version number embedded in your <code class="highlighter-rouge">Berksfile.lock</code>?</li>
+  <li><strong>You:</strong> Right. We update that by running <code class="highlighter-rouge">berks install</code> after we bump up the version. Then we commit, and push it to Github.</li>
+  <li><strong>Me:</strong> Do you do dependency checking? Lint your cookbook syntax? Run code coverage tools in addition to standard CI?</li>
+  <li><strong>You:</strong> Oh we have a pretty simple/general purpose CI script, never got around to setting those up.</li>
+  <li><strong>Me:</strong> What about actual releases? How do you get your new cookbook version into the community repo (Supermarket) or your Chef Server?</li>
+  <li><strong>You:</strong> We use <code class="highlighter-rouge">knife upload</code> or <code class="highlighter-rouge">berks upload</code>. Or maybe its <code class="highlighter-rouge">knife cookbook upload</code>. Something like that.</li>
+  <li><strong>Me:</strong> And then you create a git tag and push that to Github too right?</li>
+  <li><strong>You:</strong> uhhh.. Of course.</li>
+  <li><strong>Me:</strong> Do you update a <code class="highlighter-rouge">CHANGELOG.md</code> with a list of the changes between versions?</li>
+  <li><strong>You:</strong> Sometimes, if its a big enough change.</li>
+</ul>
+
+<p>This is obviously a very pointed example thats specific to Chef cookbooks, but versioning and releasing your library (written in any language) is just as important as releasing your actual application software. It can be hard to remember all the steps required, especially for more mature libraries which you don’t update very often. This makes it perfect for automating.</p>
+
+<h2 id="capsulecd-infomercial">CapsuleCD Infomercial</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a generic Continuous Delivery pipeline for versioned artifacts and libraries. Don’t worry, I’m not trying to convince you to throw away all your CI scripts and replace your Jenkins server. <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is meant to work with your existing CI, not complete with it. It’s goal is to bring automation to the packaging and deployment stage of your library release cycle.
+Depending how you set it up (and how much you trust your Unit Tests), every Pull Request could automatically start CapsuleCD to generate a new release of your library (Continuous Deployment) or just notify Ops to kick off CapsuleCD (Continuous Delivery).</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h2 id="hows-it-work">How’s it work?</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is configurable CLI application which can be heavily customized. It can support package/release management for libraries written in any language, but comes with built-in support for the following languages:</p>
+
+<ul>
+  <li>Javascript (Bower)</li>
+  <li>Node (Npm)</li>
+  <li>Ruby (Gem)</li>
+  <li>Chef (Cookbooks)</li>
+  <li>Python (Pip)</li>
+</ul>
+
+<p>Like Docker, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> follows the ideology of “batteries included but removable”. Every supported language has a base release pipeline that’s designed to follow the best practices of that language. This includes things like:</p>
+
+<ul>
+  <li>automatically bumping the semvar version number</li>
+  <li>regenerating any <code class="highlighter-rouge">*.lock</code> files/ shrinkwrap files with new version</li>
+  <li>creating any recommended files (eg. <code class="highlighter-rouge">.gitignore</code>)</li>
+  <li>validates all dependencies exist (by vendoring locally)</li>
+  <li>running unit tests</li>
+  <li>source minification</li>
+  <li>linting library syntax</li>
+  <li>generating code coverage reports</li>
+  <li>updating changelog</li>
+  <li>uploading versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag and pushing changes back to source control (github)</li>
+  <li>creating a new release in source control (github) and attaching any common artifacts</li>
+</ul>
+
+<p>As you can see, some steps are only applicable for some languages and not others. Other steps only make sense for public libraries, like uploading them to the community repos. As mentioned earlier, every step listed is configurable, extendable and can be completely overridden if needed.</p>
+
+<h2 id="cavaets">Cavaets</h2>
+
+<p>While <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is very flexible, it’s a bit opinionated. It’s built around Git but only supports Github right now (adding GitLab and Bitbucket support has been left as a community exercise, or if enough people request it). It also works best when paired with a CI server.</p>
+
+<p>I’d also recommend that you run <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> inside a Docker container, so you don’t have to worry about accidentally clobbering your system pip/ruby/cookbook cache between runs. But this won’t be a problem once <a href="https://github.com/AnalogJ/capsulecd/issues/25">vendoring support</a> is added, something that’s at the top of the to-do list.</p>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> was designed around the premise that pull requests precede releasing a new version, but you can also create a release manually from the HEAD of the default branch.</p>
+
+<h2 id="how-do-i-wire-it-up">How do I wire it up?</h2>
+
+<p>Using <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is as easy as:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>gem install capsulecd
+<span class="nv">CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN</span><span class="o">=</span>1234567890ABCDEF <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_REPO_FULL_NAME</span><span class="o">=</span>AnalogJ/lexicon <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_PULL_REQUEST</span><span class="o">=</span>10 <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+<p>or with Docker</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker pull AnalogJ/capsulecd:python
+docker run -e <span class="s2">"CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN=1234567890ABCDEF"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_REPO_FULL_NAME=AnalogJ/lexicon"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_PULL_REQUEST=10"</span> <span class="se">\</span>
+AnalogJ/capsulecd:python <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+
+<p>Basically what you’re doing is specifying the <code class="highlighter-rouge">GITHUB_ACCESS_TOKEN</code> for the automation user who will be pulling the source from Github, bumping the version, making any code changes, tagging the new version and pushing back to Github.
+The <code class="highlighter-rouge">REPO_FULL_NAME</code> environmental variable is used to specify the repo we’re processing.
+The <code class="highlighter-rouge">PULL_REQUEST</code> number tells <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> which branch to process and create a new release from.</p>
+
+<h2 id="ugh-ruby-my-library-is-written-in-golispjavascriptpythonetc">Ugh, Ruby? My library is written in Go/Lisp/Javascript/Python/etc.</h2>
+
+<p>To be honest, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> isn’t meant for library developers, its meant for the Ops/Devops team members that maintain the releases. Ruby is a powerful language, and the most popular configuration management tools (Puppet/Chef) are written in Ruby, which means it’s one less language that your Ops guys need to learn (because who really wants to do package management in Lisp).</p>
+
+<h2 id="all-our-rubygems-are-private-how-do-i-override-the-publish-step-to-point-to-our-private-gem-server">All our Rubygems are private, how do I override the publish step to point to our private Gem server?</h2>
+
+<p>Check out the <a href="https://github.com/AnalogJ/capsulecd/blob/master/README.md#step-prepost-hooks-and-overrides">Step pre/post hooks and override</a> section of the README.md</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

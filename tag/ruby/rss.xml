@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>CapsuleCD v2 Released</title>
+	  <link>/capsulecd-v2-released</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-08-06T04:19:33-05:00</pubDate>
+	  <guid>/capsulecd-v2-released</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is made up of a series of scripts/commands that
+make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices:</p>
+
+<ul>
+  <li>bumping <code class="highlighter-rouge">semvar</code> tags</li>
+  <li>regenerating any <code class="highlighter-rouge">*.lock</code> files</li>
+  <li>validates all dependencies exist and are free of vulnerabilities</li>
+  <li>runs unit tests &amp; linters</li>
+  <li>uploads versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag</li>
+  <li>pushing changes back to source control &amp; creating a release</li>
+  <li>and others..</li>
+</ul>
+
+<p>While <code class="highlighter-rouge">CapsuleCD</code> <strong>was</strong> a series of scripts, with the release of <strong>v2</strong> that’s no longer the case.</p>
+
+<p><code class="highlighter-rouge">CapsuleCD</code> has been re-written, and is now available as a <a href="https://github.com/AnalogJ/capsulecd/releases">static binary</a>
+on <a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-darwin-amd64"><code class="highlighter-rouge">macOS</code></a> and
+<a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-linux-amd64"><code class="highlighter-rouge">Linux</code></a>
+(<code class="highlighter-rouge">Windows</code> and <code class="highlighter-rouge">NuGet</code> support is hopefully coming soon)</p>
+
+<p>You no longer need to worry that the version of Ruby used by your library &amp; <code class="highlighter-rouge">gemspec</code> is different than the
+version required by <code class="highlighter-rouge">CapsuleCD</code>. If you maintain any Python or NodeJS libraries, this also means that a Ruby
+runtime for just for CapsuleCD is unnecessary. The <code class="highlighter-rouge">CapsuleCD</code> <a href="https://hub.docker.com/r/analogj/capsulecd/tags/">Docker</a>
+images for other languages are much slimmer, and based off the standard community images with <a href="https://github.com/AnalogJ/capsulecd-docker">minimal changes</a>.</p>
+
+<p>Releasing a new version of your Ruby library hasn’t changed, it’s as easy as downloading the <a href="https://github.com/AnalogJ/capsulecd/releases">binary</a> and running:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CAPSULE_SCM_GITHUB_ACCESS_TOKEN=123456789ABCDEF \
+CAPSULE_SCM_REPO_FULL_NAME=AnalogJ/gem_analogj_test \
+CAPSULE_SCM_PULL_REQUEST=4 \
+CAPSULE_RUBYGEMS_API_KEY=ASDF12345F \
+capsulecd start --scm github --package_type ruby
+</code></pre>
+</div>
+
+<p>Click below to watch a screencast of <code class="highlighter-rouge">CapuleCD</code> in action:</p>
+
+<p align="center">
+<a href="https://analogj.github.io/capsulecd">
+  <img alt="CapsuleCD screencast" width="800" src="https://cdn.rawgit.com/AnalogJ/capsulecd/v2.0.10/capsulecd-screencast.png" />
+  </a>
+</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower, Pip, etc)</title>
+	  <link>/continuous-delivery-for-versioned</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-04-12T14:13:11-05:00</pubDate>
+	  <guid>/continuous-delivery-for-versioned</guid>
+	  <description><![CDATA[
+	     <p>So you’re the devops/automation guy or gal on your team. You live and die by “<a href="https://memegenerator.net/instance/9449708">Automate all the things</a>”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That’s awesome, that’s how I got here too.</p>
+
+<p>If I was to ask you about your production deployments, you wouldn’t hesitate to tell me about all the automation you’ve put in place. But if I ask you about your build artifacts/libraries pipeline I’d probably get a cautious look and we would have a conversation like this:</p>
+
+<ul>
+  <li><strong>Me:</strong> How do you release new versions of your Chef cookbooks?</li>
+  <li><strong>You:</strong> We just bump up the version in the <code class="highlighter-rouge">metadata.rb</code> file and commit it.</li>
+  <li><strong>Me:</strong> But you test it right?</li>
+  <li><strong>You:</strong> Oh we have a full CI pipeline for it, every commit is tested.</li>
+  <li><strong>Me:</strong> What about handling the version number embedded in your <code class="highlighter-rouge">Berksfile.lock</code>?</li>
+  <li><strong>You:</strong> Right. We update that by running <code class="highlighter-rouge">berks install</code> after we bump up the version. Then we commit, and push it to Github.</li>
+  <li><strong>Me:</strong> Do you do dependency checking? Lint your cookbook syntax? Run code coverage tools in addition to standard CI?</li>
+  <li><strong>You:</strong> Oh we have a pretty simple/general purpose CI script, never got around to setting those up.</li>
+  <li><strong>Me:</strong> What about actual releases? How do you get your new cookbook version into the community repo (Supermarket) or your Chef Server?</li>
+  <li><strong>You:</strong> We use <code class="highlighter-rouge">knife upload</code> or <code class="highlighter-rouge">berks upload</code>. Or maybe its <code class="highlighter-rouge">knife cookbook upload</code>. Something like that.</li>
+  <li><strong>Me:</strong> And then you create a git tag and push that to Github too right?</li>
+  <li><strong>You:</strong> uhhh.. Of course.</li>
+  <li><strong>Me:</strong> Do you update a <code class="highlighter-rouge">CHANGELOG.md</code> with a list of the changes between versions?</li>
+  <li><strong>You:</strong> Sometimes, if its a big enough change.</li>
+</ul>
+
+<p>This is obviously a very pointed example thats specific to Chef cookbooks, but versioning and releasing your library (written in any language) is just as important as releasing your actual application software. It can be hard to remember all the steps required, especially for more mature libraries which you don’t update very often. This makes it perfect for automating.</p>
+
+<h2 id="capsulecd-infomercial">CapsuleCD Infomercial</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a generic Continuous Delivery pipeline for versioned artifacts and libraries. Don’t worry, I’m not trying to convince you to throw away all your CI scripts and replace your Jenkins server. <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is meant to work with your existing CI, not complete with it. It’s goal is to bring automation to the packaging and deployment stage of your library release cycle.
+Depending how you set it up (and how much you trust your Unit Tests), every Pull Request could automatically start CapsuleCD to generate a new release of your library (Continuous Deployment) or just notify Ops to kick off CapsuleCD (Continuous Delivery).</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h2 id="hows-it-work">How’s it work?</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is configurable CLI application which can be heavily customized. It can support package/release management for libraries written in any language, but comes with built-in support for the following languages:</p>
+
+<ul>
+  <li>Javascript (Bower)</li>
+  <li>Node (Npm)</li>
+  <li>Ruby (Gem)</li>
+  <li>Chef (Cookbooks)</li>
+  <li>Python (Pip)</li>
+</ul>
+
+<p>Like Docker, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> follows the ideology of “batteries included but removable”. Every supported language has a base release pipeline that’s designed to follow the best practices of that language. This includes things like:</p>
+
+<ul>
+  <li>automatically bumping the semvar version number</li>
+  <li>regenerating any <code class="highlighter-rouge">*.lock</code> files/ shrinkwrap files with new version</li>
+  <li>creating any recommended files (eg. <code class="highlighter-rouge">.gitignore</code>)</li>
+  <li>validates all dependencies exist (by vendoring locally)</li>
+  <li>running unit tests</li>
+  <li>source minification</li>
+  <li>linting library syntax</li>
+  <li>generating code coverage reports</li>
+  <li>updating changelog</li>
+  <li>uploading versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag and pushing changes back to source control (github)</li>
+  <li>creating a new release in source control (github) and attaching any common artifacts</li>
+</ul>
+
+<p>As you can see, some steps are only applicable for some languages and not others. Other steps only make sense for public libraries, like uploading them to the community repos. As mentioned earlier, every step listed is configurable, extendable and can be completely overridden if needed.</p>
+
+<h2 id="cavaets">Cavaets</h2>
+
+<p>While <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is very flexible, it’s a bit opinionated. It’s built around Git but only supports Github right now (adding GitLab and Bitbucket support has been left as a community exercise, or if enough people request it). It also works best when paired with a CI server.</p>
+
+<p>I’d also recommend that you run <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> inside a Docker container, so you don’t have to worry about accidentally clobbering your system pip/ruby/cookbook cache between runs. But this won’t be a problem once <a href="https://github.com/AnalogJ/capsulecd/issues/25">vendoring support</a> is added, something that’s at the top of the to-do list.</p>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> was designed around the premise that pull requests precede releasing a new version, but you can also create a release manually from the HEAD of the default branch.</p>
+
+<h2 id="how-do-i-wire-it-up">How do I wire it up?</h2>
+
+<p>Using <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is as easy as:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>gem install capsulecd
+<span class="nv">CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN</span><span class="o">=</span>1234567890ABCDEF <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_REPO_FULL_NAME</span><span class="o">=</span>AnalogJ/lexicon <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_PULL_REQUEST</span><span class="o">=</span>10 <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+<p>or with Docker</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker pull AnalogJ/capsulecd:python
+docker run -e <span class="s2">"CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN=1234567890ABCDEF"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_REPO_FULL_NAME=AnalogJ/lexicon"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_PULL_REQUEST=10"</span> <span class="se">\</span>
+AnalogJ/capsulecd:python <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+
+<p>Basically what you’re doing is specifying the <code class="highlighter-rouge">GITHUB_ACCESS_TOKEN</code> for the automation user who will be pulling the source from Github, bumping the version, making any code changes, tagging the new version and pushing back to Github.
+The <code class="highlighter-rouge">REPO_FULL_NAME</code> environmental variable is used to specify the repo we’re processing.
+The <code class="highlighter-rouge">PULL_REQUEST</code> number tells <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> which branch to process and create a new release from.</p>
+
+<h2 id="ugh-ruby-my-library-is-written-in-golispjavascriptpythonetc">Ugh, Ruby? My library is written in Go/Lisp/Javascript/Python/etc.</h2>
+
+<p>To be honest, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> isn’t meant for library developers, its meant for the Ops/Devops team members that maintain the releases. Ruby is a powerful language, and the most popular configuration management tools (Puppet/Chef) are written in Ruby, which means it’s one less language that your Ops guys need to learn (because who really wants to do package management in Lisp).</p>
+
+<h2 id="all-our-rubygems-are-private-how-do-i-override-the-publish-step-to-point-to-our-private-gem-server">All our Rubygems are private, how do I override the publish step to point to our private Gem server?</h2>
+
+<p>Check out the <a href="https://github.com/AnalogJ/capsulecd/blob/master/README.md#step-prepost-hooks-and-overrides">Step pre/post hooks and override</a> section of the README.md</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>I Built That - 2015</title>
+	  <link>/i-built-that-2015</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-01-17T02:37:54-06:00</pubDate>
+	  <guid>/i-built-that-2015</guid>
+	  <description><![CDATA[
+	     <p>Its 2016 now, and like many others, I thought it would be a good idea to review my accomplisments in the last year. Like most devs, I find myself scratching that itch to build by hacking on side projects in my free time.</p>
+
+<p>After looking though my projects in the last year, it’s pretty obvious that I’m missing on the follow-through to completion, and I <strong>HATE</strong> doing documentation. Both flaws I’ll have to focus on in the new year.</p>
+
+<p>This is a list of open source projects that I worked on in 2015.</p>
+
+<h1 id="filefog">Filefog</h1>
+
+<p><a href="https://github.com/filefog/filefog">Filefog</a> is a Nodejs library that lets you run common commands against popular cloud storage providers (like dropbox, google drive, microsoft onedrive) in an agnostic way.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/filefog/filefog">https://github.com/filefog/filefog</a></li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="filefog/filefog"></div>
+
+<h1 id="kickback">Kickback</h1>
+
+<p><a href="https://github.com/AnalogJ/kickback">Kickback</a> is a Google Spreadsheet Addon/Wizard that lets you easily split trip/travel expenses between friends.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/kickback">https://github.com/AnalogJ/kickback</a></li>
+  <li><strong>Language</strong>: Google Apps Script (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires app store submission</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/kickback"></div>
+
+<h1 id="goodreadsjs">Goodreads.js</h1>
+
+<p><a href="https://github.com/AnalogJ/goodreads.js">Goodreads.js</a> is a Nodejs library that wraps the (terrible) Goodreads API.</p>
+
+<ul>
+  <li><strong>Source</strong>: https://github.com/AnalogJ/goodreads.js</li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="tomecast">Tomecast</h1>
+
+<p><a href="http://www.tomecast.com">Tomecast</a> automatically transcribes some of the most popular podcasts (using Google Speech API and Microsoft Project Oxford) and generates a searchable website.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.tomecast.com">http://www.tomecast.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/tomecast">https://github.com/tomecast</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: In-Progress - Transcription stopped.</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="quietthyme">QuietThyme</h1>
+
+<p><a href="http://www.quietthyme.com">QuietThyme</a> is a plugin for Calibre which allows you to access your cloud storage as a library in Calibre, allowing you to add and remove books with ease. Quietthyme also generates an OPDS catalog for your library in the cloud, allowing you to access your books at any time, from any device.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.quietthyme.com">http://www.quietthyme.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/quietthyme.plugin">https://github.com/AnalogJ/quietthyme.plugin</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: Hosting down</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/quietthyme.plugin"></div>
+
+<h1 id="banditio">Bandit.io</h1>
+
+<p><a href="http://www.bandit.io">Bandit.io</a> is a Docker based man-in-the-middle proxy + website that lets you debug all http and https requests and responses on remote devices. Its basically like Charles and Fiddler, but without requiring the debugged device to be on the local network. Its also built ontop of the Chrome Remote Debugging Protocol, meaning the ui looks like the Chrome developer tools.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.bandit.io">http://www.bandit.io</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/banditio.engine">https://github.com/AnalogJ/banditio.engine</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: In-Progress - Requires documentation and hosting</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/banditio.engine"></div>
+
+<h1 id="capsulecd">CapsuleCD</h1>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a set of platform agnostic Continuous Delivery scripts for automating package releases (npm, cookbooks, gems, pip, jars, etc).</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/capsulecd">https://github.com/AnalogJ/capsulecd</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h1 id="mediadepot">MediaDepot</h1>
+
+<p><a href="https://github.com/mediadepot">MediaDepot</a> is Docker based self-hosted media server with the following capabilities:</p>
+
+<ol>
+  <li>Some form of JBOD disk storage (most likely greyhole as that’s what I’m currently using)</li>
+  <li>Media server applications such as plex, sickbeard, couchpotato, etc to manage and view media</li>
+  <li>Utility applications such as ajenti, openvpn, conky, btsync, bittorrent, vnc.</li>
+  <li>Notifications system (so that you are notified whenever any service stops or starts, and when media is added)</li>
+</ol>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/mediadepot">https://github.com/mediadepot</a></li>
+  <li><strong>Language</strong>: Docker + Chef</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Transparently adding encrypted fields to a Rails app using Mongoid</title>
+	  <link>/transparently-adding-encrypted-fields-to-a-rails</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-12-09T22:06:00-06:00</pubDate>
+	  <guid>/transparently-adding-encrypted-fields-to-a-rails</guid>
+	  <description><![CDATA[
+	     <p>As a software architect, you are in the business of designing new applications while balancing business requirements against future utility. Unfortunately design specifications are not as immutable as we dream they are, and sometimes significant changes must be made after the fact.</p>
+
+<p>In the following guide I’ll be explaining how to safely add encrypted fields to a Ruby on Rails application using MongoDB.</p>
+
+<h1 id="technology-stack">Technology Stack</h1>
+
+<p>Before getting started you should note that this guide was written and tested to work with the following software, however that does not mean it won’t work with your configuration. YMMV.</p>
+
+<ul>
+  <li>Rails 3.2.11</li>
+  <li>Ruby 1.9.3p392</li>
+  <li>Mongoid</li>
+</ul>
+
+<h2 id="mongoid-encrypted-fields-v122">Mongoid-Encrypted-Fields (v1.2.2)</h2>
+<p>We will be using the excellent <a href="https://github.com/KoanHealth/mongoid-encrypted-fields">mongoid-encrypted-fields</a> v1.2.2 gem by KoanHealth to transparently add support for encrypted storage types to Mongoid. <code class="highlighter-rouge">mongoid-encrypted-fields</code> can encrypt the following Mongoid types:</p>
+
+<ul>
+  <li>Date</li>
+  <li>DateTime</li>
+  <li>Hash</li>
+  <li>String</li>
+  <li>Time</li>
+</ul>
+
+<p>Add the following to your <code class="highlighter-rouge">Gemfile</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>gem 'mongoid-encrypted-fields', '~&gt; 1.2.x'
+</code></pre>
+</div>
+
+<h2 id="symmetric-encryption-v310">Symmetric-Encryption (v3.1.0)</h2>
+
+<p>While <code class="highlighter-rouge">mongoid-encrypted-fields</code> provides us with a way to transparently access our encrypted fields, it doesn’t actually do the encryption or decryption itself. The gem allows developers to use an encryption library of their choice, and provides an example implementation using the <a href="https://github.com/mdp/gibberish">gibberish</a> gem. I’m partial to the <a href="https://github.com/reidmorrison/symmetric-encryption">symmetric-encryption</a> library myself, and so that is what I’ll be using in the guide below.</p>
+
+<p>Add the following to your <code class="highlighter-rouge">Gemfile</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>gem 'symmetric-encryption', '~&gt; 3.1.x'
+</code></pre>
+</div>
+
+<h1 id="preparing-your-mongoid-models">Preparing your Mongoid models</h1>
+
+<p>If you’re reading this guide, you’ve most likely already got a working app using Mongoid. Lets use the following model as a simple example of how your current <code class="highlighter-rouge">Customer</code> model might look before adding encryption</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Customer</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Timestamps</span>
+
+  <span class="n">field</span> <span class="ss">:name</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:email</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:website</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:private_data</span><span class="p">,</span> <span class="n">type</span><span class="ss">:Hash</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>At some point you realize that (you forgot to/you have updated specifications that/management wants to) add encryption to the <code class="highlighter-rouge">private_data</code> field. Leveraging the <code class="highlighter-rouge">mongoid-encrypted-fields</code> documentation, all you need to do is change the model to the following:</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="nb">require</span> <span class="s1">'mongoid-encrypted-fields'</span>
+<span class="k">class</span> <span class="nc">Customer</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Timestamps</span>
+
+  <span class="n">field</span> <span class="ss">:name</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:email</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:website</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:private_data</span><span class="p">,</span> <span class="ss">type: </span><span class="no">Mongoid</span><span class="o">::</span><span class="no">EncryptedHash</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h1 id="initialize-mongoid-encrypted-fields-and-symmetric-encryption">Initialize mongoid-encrypted-fields and symmetric-encryption</h1>
+
+<p>I won’t get into creating the <code class="highlighter-rouge">symmetric-encryption</code> gem configuration file, as you can follow the instructions in their <a href="https://github.com/reidmorrison/symmetric-encryption#rails-configuration">documentation</a></p>
+
+<p>Assuming that the configuration is correct and located in the config folder you can use the following commands in your rails initializer to initialize both libraries correctly.</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="no">SymmetricEncryption</span><span class="p">.</span><span class="nf">load!</span><span class="p">(</span><span class="s1">'config/symmetric-encryption.yml'</span><span class="p">,</span> <span class="s1">'production'</span><span class="p">)</span>
+<span class="no">Mongoid</span><span class="o">::</span><span class="no">EncryptedFields</span><span class="p">.</span><span class="nf">cipher</span> <span class="o">=</span> <span class="no">SymmetricEncryption</span>
+</code></pre>
+</div>
+
+<h1 id="migrate-previous-data">Migrate previous data</h1>
+
+<p>At this point you’re probably thinking that while this is great and all, you already have data stored in your production database. Don’t worry, we’ll be migrating the existing data next.</p>
+
+<p>The migration task can be done in a Rake task, or using the lovely <code class="highlighter-rouge">mongoid_migration</code> gem.</p>
+
+<p>The thing to note about the steps below is that the <code class="highlighter-rouge">unset</code> and <code class="highlighter-rouge">rename</code> operations are handled by <code class="highlighter-rouge">mongoid</code> not the <code class="highlighter-rouge">mongoid-encrypted-fields</code> gem, and as such the encrypt and decrypt operations are not executed. The <code class="highlighter-rouge">migrate_encrypted_field</code> rake task will not permanently delete your unencrypted data, just rename it. It is reversible if something goes wrong.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake migrate_encrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:migrate_encrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="c1"># Rename the current :private_data field for all customers to :unencrypted_private_data</span>
+	<span class="nb">p</span> <span class="s2">"STEP1 - RENAME private_data to  unencrypted_private_data"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"renaming the :private_data field for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="o">!</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">rename</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">,</span> <span class="ss">:unencrypted_private_data</span><span class="p">);</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">)</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+		<span class="k">else</span>
+		  <span class="nb">p</span> <span class="s2">"unencrypted_private_data found already. skipping"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+
+	<span class="c1"># This step will do the actual data encryption and migration back to the :private_data field</span>
+	<span class="nb">p</span> <span class="s2">"STEP2 - ENCRYPT AND SAVE"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+	  <span class="nb">p</span> <span class="s2">"encrypting the data stored in the :unencrypted_private_data field as :private_data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+	  <span class="n">customer</span><span class="p">[</span><span class="ss">:private_data</span><span class="p">]</span> <span class="o">=</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">];</span>
+	  <span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+	<span class="k">end</span>
+
+	<span class="c1"># This step will verify that the unencrypted data matches the decrypted data. It will not delete the `unencrypted_private_data` field</span>
+	<span class="nb">p</span> <span class="s2">"STEP3 - VERIFY"</span>
+	<span class="n">errored</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+	  <span class="nb">p</span> <span class="s2">"verifying the data stored in the :unencrypted_private_data field matches the encrypted data stored in :private_data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+
+	  <span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>   <span class="c1">#make sure that a unencrypted_private_data exists.</span>
+
+		<span class="k">unless</span> <span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span> <span class="o">!=</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+		  <span class="nb">p</span> <span class="s2">"!!ERROR!! the decrypted data does not match the unencrypted data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		  <span class="n">errored</span><span class="p">.</span><span class="nf">push</span> <span class="n">credential</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span>
+		<span class="k">end</span>
+	  <span class="k">else</span>
+		<span class="nb">p</span> <span class="s2">"unencrypted_private_data not found. Skipping"</span>
+	  <span class="k">end</span>
+	<span class="k">end</span>
+
+	<span class="k">if</span> <span class="n">errored</span><span class="p">.</span><span class="nf">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+		<span class="nb">p</span> <span class="s2">"The following customers produced errors while migrating, please verify manually"</span>
+		<span class="nb">p</span> <span class="n">errored</span>
+	<span class="k">end</span>
+
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>Once the rake task finishes it will automatically print out any <code class="highlighter-rouge">Customer</code> objects that require manual verification, (something that I never had any problems with). Once you have verified that everything is working correctly it’s time to remove the unneeded <code class="highlighter-rouge">unencrypted_private_data</code> field. Remember, this change cannot be undone.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake remove_unencrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:remove_unencrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="c1"># Permanently remove unencrypted data</span>
+	<span class="nb">p</span> <span class="s2">"STEP4 - PERMANENTLY REMOVE UNENCRYPTED DATA"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"renaming the :private_data field for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>   <span class="c1">#make sure that a unencrypted_private_data exists.</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:unencrypted_test</span><span class="p">)</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">save</span>
+
+		<span class="k">else</span>
+			<span class="nb">p</span> <span class="s2">"unencrypted_private_data not found. Skipping"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>If something did go wrong, you can always revert your migration using the following rake task</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake revert_encrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:revert_encrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"reverting </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">)</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">rename</span><span class="p">(</span><span class="ss">:unencrypted_private_data</span><span class="p">,</span> <span class="ss">:private_data</span><span class="p">);</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+		<span class="k">else</span>
+		<span class="nb">p</span> <span class="s2">"did nothing, unencrypted_private_data does not exist"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+<p>At this point you should have newly encrypted database field, with all your previous data migrated over. To access your encrypted data transparently, make sure your code is accessing the newly encrypted field as follows:</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#Transparent (Decrypted) accessor</span>
+<span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span> <span class="c1"># =&gt; &lt;decrypted hash&gt;</span>
+
+<span class="c1">#Encrypted string can be accessed as follows</span>
+<span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span><span class="p">.</span><span class="nf">encrypted</span> <span class="c1"># =&gt; &lt;encrypted string&gt;</span>
+
+<span class="c1"># It can also be accessed using the hash syntax supported by Mongoid</span>
+<span class="n">customer</span><span class="p">[</span><span class="ss">:private_data</span><span class="p">]</span> <span class="c1"># =&gt; &lt;encrypted string&gt;&lt;/encrypted&gt;&lt;/encrypted&gt;&lt;/decrypted&gt;</span>
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Local Development with Wildcard DNS</title>
+	  <link>/local-development-with-wildcard-dns</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-04-07T04:19:33-05:00</pubDate>
+	  <guid>/local-development-with-wildcard-dns</guid>
+	  <description><![CDATA[
+	     <p>The holy-grail of local development is wildcard DNS: the ability to have <code class="highlighter-rouge">*.local.company.com</code> pointing to <code class="highlighter-rouge">localhost</code>, your development machine.
+It doesn’t matter if you’re working on <code class="highlighter-rouge">website.local.company.com</code> or <code class="highlighter-rouge">api.local.company.com</code>, there’s no additional configuration necessary as you start working on new projects.</p>
+
+<p>Unfortunately macOS doesn’t support wildcard entries in the <code class="highlighter-rouge">/etc/hosts</code> file – no OS does out of the box.</p>
+
+<h2 id="dnsmasq">Dnsmasq</h2>
+
+<p><a href="http://www.thekelleys.org.uk/dnsmasq/doc.html">Dnsmasq</a> is a tiny and incredibly popular DNS server that you can run locally, and supports wildcard domain resolution with very little configuration.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>brew install dnsmasq
+</code></pre>
+</div>
+
+<p>Now lets setup the configuration directory and configure <code class="highlighter-rouge">dnsmasq</code> to resolve all of our development domains.</p>
+
+<blockquote>
+  <p>You’ll want to avoid the <code class="highlighter-rouge">*.dev</code> and <code class="highlighter-rouge">*.local</code> domains for development. <code class="highlighter-rouge">.dev</code> exists as a real <a href="https://newgtlds.icann.org/en/program-status/delegated-strings">TLD in the ICANN root</a>. <code class="highlighter-rouge">.local</code> is used by the <a href="https://support.apple.com/en-us/HT201275">Bonjour service</a> on macOS. I recommend using <code class="highlighter-rouge">*.local.companyname.com</code> or <code class="highlighter-rouge">*.lan</code></p>
+</blockquote>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>mkdir -pv <span class="k">$(</span>brew --prefix<span class="k">)</span>/etc/
+
+cat &gt;<span class="k">$(</span>brew --prefix<span class="k">)</span>/etc/dnsmasq.conf <span class="sh">&lt;&lt;EOL
+
+# Add domains which you want to force to an IP address here.
+# The example below send any host in *.local.company.com and *.lan to a local
+# webserver.
+address=/local.company.com/127.0.0.1
+address=/lan/127.0.0.1
+
+# Don't read /etc/resolv.conf or any other configuration files.
+no-resolv
+# Never forward plain names (without a dot or domain part)
+domain-needed
+# Never forward addresses in the non-routed address spaces.
+bogus-priv
+
+EOL
+</span></code></pre>
+</div>
+
+<p>Then lets configure <code class="highlighter-rouge">launchd</code> start <code class="highlighter-rouge">dnsmasq</code> now and restart at startup:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>sudo brew services start dnsmasq
+</code></pre>
+</div>
+
+<p>Finally lets validate that our <code class="highlighter-rouge">dnsmasq</code> server is configured to respond to all subdomains of <code class="highlighter-rouge">local.company.com</code> by running:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>dig nested.test.local.company.com @127.0.0.1
+
+; &lt;&lt;&gt;&gt; DiG 9.8.3-P1 &lt;&lt;&gt;&gt; nested.test.local.company.com @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER<span class="sh">&lt;&lt;- opcode: QUERY, status: NOERROR, id: 64864
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;nested.test.local.company.com.	IN	A
+
+;; ANSWER SECTION:
+nested.test.local.company.com. 0 IN	A	127.0.0.1
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Sat Apr  8 11:15:17 2017
+;; MSG SIZE  rcvd: 63
+</span></code></pre>
+</div>
+
+<h2 id="integration-using-etcresolver">Integration using <code class="highlighter-rouge">/etc/resolver</code></h2>
+
+<p>At this point we have a working DNS server, but it’s meaningless because macOS won’t use it for resolving any domains.</p>
+
+<p>We can change this by adding configuration files in the <code class="highlighter-rouge">/etc/resolver</code> directory.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>sudo bash -c <span class="s1">'echo "nameserver 127.0.0.1" &gt; /etc/resolver/local.company.com'</span>
+sudo bash -c <span class="s1">'echo "nameserver 127.0.0.1" &gt; /etc/resolver/lan'</span>
+</code></pre>
+</div>
+
+<p>Each domain that we configured in <code class="highlighter-rouge">dnsmasq</code> should have a corresponding entry in <code class="highlighter-rouge">/etc/resolver/</code></p>
+
+<p>Next, lets test that our resolver entries have been picked up by macOS.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>scutil --dns
+
+...
+resolver <span class="c">#8</span>
+  domain   : local.company.com
+  nameserver[0] : 127.0.0.1
+  flags    : Request A records
+Reachable, Directly Reachable Address
+...
+</code></pre>
+</div>
+
+<h2 id="fin">Fin</h2>
+
+<p>Testing you new configuration is easy; just use ping check that you can now resolve your local subdomains:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># Make sure you haven't broken your DNS.</span>
+ping -c 1 www.google.com
+
+<span class="c"># Check that .local.company.com &amp; .lan names work</span>
+ping -c 1 this.is.a.test.local.company.com
+ping -c 1 this.domain.does.not.exist.lan
+</code></pre>
+</div>
+
+<p>This is useful in particular for developers of microservices: your orchestration platform can dynamically generate hostnames, and you won’t have to worry about your <code class="highlighter-rouge">/etc/hosts</code> file again.</p>
+
+<h3 id="references">References</h3>
+<ul>
+  <li>http://asciithoughts.com/posts/2014/02/23/setting-up-a-wildcard-dns-domain-on-mac-os-x/</li>
+  <li>https://gist.github.com/eloypnd/5efc3b590e7c738630fdcf0c10b68072</li>
+  <li>https://passingcuriosity.com/2013/dnsmasq-dev-osx/</li>
+  <li>http://serverfault.com/questions/118378/in-my-etc-hosts-file-on-linux-osx-how-do-i-do-a-wildcard-subdomain</li>
+  <li>https://gist.github.com/ogrrd/5831371</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Generating Intranet and Private Network SSL Certificates using LetsEncrypt</title>
+	  <link>/generating-intranet-and-private-network-ssl</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-02-09T15:19:33-06:00</pubDate>
+	  <guid>/generating-intranet-and-private-network-ssl</guid>
+	  <description><![CDATA[
+	     <p>This post is a follow up to my previous one <a href="http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx">Automating SSL Certificates using Nginx &amp; LetsEncrypt</a>. This time we’ll be generating SSL certificates for intranet and non-public networks.</p>
+
+<h2 id="requirements">Requirements</h2>
+<p>Before we get started, you’ll want to make sure that the following items are true.</p>
+
+<ul>
+  <li>You must use a real/purchased domain. <a href="https://en.wikipedia.org/wiki/Top-level_domain#Reserved_domains">Reserved domains/TLD’s</a> like <code class="highlighter-rouge">*.example</code>, <code class="highlighter-rouge">*.test</code>, <code class="highlighter-rouge">*.local</code> will never work.</li>
+  <li>You must have an external DNS provider that has an API.
+    <ul>
+      <li>If your DNS provider doesn’t have an API, you can use <a href="https://www.cloudflare.com">cloud flare.com</a> for free.</li>
+    </ul>
+  </li>
+  <li>You must have python 2.6+ installed</li>
+</ul>
+
+<h2 id="install-dehydrated">Install Dehydrated</h2>
+
+<div class="github-widget" data-repo="lukas2511/dehydrated"></div>
+
+<p>The first step is to install a Letsencrypt client. The <a href="https://github.com/letsencrypt/letsencrypt">official client</a> is a bit bloated and complicated to setup. I prefer to use the <a href="https://github.com/lukas2511/dehydrated">dehydrated client</a> instead as its code is easier to understand, has few dependencies and its incredibly simple to automate.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># install dehydrated dependencies (most should already be installed)</span>
+apt-get install -y openssl curl sed grep mktemp git
+
+<span class="c"># install dehydrated into /srv/dehydrated</span>
+git clone https://github.com/lukas2511/dehydrated.git /srv/dehydrated
+</code></pre>
+</div>
+
+<h2 id="configure-dehydrated">Configure Dehydrated</h2>
+<p>Dehydrated requires some configuration, but not much, the defaults work out of the box. That means that all you need to do is</p>
+
+<ul>
+  <li>create a domains.txt file with the url(s) of the site(s) you’re generating ssl certificates for</li>
+</ul>
+
+<p>Here’s how we can do that.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># First we need to make the client executable</span>
+chmod +x /srv/dehydrated/dehydrated
+<span class="c"># Then we need to specify the intranet/private domain</span>
+<span class="nb">echo</span> <span class="s2">"test.intranet.example.com"</span> &gt; /srv/dehydrated/domains.txt
+</code></pre>
+</div>
+
+<h2 id="install-lexicon">Install Lexicon</h2>
+
+<div class="github-widget" data-repo="AnalogJ/lexicon"></div>
+
+<p>Next we’re going to install the <a href="https://github.com/AnalogJ/lexicon">Lexicon</a> library. Lexicon provides a way to manipulate DNS records on multiple DNS providers in a standardized way.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#  install python requests library dependencies</span>
+apt-get install -y build-essential python-dev curl libffi-dev libssl-dev
+pip install requests[security]
+pip install dns-lexicon
+</code></pre>
+</div>
+
+<h2 id="configure-lexicon">Configure Lexicon</h2>
+<p>The Lexicon library lets you automatically configure your DNS provider using Letsencrypt DNS challenges without having to deal with creating API calls yourself. Its perfect for generating internal/intranet SSL certs.</p>
+
+<p>Dehydrated requires a hook file to complete <code class="highlighter-rouge">dns-01</code> challenges. The Lexicon repo has an example one that wires up the <code class="highlighter-rouge">deploy_challenge</code> and <code class="highlighter-rouge">clean_challenge</code> calls to Lexicon commands.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -O https://raw.githubusercontent.com/AnalogJ/lexicon/master/examples/dehydrated.default.sh /srv/dehydrated
+chmod +x /srv/dehydrated/dehydrated.default.sh
+</code></pre>
+</div>
+
+<p>The only information that Lexicon requires is:</p>
+
+<ul>
+  <li>authentication information such as username/password or token.
+    <ul>
+      <li>In general your API token should be availble in your DNS provider’s account settings page.</li>
+    </ul>
+  </li>
+  <li>provider name</li>
+</ul>
+
+<p>We can pass all that information to Lexicon by setting a handful of environmental variables. If don’t want to do that, you can modify the hook file and add the <code class="highlighter-rouge">--auth-username</code> and <code class="highlighter-rouge">--auth-password</code> parameters to all <code class="highlighter-rouge">lexicon</code> commands.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#If our DNS provider is cloudflare</span>
+<span class="nb">export </span><span class="nv">PROVIDER</span><span class="o">=</span>cloudflare
+<span class="nb">export </span><span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span>username@example.com
+<span class="nb">export </span><span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span>234dcef90c3d9aa0eb6798e16bdc1e4b
+</code></pre>
+</div>
+
+<h2 id="generate-certificates">Generate Certificates</h2>
+<p>Now that we’ve finished configuring everything, it’s time to generate the certificates. Its as simple as:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># Lets generate the Letsencrypt SSL certificates</span>
+/srv/dehydrated/dehydrated --cron --hook /srv/dehydrated/dehydrated.default.sh --challenge dns-01
+</code></pre>
+</div>
+
+<p>Our certificates will be available in the following folder:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/srv/dehydrated/certs/
+</code></pre>
+</div>
+
+<h2 id="fin">Fin</h2>
+<p>At this point we have working Letsencrypt SSL certificates for an internal/intranet domain that’s not accessible on the public internet.</p>
+
+<p>I’ve written an example <a href="https://github.com/AnalogJ/lexicon/blob/master/Dockerfile">Dockerfile</a> that you can reference if you’re curious. Just make sure to use <code class="highlighter-rouge">docker run -e "PROVIDER=cloudflare" -e ..</code> to set the environmental variables that you need.</p>
+
+<p>If you’re wondering how to automate this whole process, check out my previous post: <a href="http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx">Automating SSL Certificates using Nginx &amp; LetsEncrypt</a></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

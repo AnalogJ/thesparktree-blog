@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>How to setup a Free Continuous Integration Server Using Cloudbees + Private Github</title>
+	  <link>/how-to-setup-a-free-continuous-integration-server</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-11-05T02:00:00-06:00</pubDate>
+	  <guid>/how-to-setup-a-free-continuous-integration-server</guid>
+	  <description><![CDATA[
+	     <h3 id="better-integration-between-jenkins-and-github-with-the-github-jenkins-plugin">Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)</h3>
+
+<p>The following steps will help setup your Cloudbees Jenkins Service for continuous integration via Github. Most of the documentation for this section came from here <a href="http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html">http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html</a></p>
+
+<h2 id="setup-cloudbees--jenkins--private-github">Setup Cloudbees + Jenkins + Private Github</h2>
+
+<ol>
+  <li>Go to your Jenkins instances root page.</li>
+  <li>If your Jenkins instance has security enabled, login as a user who has the <code class="highlighter-rouge">Overall | Administer</code> permission.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Jenkins</code> link on the left-hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Plugins</code> link.</li>
+  <li>On the <code class="highlighter-rouge">Available</code> tab, select the <code class="highlighter-rouge">Github Plugin</code> and click the <code class="highlighter-rouge">Download and Install</code> button at the bottom of the page (if you do not got the Git Plugin installed, do not worry, Jenkins is smart enough to install/upgrade the Git plugin, where required).</li>
+  <li>Restart Jenkins once the plugins are downloaded (Note: users of Jenkins 1.442 or newer should be aware that the plugin currently requires a restart to function correctly).</li>
+</ol>
+
+<h2 id="configure-github-push-webhook">Configure Github Push Webhook</h2>
+
+<ol>
+  <li>Goto your Jenkins instance job.</li>
+  <li>Select the <code class="highlighter-rouge">Configure</code> link on the left hand side of the screen.</li>
+  <li>
+    <p>In the <code class="highlighter-rouge">GitHub project</code> field, enter the URL of the GitHub project. If your GitHub project’s git URL looks like: <code class="highlighter-rouge">git@github.com:username/project.git</code>,</p>
+
+    <p>then the GitHub project should be: http://github.com/username/project/or if the project is private, you can get faster navigation with: https://github.com/username/project/</p>
+  </li>
+  <li>Go to your Jenkins instances root page.</li>
+  <li>Select the <code class="highlighter-rouge">Manage Jenkins</code> link on the left hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Configure System</code> link.</li>
+  <li>In the <code class="highlighter-rouge">GitHub Web Hook</code> section select the <code class="highlighter-rouge">Let Jenkins auto-manage hook URLs</code> option.</li>
+  <li>Ensure you have provided at least one username and password for connecting to GitHub (the password is required as GitHub does not expose an API for managing the Post-Receive URLs).</li>
+</ol>
+
+<p>Once you have configured your Jenkins instance for receiving the push notifications, you can enable jobs being triggered via the push notifications:</p>
+
+<ol>
+  <li>Goto your Jenkins instance job.</li>
+  <li>Select the <code class="highlighter-rouge">Configure</code> link on the left hand side of the screen.</li>
+  <li>Select the <code class="highlighter-rouge">Build when a change is pushed to GitHub checkbox</code> and save the configuration.</li>
+</ol>
+
+<h1 id="jenkins-build-scripts">Jenkins Build Scripts</h1>
+
+<p>Depending on your application environment you will need to run a command to start your test runners. Here are a few build scripts we use in our environments. Note: be careful when using <code class="highlighter-rouge"><span class="c">#!/bin/bash</span></code> at the beginning of the script, <a href="http://stackoverflow.com/questions/11464883/jenkins-succeed-when-unit-test-fails-rails">it may produce unintended problems</a>.</p>
+
+<h2 id="ruby-rspec">Ruby RSpec</h2>
+<p>To use Ruby on DEV@Cloud, add the following to the beginning of your shell script build step:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+</code></pre>
+</div>
+
+<p>The list of available versions is here: <a href="https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/fc17/">https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/fc17/</a></p>
+
+<p>This will:</p>
+
+<ul>
+  <li>Download and install the ruby – if needed. We cache the installation on the slave, and try to give you the same slave. But even then, it’s very fast.</li>
+  <li>Setup your $PATH and other environment variables to use this ruby</li>
+</ul>
+
+<p>You can then:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+rake spec:normal
+</code></pre>
+</div>
+
+<h1 id="ruby-gem">Ruby Gem</h1>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+rake spec:normal
+gem build &lt;gem name here&gt;.gemspec
+</code></pre>
+</div>
+
+<h2 id="ruby-on-rails">Ruby-on-rails</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+bundle <span class="nb">exec </span>rake
+</code></pre>
+</div>
+
+<h2 id="chef--berkshelf--foodcritic--test-kitchen">Chef + Berkshelf + Foodcritic + Test-Kitchen</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl -s -o use-ruby https://repository-cloudbees.forge.cloudbees.com/distributions/ci-addons/ruby/use-ruby
+<span class="nv">RUBY_VERSION</span><span class="o">=</span>1.9.3-p327 . ./use-ruby
+gem install --conservative bundler
+bundle check <span class="o">||</span> bundle install
+gem install foodcritic
+foodcritic .
+<span class="c"># kitchen test - this command will run the Vagrant file and test the application, can take a very long time. should only be uncommented when required.</span>
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

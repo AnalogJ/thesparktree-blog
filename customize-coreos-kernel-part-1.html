@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Customize the CoreOS Kernel - Part 1 - Kernel Modules</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Customize the CoreOS Kernel - Part 1 - Kernel Modules" />
+    <meta name="twitter:description" content="Story Time As a Devops &amp;amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code. With a bit..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/customize-coreos-kernel-part-1" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_coreos.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Customize the CoreOS Kernel - Part 1 - Kernel Modules" />
+    <meta property="og:description" content="Story Time As a Devops &amp;amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code. With a bit..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/customize-coreos-kernel-part-1" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_coreos.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/customize-coreos-kernel-part-1",
+        "image": "https://blog.thesparktree.com/assets/images/cover_coreos.png",
+        "description": "Story Time As a Devops &amp;amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code. With a bit..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_coreos.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Customize the CoreOS Kernel - Part 1 - Kernel Modules</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2018-12-09">09 Dec 2018</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/coreos'>Coreos</a>,
+                    
+                
+                    
+                       <a href='/tag/github'>Github</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/kernel'>Kernel</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <h1 id="story-time">Story Time</h1>
+
+<p>As a Devops &amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code.
+With a bit of help from Google I can usually come up with a working solution, even if the end result needs a bit of polish afterwards.</p>
+
+<p>That self-assurance was checked on my latest project: <strong>building a dockerized home server.</strong></p>
+
+<p>I’ve touched on my home server a bit in the past, and I’ll be doing a follow up post on it later, but here’s a quick summary of what it does:</p>
+
+<ul>
+  <li>Its a home server, so it needed to be physically small and quiet, but easy to upgrade.</li>
+  <li>Storage space was more important than content archival, so a JBOD disk array was required</li>
+  <li>All applications should run in Docker where possible, for ease of installation, minimizing conflicts and updating.</li>
+  <li><strong>OS needed to be as minimal as possible, since all work was done in Docker containers</strong></li>
+</ul>
+
+<p>I’ve had a Home Server that checked off the first three items for a while, but not that last one. Professionally, I’ve been lucky enough to
+use (and abuse) a Kubernetes cluster which builds our Jenkins jobs. That Kubernetes cluster was built ontop of <del>CoreOS</del> Container Linux, which
+I’ve grown to love. It checks off that last requirement perfectly.</p>
+
+<p>So I did what any tinkerer would do, I started up a CoreOS VM, rebuilt my entire software stack for another OS, learned a compeletely new
+configuration management tool (<a href="https://github.com/mediadepot/ignition">Ignition</a> is pretty slick), and finally wiped my server’s OS and installed CoreOS
+&amp; my dockerized applications.</p>
+
+<p>This is where our story actually begins, which will eventually lead me down a rabbit hole of device drivers &amp; kernel modules.</p>
+
+<p><strong>The <code class="highlighter-rouge">/dev/dri</code> folder was missing on CoreOS.</strong></p>
+
+<p>I eventually got around to starting up Plex on my homeserver, and while everything looked fine, I noticed that the container was not automatically doing Hardware Transcoding
+for video, like it should be.
+After doing a bunch of debugging I determined that I needed to compile the CoreOS Kernel with a couple of extra options enabled:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)</code></li>
+  <li><code class="highlighter-rouge">Intel 8xx/9xx/G3x/G4x/HD Graphics</code></li>
+</ul>
+
+<p>Here’s <strong>Problem #1</strong>. If you’re unfamiliar with CoreOS, all you need to know is that unlike traditional OS’s the CoreOS kernel is
+continuously updated, similar to how Google Chrome is always kept up-to date. This means that <strong>any local modifications I make to the kernel
+will be completely lost on the next kernel update</strong>.</p>
+
+<p>Thankfully kernel developers have provided a way to load code into the kernel, without recompiling the whole thing: kernel modules.</p>
+
+<h1 id="compiling-coreos-kernel-modules-in-tree-or-out-of-tree">Compiling CoreOS Kernel Modules (In-Tree or Out-Of-Tree)</h1>
+<p>Here’s where we end story time and actually start coding.</p>
+
+<p>CoreOS is so minimal that it doesn’t even have a any compilers or even a package manager installed.
+In fact, it’s designed such that all real work takes place inside of containers.</p>
+
+<p>But before we can even do much work towards solving Problem #1, we run into <strong>Problem #2: the standard location for storing kernel modules <code class="highlighter-rouge">/lib/modules</code> is read-only in CoreOS.</strong>
+If you think about it, it kind of all makes sense: an OS that auto-updates its kernel needs to ensure that it controls all locations where
+kernel code is loaded from.</p>
+
+<p>We’ll solve Problem #2 first, by creating a <code class="highlighter-rouge">overlay</code> filesystem over the standard <code class="highlighter-rouge">/lib/modules</code> directory. This overlay filesystem will
+leave the underlying directory untouched, while creating a new writable directory where we can place our kernel modules.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nv">modules</span><span class="o">=</span>/opt/modules  <span class="c"># Adjust this writable storage location as needed.</span>
+sudo mkdir -p <span class="s2">"</span><span class="nv">$modules</span><span class="s2">"</span> <span class="s2">"</span><span class="nv">$modules</span><span class="s2">.wd"</span>
+sudo mount <span class="se">\</span>
+    -o <span class="s2">"lowerdir=/lib/modules,upperdir=</span><span class="nv">$modules</span><span class="s2">,workdir=</span><span class="nv">$modules</span><span class="s2">.wd"</span> <span class="se">\</span>
+    -t overlay overlay /lib/modules
+</code></pre>
+</div>
+
+<p>Next we’ll add an entry to <code class="highlighter-rouge">/etc/fstab</code> to ensure that we automatically mount the overlay when the system boots</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="gp">$ </span>cat /etc/fstab
+
+overlay /lib/modules overlay <span class="nv">lowerdir</span><span class="o">=</span>/lib/modules,upperdir<span class="o">=</span>/opt/modules,workdir<span class="o">=</span>/opt/modules.wd,nofail 0 0
+
+</code></pre>
+</div>
+
+<p>Now that Problem #2 is solved, lets go back to Problem #1: the lack of a package manager and compilation tools in CoreOS.
+Thankfully the CoreOS developers provide a <code class="highlighter-rouge">develoment container</code>, which has a bunch of tools that can be used to manipulate CoreOS (and includes a package manager).</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="c"># change to a well known location, with enough space for atleast a 3GB image</span>
+<span class="nb">cd</span> ~
+
+
+<span class="c"># read system configuration files to determine the URL of the development container that corresponds to the current Container Linux version</span>
+
+. /usr/share/coreos/release
+. /usr/share/coreos/update.conf
+<span class="nv">url</span><span class="o">=</span><span class="s2">"http://</span><span class="k">${</span><span class="nv">GROUP</span><span class="k">:-</span><span class="nv">stable</span><span class="k">}</span><span class="s2">.release.core-os.net/</span><span class="nv">$COREOS_RELEASE_BOARD</span><span class="s2">/</span><span class="nv">$COREOS_RELEASE_VERSION</span><span class="s2">/coreos_developer_container.bin.bz2"</span>
+
+<span class="c"># Download, decompress, and verify the development container image.</span>
+
+gpg2 --recv-keys 04127D0BFABEC8871FFB2CCE50E0885593D2DCB4  <span class="c"># Fetch the buildbot key if neccesary.</span>
+curl -L <span class="s2">"</span><span class="nv">$url</span><span class="s2">"</span> |
+    tee &gt;<span class="o">(</span>bzip2 -d &gt; coreos_developer_container.bin<span class="o">)</span> |
+    gpg2 --verify &lt;<span class="o">(</span>curl -Ls <span class="s2">"</span><span class="nv">$url</span><span class="s2">.sig"</span><span class="o">)</span> -
+
+</code></pre>
+</div>
+<p>Now that we’ve downloaded the developement container image (<code class="highlighter-rouge">coreos_developer_container.bin</code>) we can create a container based off of it.
+<strong>Problem #3</strong> rears its ugly head now: <strong>containers created via <code class="highlighter-rouge">systemd-nspawn</code> seem to have a diskspace limit of ~3GB.</strong> This can be fixed by
+doing a couple of additional volume mounts when starting the container:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nb">cd</span> ~
+mkdir boot src
+
+sudo systemd-nspawn <span class="se">\</span>
+--bind<span class="o">=</span>/tmp <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/boot:/boot"</span> <span class="se">\</span>
+--bind<span class="o">=</span>/lib/modules:/lib/modules <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/src:/usr/src"</span> <span class="se">\</span>
+--image<span class="o">=</span>coreos_developer_container.bin
+</code></pre>
+</div>
+
+<h2 id="inside-coreos-development-container">Inside CoreOS Development Container</h2>
+
+<p>Now that we’re inside the development container, we’ll update the package manager and download the coreos kernel source</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+emerge-gitclone
+emerge -gKv bootengine coreos-sources dracut
+update-bootengine -o /usr/src/linux/bootengine.cpio
+
+</code></pre>
+</div>
+
+<h2 id="configure-kernel-options">Configure Kernel Options</h2>
+<p>The kernel source for the current kernel will be downloaded to the following path <code class="highlighter-rouge">/usr/src/linux-$(uname -r)</code> and symlinked to <code class="highlighter-rouge">/usr/src/linux</code>.
+Lets configure the kernel options to enable the I915 driver (and it’s dependencies) to be built as a kernel module.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+<span class="nb">cd</span> /usr/src/linux  <span class="c"># remember, this is a symlink to your exact kernel source code</span>
+
+<span class="c"># lets ensure we're working from a clean copy of the source tree.</span>
+make distclean
+
+<span class="c"># lets copy over the symbols file for the current kernel</span>
+cp /lib/modules/<span class="sb">`</span>uname -r<span class="sb">`</span>/build/Module.symvers .
+
+<span class="c"># lets copy over the .config used to build the current kernel</span>
+gzip -cd /proc/config.gz &gt; /usr/src/linux/.config
+
+<span class="c"># lets backup the current config</span>
+make oldconfig
+
+<span class="c"># lets use the interactive UI to enable the options that we need to enable.</span>
+<span class="c"># remember, "m" means build as module.</span>
+make menuconfig
+
+<span class="c"># next lets prepare the source code to be built</span>
+make prepare <span class="o">&amp;&amp;</span> make modules_prepare
+make -C /usr/src/linux scripts
+
+<span class="c"># (OPTIONAL) finally, lets validate that the options we need are enabled.</span>
+cat .config | grep DRM
+diff .config.old .config
+
+</code></pre>
+</div>
+
+<h2 id="build--install-kernel-modules">Build &amp; Install Kernel Module(s)</h2>
+
+<p>Initially all I did here was build the one module I thought was necessary: <code class="highlighter-rouge">/drivers/drm</code>, but after taking a closer look
+at the output of <code class="highlighter-rouge"><span class="gh">diff .config.old .config</span></code> it’s clear that a couple of other kernel options were enabled as well, and their modules are dependencies for
+the <code class="highlighter-rouge">Intel i915 driver</code> to work correctly.</p>
+
+<p>The general form for building and installing a kernel module looks like the following:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules <span class="o">&amp;&amp;</span> make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules_install
+</code></pre>
+</div>
+
+<p>However, since there’s additional kernel modules that we need, the full build command looks like:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">make modules</code> command will build &amp; compile the <code class="highlighter-rouge">.ko</code> files, while the <code class="highlighter-rouge">make modules_install</code> command will copy them to the <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras/</code> directory.
+Lets validate that the kernel modules we require are all there:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## DEVELOPMENT CONTAINER ##
+ls -alt /lib/modules/$(uname -r)/extras/
+
+# if everything looks good, we can exit from the container back to the host
+
+exit
+
+</code></pre>
+</div>
+
+<h2 id="prepare-kernel-modules">Prepare Kernel Modules</h2>
+<p>So at this point we have a handful of kernel modules, but we’re not quite ready to load them into the kernel yet. We need to run a tool called <code class="highlighter-rouge">depmod</code> first</p>
+
+<blockquote>
+  <p>depmod creates a list of module dependencies by reading each module under <em>/lib/modules/version</em> and determining what symbols
+it exports and what symbols it needs. By default, this list is written to <em>modules.dep</em> in the same directory. If
+filenames are given on the command line, only those modules are examined (which is rarely useful unless all modules are listed).</p>
+</blockquote>
+
+<p>Lets run it on the host, to update the <code class="highlighter-rouge">modules.dep</code> file.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+depmod
+</code></pre>
+</div>
+
+<p>Well that was easy.</p>
+
+<h2 id="load-kernel-modules">Load Kernel Modules</h2>
+
+<p>Here we are at the moment of truth, lets load our kernel modules into the kernel using <code class="highlighter-rouge">modprobe</code>. If we did everything right the command should complete silently for each module.</p>
+
+<blockquote>
+  <p>modprobe intelligently adds or removes a module from the Linux kernel: note that for convenience, there is no difference between _ and - in module names. modprobe looks in the module directory /lib/modules/’uname -r’ for all the modules and other files, except for the optional /etc/modprobe.conf configuration file and /etc/modprobe.d directory (see modprobe.conf(5)). modprobe will also use module options specified on the kernel command line in the form of <module>.<option>.</option></module></p>
+</blockquote>
+
+<p>The modules in <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras</code> should be individually loaded via <code class="highlighter-rouge">modprobe</code>. Note: when using modprobe, you reference kernel modules by name, not path, ie. <code class="highlighter-rouge">modprobe i915</code> not <del><code class="highlighter-rouge">modprobe i915/i915.ko</code></del></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+modprobe acpi_ipmi
+...
+</code></pre>
+</div>
+
+<p>Once we’ve completed the dependent modules, lets load the modules we actually care about <code class="highlighter-rouge">drm</code>, <code class="highlighter-rouge">drm_kms_helper</code> and <code class="highlighter-rouge">i915</code>.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+<span class="gp">$ </span>modprobe drm_kms_helper
+modprobe: ERROR: could not insert <span class="s1">'drm_kms_helper'</span>: Unknown symbol <span class="k">in </span>module, or unknown parameter <span class="o">(</span>see dmesg<span class="o">)</span>
+</code></pre>
+</div>
+
+<p>Uh oh. Lets look at the logs in <code class="highlighter-rouge">dmesg</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[83845.709910] drm: Unknown symbol hdmi_vendor_infoframe_init (err 0)
+[83845.710508] drm: Unknown symbol dma_fence_add_callback (err 0)
+[83845.711248] drm: Unknown symbol dma_buf_attach (err 0)
+[83845.711921] drm: Unknown symbol dma_fence_default_wait (err 0)
+[83845.712474] drm: Unknown symbol dma_buf_export (err 0)
+[83845.712884] drm: Unknown symbol dma_buf_map_attachment (err 0)
+[83845.713648] drm: Unknown symbol dma_fence_remove_callback (err 0)
+[83845.714288] drm: Unknown symbol dma_buf_unmap_attachment (err 0)
+[83845.714946] drm: Unknown symbol dma_fence_context_alloc (err 0)
+[83845.715508] drm: Unknown symbol dma_fence_signal (err 0)
+[83845.716182] drm: Unknown symbol dma_buf_get (err 0)
+[83845.716762] drm: Unknown symbol dma_buf_put (err 0)
+[83845.717257] drm: Unknown symbol dma_buf_fd (err 0)
+[83845.717843] drm: Unknown symbol dma_fence_init (err 0)
+[83845.718371] drm: Unknown symbol hdmi_avi_infoframe_init (err 0)
+[83845.719094] drm: Unknown symbol dma_fence_enable_sw_signaling (err 0)
+[83845.719835] drm: Unknown symbol dma_buf_detach (err 0)
+[83845.720422] drm: Unknown symbol dma_fence_release (err 0)
+[83845.721103] drm: Unknown symbol sync_file_get_fence (err 0)
+[83845.721771] drm: Unknown symbol sync_file_create (err 0)
+</code></pre>
+</div>
+
+<p>Looks like we’ve hit <strong>Problem #4: there’s some additional dependencies that we need to enable as modules.</strong></p>
+
+<p>Lets check for <code class="highlighter-rouge">hdmi_vendor_infoframe_init</code> first. In our case we’re building off the linux kernel used by CoreOS, so
+we’ll do a search of the source code in the <code class="highlighter-rouge">github.com/coreos/linux</code> repo.</p>
+
+<p>It looks like the symbol is exported in the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/hdmi.c">drivers/video/hdmi.c</a> file.
+Now lets look at the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Makefile">Makefile in the video directory</a> to determine which kernel config flag controls this file:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>..
+<span class="c"># SPDX-License-Identifier: GPL-2.0</span>
+obj-<span class="k">$(</span>CONFIG_VGASTATE<span class="k">)</span>            +<span class="o">=</span> vgastate.o
+obj-<span class="k">$(</span>CONFIG_HDMI<span class="k">)</span>                +<span class="o">=</span> hdmi.o
+
+obj-<span class="k">$(</span>CONFIG_VT<span class="k">)</span>		  +<span class="o">=</span> console/
+..
+</code></pre>
+</div>
+
+<p>Looks like the <code class="highlighter-rouge">CONFIG_HDMI</code> option controls the inclusion of the <code class="highlighter-rouge">hdmi.c</code> file. Perfect.</p>
+
+<p>Now lets check the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Kconfig"><code class="highlighter-rouge">Kconfig</code> file</a> for more information about the <code class="highlighter-rouge">CONFIG_HDMI</code> option.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+config HDMI
+	bool
+
+</code></pre>
+</div>
+
+<p>After looking at the <code class="highlighter-rouge">Kconfig</code> file and the <code class="highlighter-rouge">Makefile</code> closely, it seems that there is no configuration available to build <code class="highlighter-rouge">hdmi.c</code>
+file into a kernel module. This is confirmed when we run <code class="highlighter-rouge">make menuconfig</code>, press <code class="highlighter-rouge">/</code> to search, and enter <code class="highlighter-rouge">HDMI</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/make_menuconfig.png" alt="make menuconfig" /></p>
+
+<p>Looks like we’ve hit a dead end.</p>
+
+<p><strong>While we can create kernel modules for the <code class="highlighter-rouge">i915</code> and <code class="highlighter-rouge">drm</code> drivers, the <code class="highlighter-rouge">hdmi.c</code> file cannot be compiled as a module, only included
+directly in the kernel as a built-in. In our case <code class="highlighter-rouge">CONFIG_HDMI</code> is set to <code class="highlighter-rouge">n</code> in the CoreOS kernel build.</strong></p>
+
+<h1 id="fin">Fin</h1>
+
+<p>While it looks like I may have to scrap this work and start over from scratch, hopefully your <code class="highlighter-rouge">kernel module</code> does not have any
+dependencies that are unavailable as modules.</p>
+
+<p>If you were lucky enough to build a CoreOS kernel module and load it without any issues, you’ll want to look at
+<a href="https://gist.github.com/dm0-/0db058ba3a85d55aca99c93a642b8a20">automatically building and loading your kernel modules via a service</a>.
+I obviously never got that far.</p>
+
+<p>In Part 2 of this series I’ll walk though the steps as I attempt to build a full custom CoreOS kernel.</p>
+
+<h1 id="special-thanks">Special Thanks</h1>
+
+<p>I’d like to give a special thanks to the following people:</p>
+
+<ul>
+  <li>Abylay Ospan</li>
+  <li>David Michael</li>
+  <li>Ayan Halder</li>
+  <li>Mathieu Levallois</li>
+</ul>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver</li>
+  <li>https://coreos.com/os/docs/latest/kernel-modules.html - Initial instructions for building a Kernel module</li>
+</ul>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Customize the CoreOS Kernel - Part 1 - Kernel Modules&amp;url=https://blog.thesparktree.com/customize-coreos-kernel-part-1"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/customize-coreos-kernel-part-1"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/customize-coreos-kernel-part-1"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/customize-coreos-kernel-part-1" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/customize-coreos-kernel-part-1'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Customize the CoreOS Kernel - Part 1 - Kernel Modules';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_coreos.png)" href="/customize-coreos-kernel-part-2">
+            <section class="post">
+                <h2>Customize the CoreOS Kernel - Part 2 - Kernel SDK</h2>
+                <p>After running into a roadblock while attempting to [build the Intel I915 driver as a...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_drawbridge.png)" href="/drawbridge-ssh-config-management">
+            <section class="post">
+                <h2>Drawbridge - SSH Config management for Jump/Bastion hosts</h2>
+                <p>In our architecture we have many environments (test/stage/prod/etc), and each environment can have one or...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

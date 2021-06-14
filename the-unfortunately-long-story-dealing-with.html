@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Python Fails - Multipart file uploads in Python</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Python Fails - Multipart file uploads in Python" />
+    <meta name="twitter:description" content="Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box...." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_python.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Python Fails - Multipart file uploads in Python" />
+    <meta property="og:description" content="Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box...." />
+    <meta property="og:url" content="https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_python.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with",
+        "image": "https://blog.thesparktree.com/assets/images/cover_python.png",
+        "description": "Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box...."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_python.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Python Fails - Multipart file uploads in Python</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2015-03-19">19 Mar 2015</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/python'>Python</a>,
+                    
+                
+                    
+                       <a href='/tag/file-upload'>File-upload</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box.</p>
+
+<p>Before we start, a caveat. I’m working with Python 2.7, if you’re using Python 3.x, you may be able to use <code class="highlighter-rouge">urllib3</code>, which I’ve heard good things about. If you’re too lazy to look into it, the code I include below should still work for you.</p>
+
+<p>I found myself needing to upload a file via Python. Like any <strike>expert</strike> developer I began searching the compendium of human knowledge that is StackOverflow.</p>
+
+<p>I found many results, all of which looked promising at first glance.</p>
+
+<ul>
+  <li><a href="https://stackoverflow.com/questions/680305/using-multipartposthandler-to-post-form-data-with-python">Using MultipartPostHandler to POST form-data with Python</a></li>
+  <li><a href="https://stackoverflow.com/questions/68477/send-file-using-post-from-a-python-script">Send file using POST from a Python script</a></li>
+  <li><a href="https://stackoverflow.com/questions/12385179/how-to-send-a-multipart-form-data-with-requests-in-python">How to send a “multipart/form-data” with requests in python?</a></li>
+</ul>
+
+<p>I quickly realized that almost all questions referenced the incredible <a href="http://docs.python-requests.org/en/latest/">“requests”</a> , <a href="http://atlee.ca/software/poster/">“poster”</a> or other third party modules. While any sane developer would just bask in their single handed victory and then start on the next item of their to-do list, I’m a glutton for punishment. I needed to do my multipart upload like a real <strike>man</strike> developer: python standard libraries only.</p>
+
+<p>Luckily I was able to find a simple looking snippet that only used <a href="http://code.activestate.com/recipes/146306-http-client-to-post-using-multipartform-data/">urllib2</a> something I was familiar with. Huzzah! With a few test files in hand, I began testing my shiny new script. Alas it was all for naught, the multipart upload script would only work for some files, and would fail horribly for others.</p>
+
+<p>The error message I was getting <code class="highlighter-rouge">UnicodeDecodeError: 'utf8' codec can't decode byte 0x8d in position 516: invalid start byte</code> helped clue me into the fact that the files that failed were binary files rather than simple text documents. It seems the simple script was concatenating the file data directly into a string, at which point my binary files threw up. Ah the joys of file encoding.</p>
+
+<p>I tried a quick and proven fix: when in doubt, force “utf-8”. As the <code class="highlighter-rouge">open</code> command doesn’t allow us to force encoding, I switched to using the built-in <code class="highlighter-rouge">codecs</code> module. I tried a few different file encodings before doing a naive search for <a href="https://programmers.stackexchange.com/questions/187169/how-to-detect-the-encoding-of-a-file">“How to detect the encoding of a file”</a> at which point I felt like a real idiot as I saw the answer:</p>
+<blockquote>
+  <p>Files generally indicate their encoding with a file header. … However, even reading the header you can never be sure what encoding a file is really using.</p>
+</blockquote>
+
+<p>Great, back to square one.</p>
+
+<p>The most obvious solution was to rewrite the uploader script so that it used a binary buffer to store the file data, something that would be much more intelligent. I quickly hacked together a quick version of the file uploader script, but made sure to use <code class="highlighter-rouge">BytesIO</code> to store the form data, rather than joining all the data into a string. Again, no joy. Now I was getting the same error, but deep inside the <code class="highlighter-rouge">urllib2</code> function. Ugh, that means that internally <code class="highlighter-rouge">urllib2</code> is converting my beautiful binary buffer into a string. Son of a.</p>
+
+<p>Screw it. I’ll just rewrite it using <code class="highlighter-rouge">http</code>.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">mimetools</span>
+<span class="kn">import</span> <span class="nn">mimetypes</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">http</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+
+<span class="n">form</span> <span class="o">=</span> <span class="n">MultiPartForm</span><span class="p">()</span>
+<span class="n">form</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="s">"form_field"</span><span class="p">,</span> <span class="s">"my awesome data"</span><span class="p">)</span>
+
+<span class="c"># Add a fake file</span>
+<span class="n">form</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
+	<span class="n">fileHandle</span><span class="o">=</span><span class="n">codecs</span><span class="o">.</span><span class="nb">open</span><span class="p">(</span><span class="s">"/path/to/my/file.zip"</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">))</span>
+
+<span class="c"># Build the request</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s">"http://www.example.com/endpoint"</span>
+<span class="n">schema</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragments</span> <span class="o">=</span> <span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">form_buffer</span> <span class="o">=</span>  <span class="n">form</span><span class="o">.</span><span class="n">get_binary</span><span class="p">()</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+	<span class="n">http</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPConnection</span><span class="p">(</span><span class="n">netloc</span><span class="p">)</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">putrequest</span><span class="p">(</span><span class="s">"POST"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">putheader</span><span class="p">(</span><span class="s">'Content-type'</span><span class="p">,</span><span class="n">form</span><span class="o">.</span><span class="n">get_content_type</span><span class="p">())</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">putheader</span><span class="p">(</span><span class="s">'Content-length'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">form_buffer</span><span class="p">)))</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">endheaders</span><span class="p">()</span>
+	<span class="n">http</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">form_buffer</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+	<span class="k">raise</span> <span class="nb">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">http</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+	<span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="k">print</span><span class="p">(</span><span class="s">'Upload failed (</span><span class="si">%</span><span class="s">s): </span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">reason</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">MultiPartForm</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="s">"""Accumulate the data to be used when posting a form."""</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">form_fields</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="n">mimetools</span><span class="o">.</span><span class="n">choose_boundary</span><span class="p">()</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">get_content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="s">'multipart/form-data; boundary=</span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span>
+
+	<span class="k">def</span> <span class="nf">add_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="s">"""Add a simple field to the form data."""</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">form_fields</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">add_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fileHandle</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="s">"""Add a file to be uploaded."""</span>
+		<span class="n">body</span> <span class="o">=</span> <span class="n">fileHandle</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">mimetype</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="s">'application/octet-stream'</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fieldname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">get_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="s">"""Return a binary buffer containing the form data, including attached files."""</span>
+		<span class="n">part_boundary</span> <span class="o">=</span> <span class="s">'--'</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span>
+
+		<span class="n">binary</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+		<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="c"># Add the form fields</span>
+		<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_fields</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">needsCLRF</span><span class="p">:</span>
+				<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">'</span><span class="p">)</span>
+			<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">True</span>
+
+			<span class="n">block</span> <span class="o">=</span> <span class="p">[</span><span class="n">part_boundary</span><span class="p">,</span>
+			  <span class="s">'Content-Disposition: form-data; name="</span><span class="si">%</span><span class="s">s"'</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span>
+			  <span class="s">''</span><span class="p">,</span>
+			  <span class="n">value</span>
+			<span class="p">]</span>
+			<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+
+		<span class="c"># Add the files to upload</span>
+		<span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">needsCLRF</span><span class="p">:</span>
+				<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">'</span><span class="p">)</span>
+			<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">True</span>
+
+			<span class="n">block</span> <span class="o">=</span> <span class="p">[</span><span class="n">part_boundary</span><span class="p">,</span>
+			  <span class="nb">str</span><span class="p">(</span><span class="s">'Content-Disposition: file; name="</span><span class="si">%</span><span class="s">s"; filename="</span><span class="si">%</span><span class="s">s"'</span> <span class="o">%</span> \
+			  <span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)),</span>
+			  <span class="s">'Content-Type: </span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="n">content_type</span><span class="p">,</span>
+			  <span class="s">''</span>
+			  <span class="p">]</span>
+			<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+			<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">'</span><span class="p">)</span>
+			<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+
+		<span class="c"># add closing boundary marker,</span>
+		<span class="n">binary</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">'</span><span class="se">\r\n</span><span class="s">--'</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span> <span class="o">+</span> <span class="s">'--</span><span class="se">\r\n</span><span class="s">'</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">binary</span>
+</code></pre>
+</div>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Python Fails - Multipart file uploads in Python&amp;url=https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/the-unfortunately-long-story-dealing-with" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/the-unfortunately-long-story-dealing-with'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Python Fails - Multipart file uploads in Python';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_docker.jpg)" href="/step-by-step-shipyard-2-docker-cluster">
+            <section class="post">
+                <h2>Step-By-Step Shipyard 2 Docker Cluster</h2>
+                <p># Step-By-Step Shipyard 2 Docker Cluster Since [Shipyard 3](https://github.com/shipyard/shipyard/pull/455) (with its built in support for...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_sails.jpg)" href="/reusing-sailsjs-waterline-models-in-background">
+            <section class="post">
+                <h2>Reusing SailsJS + Waterline Models in Background Tasks</h2>
+                <p>Its been a while since I first attempted to design a background tasks/workers pattern for...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

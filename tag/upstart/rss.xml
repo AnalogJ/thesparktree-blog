@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Debugging Upstart Jobs on Ubuntu 14.04</title>
+	  <link>/debugging-upstart-jobs-on-ubuntu-1404</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-09-01T17:22:00-05:00</pubDate>
+	  <guid>/debugging-upstart-jobs-on-ubuntu-1404</guid>
+	  <description><![CDATA[
+	     <p>Before you begin, you should be (intimately) familiar with the <a href="http://upstart.ubuntu.com/cookbook/">Upstart Cookbook</a>. It’s an incredible resource for understanding the in’s and out’s of Upstart and its configuration.</p>
+
+<p>That said, unfortunately its still pretty difficult to debug Upstart jobs. You’ll get messages like “Job failed to start” or “Unknown job”  without any obvious reasons why. The following is just a collection of the different methods I’ve found useful to debug Upstart jobs that are acting up.</p>
+
+<h1 id="verify-job-configuration-location">Verify job configuration location</h1>
+
+<p>Upstart jobs are located in <code class="highlighter-rouge">/etc/init/</code> and are text files named <code class="highlighter-rouge">foo.conf</code> where <code class="highlighter-rouge">foo</code> is your job name.
+Session jobs can be found in one of the following directories:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">$XDG_CONFIG_HOME/upstart/</code> (or <code class="highlighter-rouge">$HOME/.config/upstart/</code> if <code class="highlighter-rouge">$XDG_CONFIG_HOME</code> not set).</li>
+  <li><code class="highlighter-rouge">$HOME/.init/</code> (deprecated - supported for legacy User Jobs).</li>
+  <li><code class="highlighter-rouge">$XDG_CONFIG_DIRS</code></li>
+  <li><code class="highlighter-rouge">/usr/share/upstart/sessions/</code></li>
+</ul>
+
+<h1 id="check-the-job-using-the-built-in-validators">Check the job using the built-in validators</h1>
+
+<p>The built in validators are pretty basic, but they can help you catch simple errors, and save you from running into migration errors.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>init-checkconfig foo.conf
+<span class="gp">$ </span>initctl check-config
+</code></pre>
+</div>
+
+<h1 id="check-the-job-logs">Check the Job logs</h1>
+
+<p>The first and most obvious way to debug anything is to check the log files.
+By default all Upstart jobs will log their output to a log file located at <code class="highlighter-rouge">/var/log/upstart/foo.log</code> where <code class="highlighter-rouge">foo</code> is your job name.
+<em>Note:</em> Session/User jobs have a special log location: <code class="highlighter-rouge">~/.cache/upstart/foo.log</code></p>
+
+<h1 id="enable-verbosedebug-mode">Enable Verbose/Debug mode</h1>
+
+<p>If the log files aren’t helpful enough, you can enable verbose debugging using</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>sudo initctl log-priority debug
+sudo start foo
+</code></pre>
+</div>
+
+<h1 id="grep-dmesg-for-related-information">Grep <code class="highlighter-rouge">dmesg</code> for related information</h1>
+<p>If the logs still don’t show any new information about why the job is failing, you can try <code class="highlighter-rouge">grepping</code> the output of <code class="highlighter-rouge">dmesg</code>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo dmesg | grep foo
+</code></pre>
+</div>
+
+<p>This has helped me solve <code class="highlighter-rouge">start: Job failed to start</code> issues where the errors occured in the <code class="highlighter-rouge">pre-start script</code> stanza.</p>
+
+<h1 id="force-reload-upstart-configuration">Force reload Upstart configuration</h1>
+
+<p>While this should be unnecesssary (Upstart watches for changes to the config directories), you can force a reload</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo initctl reload-configuration
+</code></pre>
+</div>
+
+<h1 id="solving-unknown-job-errors">Solving <code class="highlighter-rouge">Unknown Job</code> errors</h1>
+
+<p>In my experience <code class="highlighter-rouge">start: Unknown job: foo</code> errors happen for three reasons.</p>
+
+<ol>
+  <li>
+    <p>You are incorrectly spelling/calling the job  - <code class="highlighter-rouge">/etc/init/foo-job.conf</code> should be called by <code class="highlighter-rouge">start foo-job</code></p>
+
+    <p>Solving the first case is simple, stop being stupid. You can verify that your job exists by <code class="highlighter-rouge">initctl list | grep foo</code></p>
+  </li>
+  <li>
+    <p>Theres an error in the job configuration file</p>
+
+    <p>Debugging the second case is a bit more difficult. Job configuration is loaded immediately on system startup, and you will have to check syslog for errors related to your specific job. I’ve had luck grepping <code class="highlighter-rouge">dmesg</code> as well.</p>
+  </li>
+  <li>
+    <p>You are attempting to start a Session job and a Upstart session has not been started.</p>
+
+    <p>If you are trying to start a session job, ensure that there is a valid Upstart session running <code class="highlighter-rouge">echo "$UPSTART_SESSION"</code>. Make sure that you are running your terminal as the correct user. By default Ubuntu will start a Upstart session for you.</p>
+  </li>
+</ol>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

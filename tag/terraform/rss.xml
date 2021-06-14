@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Jenkins Dockerized Slave Cluster - Premise</title>
+	  <link>/jenkins-dockerized-slave-cluster</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-03-25T04:19:33-05:00</pubDate>
+	  <guid>/jenkins-dockerized-slave-cluster</guid>
+	  <description><![CDATA[
+	     <p>Here’s the premise, we have one or more Jenkins masters running our various jobs, and the server is bottlenecking: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources.</p>
+
+<p>Wouldn’t it be nice if we could share slave nodes between the masters? Create a cluster of slave nodes and have the various Jenkins masters run their jobs without needing to worry about scheduling or the underlying utilization of the hardware?</p>
+
+<p>Enter buzzword heaven. In the next few posts I’ll be going through all the steps required to build a Dockerized Jenkins slave cluster.</p>
+
+<ul>
+  <li>Part 1 - Our cloud provider will be OpenStack, however we’ll be using Terraform for provisioning, so you could easily migrate my tutorial onto Azure/AWS/GCE or Bare Metal. Our foundation will be a half-dozen vanilla CoreOS machines, which you can resize to your needs.</li>
+  <li>Part 2 - On top of that we’ll use kubeadm to bootstrap a best-practice Kubernetes cluster in an easy, reasonably secure and extensible way. No complex configuration-management required.</li>
+  <li>Part 3 - Finally, we’ll configure our Jenkins masters to communicate with a single Kubernetes cluster. The Jenkins masters will run jobs in a “cloud” that will transparently spin up Docker containers on demand. Once the job finishes the container is destroyed automatically, freeing up those resources for other masters and their jobs.</li>
+</ul>
+
+<p>My goal with these posts are to:</p>
+
+<ol>
+  <li>Aggregate all the steps in one place. There’s alot of smart people out there who’ve written various guides doing each of these things individually. I want to aggregate all the steps into one, easy to follow along tutorial</li>
+  <li>Break each stage up into comprehendible chunks, and clearly explain how they interact with each other. This allows you to modify my tutorial to suit your needs, while still being able to follow along.</li>
+  <li>Provide a real code repository, not just snippets out of context. Sometimes the “obvious” glue code isn’t so obvious. A repo you can grep can save a lot of time.</li>
+  <li>Write a continiously updated/evergreen guide following modern best practices. Like code, content also rots – especially quick in the devops &amp; docker world. I’ll be keeping this guide as up-to-date as possible. In addition it’s hosted on Github, so you can submit edits to make each post better.</li>
+</ol>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

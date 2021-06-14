@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API</title>
+	  <link>/dropstore-ng-opensource-angularjs-bindings-for</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-12-08T22:00:00-06:00</pubDate>
+	  <guid>/dropstore-ng-opensource-angularjs-bindings-for</guid>
+	  <description><![CDATA[
+	     <p>I created an github project called <a href="https://github.com/AnalogJ/dropstore-ng">dropstore-ng</a> that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.
+The service wraps most of the Dropbox Datastore callbacks in promises, contains subscription methods for Dropbox events and provides transparent aliases for untouched library methods.</p>
+
+<p>I also created a realtime todo sample app which you can try <a href="https://dropstore-ng.herokuapp.com/">here</a></p>
+
+<p>You can access the library here:
+<a href="https://github.com/AnalogJ/dropstore-ng">https://github.com/AnalogJ/dropstore-ng</a></p>
+
+<p>or through bower</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>bower install dropstore-ng --save
+</code></pre>
+</div>
+
+<div class="github-widget" data-repo="AnalogJ/dropstore-ng"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

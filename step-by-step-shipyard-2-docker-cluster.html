@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Step-By-Step Shipyard 2 Docker Cluster</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Step-By-Step Shipyard 2 Docker Cluster" />
+    <meta name="twitter:description" content="Step-By-Step Shipyard 2 Docker Cluster Since Shipyard 3 (with its built in support for Docker Swarm) is not quite ready, I thought I would create a..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Step-By-Step Shipyard 2 Docker Cluster" />
+    <meta property="og:description" content="Step-By-Step Shipyard 2 Docker Cluster Since Shipyard 3 (with its built in support for Docker Swarm) is not quite ready, I thought I would create a..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster",
+        "image": "https://blog.thesparktree.com/assets/images/cover_docker.jpg",
+        "description": "Step-By-Step Shipyard 2 Docker Cluster Since Shipyard 3 (with its built in support for Docker Swarm) is not quite ready, I thought I would create a..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_docker.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Step-By-Step Shipyard 2 Docker Cluster</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2015-07-16">16 Jul 2015</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/shipyard-project'>Shipyard-project</a>,
+                    
+                
+                    
+                       <a href='/tag/cluser'>Cluser</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <h1 id="step-by-step-shipyard-2-docker-cluster">Step-By-Step Shipyard 2 Docker Cluster</h1>
+
+<p>Since <a href="https://github.com/shipyard/shipyard/pull/455">Shipyard 3</a> (with its built in support for <a href="https://github.com/docker/swarm">Docker Swarm</a>) is not quite ready, I thought I would create a step-by-step guide for getting a Shipyard 2 cluster going with 3 nodes (engines).</p>
+
+<p>I’ve seen a few other guides written, but they are either dated or missing very important instructions.</p>
+
+<h1 id="requirements">Requirements</h1>
+
+<p>This guide makes a few assumtions about your setup. Since we’re going to be creating a cluster, you’ll need more than 2 servers available to run as nodes. This guide will have <strong>3 servers running as nodes, and 1 dedicated master server</strong>. You should also have the latest version of <a href="https://docs.docker.com/installation/">docker installed on all your servers</a> (master and nodes) as of right now, that is <strong>Docker 1.7</strong>. This guide is written to be used with Ubuntu 14.04 but should work on any linux system with little to no changes.</p>
+
+<h1 id="definitions">Definitions</h1>
+
+<p>In the following guide, I’ll make use of the following variables. If you see them in any instruction you should replace it with the applicable value</p>
+
+<ul>
+  <li><strong>$MASTER_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard master server</li>
+  <li><strong>$NODE1_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node1 server</li>
+  <li><strong>$NODE2_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node2 server</li>
+  <li><strong>$NODE3_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node3 server</li>
+</ul>
+
+<h1 id="security-configuration">Security Configuration</h1>
+
+<p>As recommended by the <a href="https://docs.docker.com/articles/security/">Docker Security Guide</a> we’re going to want to <a href="https://docs.docker.com/articles/https/">Protect the Docker daemon socket</a> as Shipyard will need to remotely access the Docker daemon on each node. Don’t worry about blindly following those instructions. All the relavent steps are included below with descriptions and a few tweaks to get everything working for a Shipyard cluster.</p>
+
+<blockquote>
+  <p>By default, Docker runs via a non-networked Unix socket. It can also optionally communicate using a HTTP socket.
+If you need Docker to be reachable via the network in a safe manner, you can enable TLS by specifying the tlsverify flag and pointing Docker’s tlscacert flag to a trusted CA certificate.</p>
+</blockquote>
+
+<p>At the end of this section we’ll have protected the Docker daemon on each of our servers such that it will only allow connections from clients authenticated by a certificate signed by that CA. We can then provide Shipyard with the connection information and associated client certificates so that Shipyard can securely communicate with the Docker daemons on the nodes.</p>
+
+<p>Here’s a quick rundown of what we’re going to be doing:</p>
+
+<ul>
+  <li>Create a minimal openssl.cnf file with required settings</li>
+  <li>Create a Certificate Authority keypair</li>
+  <li>Use the CA to create a keypair for each of your Nodes</li>
+  <li>Transfer the keys to the correct nodes</li>
+  <li>Configure the Docker daemon on the Nodes to use TLS by default</li>
+  <li>Setup IPTables firewall rules</li>
+</ul>
+
+<h2 id="create-a-minimal-opensslcnf-file-on-master">Create a minimal openssl.cnf file on Master</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ssh root@$MASTER_HOSTNAME
+$ nano /etc/docker/openssl.cnf
+
+[ req ]
+default_bits	= 4096
+default_keyfile = privkey.pem
+distinguished_name	= req_distinguished_name
+x509_extensions	= v3_ca
+default_md = sha1
+string_mask = nombstr
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+countryName = US
+stateOrProvinceName = CA
+localityName = San Francisco
+organizationName = SparkTree Inc
+organizationalUnitName	= Shipyard
+emailAddress = jason@thesparktree.com
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth,serverAuth
+subjectKeyIdentifier = hash
+
+[ v3_ca ]
+subjectKeyIdentifier	= hash
+authorityKeyIdentifier	= keyid:always,issuer:always
+basicConstraints = CA:true
+
+[ crl_ext ]
+authorityKeyIdentifier=keyid:always
+</code></pre>
+</div>
+
+<h2 id="create-a-certificate-authority-keypair-on-master">Create a Certificate Authority keypair on Master</h2>
+
+<p>First generate CA private and public keys:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd</span> /etc/docker/
+<span class="gp">$ </span>openssl genrsa -aes256 -out ca-key.pem 2048
+<span class="gp">$ </span>openssl req -config openssl.cnf -new -x509 -days 3650 -key ca-key.pem -sha256 -out ca.pem
+</code></pre>
+</div>
+
+<p>In order to protect your keys from accidental damage, you will want to remove their write permissions.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>chmod -v 0400 ca-key.pem
+<span class="gp">$ </span>chmod -v 0444 ca.pem
+</code></pre>
+</div>
+
+<h2 id="use-the-ca-to-create-a-keypair-for-your-nodes-on-master">Use the CA to create a keypair for your Nodes on Master</h2>
+
+<p>Now that we have a CA, you can create a server key and certificate signing request (CSR) for each Node. We’ll create individual folders to contain the server and client key pairs for each Node</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>mkdir /etc/docker/node1
+<span class="gp">$ </span>mkdir /etc/docker/node2
+<span class="gp">$ </span>mkdir /etc/docker/node3
+</code></pre>
+</div>
+
+<p>Make sure that “Common Name” (i.e., server FQDN or YOUR name) matches the hostname you will use to connect to your <strong>Node1</strong>:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd</span> /etc/docker/node1
+<span class="gp">$ </span>openssl genrsa -out server-key.pem 2048
+<span class="gp">$ </span>openssl req -subj <span class="s2">"/CN=</span><span class="nv">$NODE1_HOSTNAME</span><span class="s2">"</span> -new -key server-key.pem <span class="se">\</span>
+-out server.csr
+</code></pre>
+</div>
+
+<p>Next, we’re going to sign the <strong>Node1</strong> public key with our CA:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>openssl x509 -req -days 3650 -in server.csr -CA /etc/docker/ca.pem -CAkey /etc/docker/ca-key.pem <span class="se">\</span>
+-CAcreateserial -out server-cert.pem -extensions v3_req -extfile /etc/docker/openssl.cnf
+</code></pre>
+</div>
+
+<p>For the Shipyard master to communicate with <strong>Node1</strong> using client authentication we’ll need to create a client key and certificate signing request:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>openssl genrsa -out key.pem 2048
+<span class="gp">$ </span>openssl req -subj <span class="s1">'/CN=node1_client'</span> -new -key key.pem -out client.csr
+</code></pre>
+</div>
+
+<p>Then sign the <strong>Node1</strong> client key as we did the server key.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>openssl x509 -req -days 3650 -in client.csr -CA /etc/docker/ca.pem -CAkey /etc/docker/ca-key.pem <span class="se">\</span>
+-CAcreateserial -out cert.pem -extensions v3_req -extfile /etc/docker/openssl.cnf
+</code></pre>
+</div>
+
+<p>After generating cert.pem and server-cert.pem for <strong>Node1</strong> you can safely remove the two certificate signing requests:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ rm -v client.csr server.csr
+</code></pre>
+</div>
+
+<p>In order to protect your keys from accidental damage, you will want to remove their write permissions. To make them only readable by you, change file modes as follows:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ chmod -v 0400 key.pem server-key.pem
+</code></pre>
+</div>
+
+<p>Now that we have a server and client key pair for <strong>Node1</strong> we have to follow the above instructions 2 more times, for <strong>Node2</strong> and <strong>Node3</strong> inside their respective folders.</p>
+
+<h2 id="transfer-the-keys-to-the-correct-nodes">Transfer the keys to the correct nodes</h2>
+
+<p>Now that we have all the key pairs that we need for each Node, we need to move them to the correct servers.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd</span> /etc/docker/node1 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE1_HOSTNAME</span>:/etc/docker/
+
+<span class="gp">$ </span><span class="nb">cd</span> /etc/docker/node2 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE2_HOSTNAME</span>:/etc/docker/
+
+<span class="gp">$ </span><span class="nb">cd</span> /etc/docker/node3 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE3_HOSTNAME</span>:/etc/docker/
+</code></pre>
+</div>
+
+<h2 id="configure-the-docker-daemon-on-the-nodes-to-use-tls-by-default">Configure the Docker daemon on the Nodes to use TLS by default</h2>
+
+<p>Now that the server key pairs have been copied to the Nodes, we need to configure Docker to use them. First lets stop the Docker daemon on the Node.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>ssh root@<span class="nv">$NODE1_HOSTNAME</span>
+<span class="gp">$ </span>service docker stop
+</code></pre>
+</div>
+
+<p>Update your Docker daemon settings to use TLS. I’m using Ubuntu so my file is at <code class="highlighter-rouge">/etc/default/docker</code>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ nano /etc/default/docker
+</code></pre>
+</div>
+
+<p>And add the following line to the bottom of the file.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>DOCKER_OPTS="--tlsverify -H=unix:///var/run/docker.sock -H=$NODE1_HOSTNAME:2376 --tlscacert=/etc/docker/ca.pem --tlscert=/etc/docker/server-cert.pem --tlskey=/etc/docker/server-key.pem --label name=node1"
+</code></pre>
+</div>
+
+<p>Now we can restart the Docker daemon on the Node</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ service docker start
+</code></pre>
+</div>
+
+<p>Now follow the above instructions for <strong>Node2</strong> and <strong>Node3</strong> by replacing all instances of <code class="highlighter-rouge">node1</code> and <code class="highlighter-rouge">$NODE1_HOSTNAME</code> with the appropriate Node variables.</p>
+
+<h2 id="setup-iptables-firewall-rules">Setup IPTables firewall rules</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>TODO
+</code></pre>
+</div>
+
+<h1 id="shipyard-configuration">Shipyard Configuration</h1>
+
+<p>Now that the Nodes are all correctly configured, its time to <a href="http://shipyard-project.com/docs/quickstart/">deploy Shipyard on the Master</a>. There is a very small Docker image that will deploy and manage an entire Shipyard stack called Deploy.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>ssh root@<span class="nv">$MASTER_HOSTNAME</span>
+<span class="gp">$ </span>docker run --rm -v /var/run/docker.sock:/var/run/docker.sock <span class="se">\</span>
+shipyard/deploy start
+</code></pre>
+</div>
+
+<p>Once that’s complete lets also deploy the Shipyard CLI container</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ docker run -it --rm shipyard/shipyard-cli shipyard help
+</code></pre>
+</div>
+
+<p>You should now be able to access your Shipyard web UI by visiting  <code class="highlighter-rouge">http://$MASTER_HOSTNAME:8080</code> and logging in with:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>username: admin
+password: shipyard
+</code></pre>
+</div>
+
+<h2 id="register-nodes-as-shipyard-engines">Register Nodes as Shipyard Engines</h2>
+
+<p>Now that we have a working Shipyard container, lets register our Nodes as Shipyard Engines, after logging into the Shipyard CLI.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ docker run -it -v /etc/docker/:/home/  shipyard/shipyard-cli
+shipyard cli&gt; shipyard login
+URL:http://$MASTER_HOSTNAME:8080
+Username: admin
+Password: shipyard
+</code></pre>
+</div>
+
+<p>Before we do anything lets change the insecure default Shipyard Admin account password</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>shipyard cli&gt; shipyard change-password
+Password: &lt;enter a new password&gt;
+Confirm: &lt;re-enter a new password&gt;
+</code></pre>
+</div>
+
+<p>Now lets register our Nodes</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>shipyard cli&gt; shipyard add-engine --id node1 \
+--addr https://$NODE1_HOSTNAME:2376 \
+--label node1 \
+--ssl-cert /home/node1/cert.pem \
+--ssl-key /home/node1/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+
+shipyard cli&gt; shipyard add-engine --id node2 \
+--addr https://$NODE2_HOSTNAME:2376 \
+--label node2 \
+--ssl-cert /home/node2/cert.pem \
+--ssl-key /home/node2/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+
+shipyard cli&gt; shipyard add-engine --id node3 \
+--addr https://$NODE3_HOSTNAME:2376 \
+--label node3 \
+--ssl-cert /home/node3/cert.pem \
+--ssl-key /home/node3/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+</code></pre>
+</div>
+
+<p>Once the operation is complete, use ctrl+d to exit the CLI.</p>
+
+<h1 id="fin">Fin</h1>
+
+<p>At this point you should have a working Shipyard Cluster. You should now be able to view and manage all containers deployed on your various Nodes under the Containers tab:</p>
+
+<p><img src="https://www.ovh.com/us/images/guides/1762/img_2614.jpg" alt="Containers" /></p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://docs.docker.com/installation/</li>
+  <li>https://docs.docker.com/articles/security/</li>
+  <li>https://docs.docker.com/articles/https/</li>
+  <li>http://www.blackfinsecurity.com/docker-swarm-with-tls-authentication/</li>
+  <li>https://askubuntu.com/questions/147241/execute-sudo-without-password</li>
+  <li>http://sheerun.net/2014/05/17/remote-access-to-docker-with-tls/</li>
+  <li>https://www.ovh.com/us/g1762.orchestrating_a_cluster_of_docker_servers_with_shipyard &lt;/re-enter&gt;&lt;/enter&gt;</li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Step-By-Step Shipyard 2 Docker Cluster&amp;url=https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/step-by-step-shipyard-2-docker-cluster" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/step-by-step-shipyard-2-docker-cluster'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Step-By-Step Shipyard 2 Docker Cluster';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_fireworks.jpg)" href="/i-built-that-2015">
+            <section class="post">
+                <h2>I Built That - 2015</h2>
+                <p>Its 2016 now, and like many others, I thought it would be a good idea...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_python.png)" href="/the-unfortunately-long-story-dealing-with">
+            <section class="post">
+                <h2>Python Fails - Multipart file uploads in Python</h2>
+                <p>Python: Its a scripting language you can basically do anything with. Err.. most things, some...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

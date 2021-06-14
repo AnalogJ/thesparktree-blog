@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</title>
+	  <link>/customize-flatcar-kernel-part-3</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-12-12T03:19:33-06:00</pubDate>
+	  <guid>/customize-flatcar-kernel-part-3</guid>
+	  <description><![CDATA[
+	     <p>It’s been a while since I discussed building kernel modules for CoreOS (in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1">Part 1</a> and <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-2">Part 2</a>)
+and lot’s has changed in the CoreOS world. <a href="https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership">CoreOS was acquired by RedHat</a> and eventually replaced by
+<a href="https://docs.fedoraproject.org/en-US/fedora-coreos/faq/">CoreOS Fedora</a> but the original project lives on in <a href="https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/">FlatCar linux</a>,
+a fork of CoreOS.</p>
+
+<p>Since those last posts, I’ve also started using a dedicated GPU to do hardware transcoding of video files. Unfortunately
+using a dedicated NVidia GPU means I need to change the process I use for building kernel modules.</p>
+
+<hr />
+
+<h1 id="building-a-developer-container">Building a Developer Container</h1>
+
+<p>As with CoreOS, the first step is building a <a href="https://docs.flatcar-linux.org/os/kernel-modules/">FlatCar Development Container</a>.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-developer"></div>
+
+<p>With the help of Github Actions, I’ve created a repository that will automatically generate versioned Docker images for each
+<a href="https://www.flatcar-linux.org/releases/">FlatCar Release Channel</a></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt -o version.txt
+cat version.txt
+<span class="nb">export</span> <span class="k">$(</span>cat version.txt | xargs<span class="k">)</span>
+
+<span class="nb">echo</span> <span class="s2">"Download Developer Container"</span>
+curl -L https://stable.release.flatcar-linux.net/amd64-usr/<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>/flatcar_developer_container.bin.bz2 -o flatcar_developer_container.bin.bz2
+bunzip2 -k flatcar_developer_container.bin.bz2
+mkdir <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo mount -o ro,loop,offset<span class="o">=</span>2097152 flatcar_developer_container.bin <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo tar -cp --one-file-system -C <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span> . | docker import - mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+rm -rf flatcar_developer_container.bin flatcar_developer_container.bin.bz2
+
+docker push mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+</code></pre>
+</div>
+
+<p>While it’s useful to have the Flatcar Development Container easily accessible on Docker Hub, it’s not functional out of
+the box for building Kernel Modules. At the very least we need to provide the kernel source within the container.
+We need to be careful that the source code for the kernel matches the linux kernel deployed with the specific version of
+Flatcar.</p>
+
+<p>To do that, we’ll use a <a href="https://github.com/mediadepot/docker-flatcar-developer/blob/master/Dockerfile">Dockerfile</a>.</p>
+
+<pre><code class="language-Dockerfile">ARG FLATCAR_VERSION
+FROM mediadepot/flatcar-developer:${FLATCAR_VERSION}
+LABEL maintainer="Jason Kulatunga &lt;jason@thesparktree.com&gt;"
+ARG FLATCAR_VERSION
+ARG FLATCAR_BUILD
+
+# Create a Flatcar Linux Developer image as defined in:
+# https://docs.flatcar-linux.org/os/kernel-modules/
+
+RUN emerge-gitclone \
+    &amp;&amp; export $(cat /usr/share/coreos/release | xargs) \
+    &amp;&amp; export OVERLAY_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; export PORTAGE_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; env \
+    &amp;&amp; git -C /var/lib/portage/coreos-overlay checkout "$OVERLAY_VERSION" \
+    &amp;&amp; git -C /var/lib/portage/portage-stable checkout "$PORTAGE_VERSION"
+
+# try to use pre-built binaries and fall back to building from source
+RUN emerge -gKq --jobs 4 --load-average 4 coreos-sources || echo "failed to download binaries, fallback build from source:" &amp;&amp; emerge -q --jobs 4 --load-average 4 coreos-sources
+
+# Prepare the filesystem
+# KERNEL_VERSION is determined from kernel source, not running kernel.
+# see https://superuser.com/questions/504684/is-the-version-of-the-linux-kernel-listed-in-the-source-some-where
+RUN cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/.config /usr/src/linux/ \
+    &amp;&amp; make -C /usr/src/linux modules_prepare \
+    &amp;&amp; cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/Module.symvers /usr/src/linux/
+</code></pre>
+
+<h1 id="pre-compiling-nvidia-kernel-driver">Pre-Compiling Nvidia Kernel Driver</h1>
+
+<p>Now that we have a Docker image matching our Flatcar version, the next thing we need to do is build the Nvidia Drivers against
+the kernel source. Again, we’ll be using Github Actions to pre-build our Docker image, meaning we need to take special care
+when we compile the driver, since Docker images share a kernel with the host machine, and the Github Action server is
+definitely running a kernel that is different from the kernel we’ll be running on our actual Flatcar host.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-nvidia-driver"></div>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+./nvidia-installer -s -n <span class="se">\</span>
+  --kernel-name<span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">KERNEL_VERSION</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  --kernel-source-path<span class="o">=</span>/usr/src/linux <span class="se">\</span>
+  --no-check-for-alternate-installs <span class="se">\</span>
+  --no-opengl-files <span class="se">\</span>
+  --no-distro-scripts <span class="se">\</span>
+  --kernel-install-path<span class="o">=</span><span class="s2">"/</span><span class="nv">$PWD</span><span class="s2">"</span> <span class="se">\</span>
+  --log-file-name<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>/nvidia-installer.log <span class="o">||</span> <span class="nb">true</span>
+
+</code></pre>
+</div>
+
+<p>The important flags for compiling the Nvidia driver for a different kernel are the following:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">--kernel-name</code> - build and install the NVIDIA kernel module for the non-running kernel specified by KERNEL-NAME
+  (KERNEL-NAME should be the output of <code class="highlighter-rouge">uname -r</code> when the target kernel is actually running).</li>
+  <li><code class="highlighter-rouge">--kernel-source-path</code> - The directory containing the kernel source files that should be used when compiling the NVIDIA kernel module.</li>
+</ul>
+
+<p>Now that we can pre-compile the Nvidia driver for Flatcar, we need a way to download the drivers and install them automatically
+since Flatcar is an auto-updating OS.</p>
+
+<h1 id="forklift---auto-updating-kernel-drivers">Forklift - Auto Updating Kernel Drivers</h1>
+
+<div class="github-widget" data-repo="mediadepot/flatcar-forklift"></div>
+
+<p>Forklift is the last part of the equation. It’s a Systemd service and a simple script, which runs automatically on startup
+pulling the relevant Docker image containing a Nvidia driver and matches the version of Flatcar, caches the drivers to a specific folder, and then
+installs the kernel module.</p>
+
+<h1 id="extending-forklift">Extending Forklift</h1>
+
+<p>There’s nothing unique about this pattern, it can be used to continuously build any other kernel module (eg. wireguard), and
+contributions are welcome!</p>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22</title>
+	  <link>/automating-ssl-certificates-using-nginx</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-01-31T23:49:09-06:00</pubDate>
+	  <guid>/automating-ssl-certificates-using-nginx</guid>
+	  <description><![CDATA[
+	     <p>There’s a ton of smart people out there who’ve written guides on <a href="https://sysops.forlaravel.com/letsencrypt">setting</a> <a href="https://blog.rudeotter.com/lets-encrypt-ssl-certificate-nginx-ubuntu/">up</a> <a href="https://davidzych.com/setting-up-ssl-with-lets-encrypt-on-ubuntu-and-nginx/">Nginx</a>, <a href="https://community.letsencrypt.org/t/howto-easy-cert-generation-and-renewal-with-nginx/3491/2">and</a> <a href="https://adambard.com/blog/using-letsencrypt-with-nginx/">automating</a> <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04">Letsencrypt</a> —but none that setup automation and work 100% correctly out of the box. That’s the goal here, I’ll be documenting all the steps required to get your web application protected by an automatically renewing SSL certificate.</p>
+
+<blockquote>
+  <p>NOTE: The following commands will require root user permissions.
+You might want to run <code class="highlighter-rouge">sudo su -</code> first.</p>
+</blockquote>
+
+<h2 id="installing-nginx">Installing Nginx</h2>
+
+<p>The first step is to install Nginx. If all you want to do is install the standard version, it should be available via your distro’s package manager.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># install Nginx on Ubuntu</span>
+apt-get update
+apt-get install -y nginx
+</code></pre>
+</div>
+
+<h2 id="install-letsencryptsh">Install Letsencrypt.sh</h2>
+
+<p>The second step is to install a Letsencrypt client. The <a href="https://github.com/letsencrypt/letsencrypt">official client</a> is a bit bloated and complicated to setup. I prefer to use the <a href="https://github.com/lukas2511/letsencrypt.sh">letsencrypt.sh client</a> instead as its code is easier to understand, has few dependencies and its incredibly simple to automate.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># install letsencrypt.sh dependencies (most should already be installed)</span>
+apt-get install -y openssl curl sed grep mktemp git
+
+<span class="c"># install letsencrypt.sh into /srv/letsencrypt</span>
+git clone https://github.com/lukas2511/letsencrypt.sh.git /srv/letsencrypt
+</code></pre>
+</div>
+
+<h2 id="configure-letsencrypt">Configure Letsencrypt</h2>
+
+<p>Letsencrypt.sh requires some configuration, but not much, the defaults work out of the box. That means that all you need to do is</p>
+
+<ul>
+  <li>create a domains.txt file with the url(s) of the site(s) you’re generating ssl certificates for</li>
+  <li>create a acme-challenges folder that can be  accessed by Nginx.</li>
+</ul>
+
+<p>Here’s how we can do that.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># First we need to make the client executable</span>
+chmod +x /srv/letsencrypt/letsencrypt.sh
+<span class="c"># Then we need to create an ACME challenges folder and symlink it for Nginx to use</span>
+mkdir -p /srv/letsencrypt/.acme-challenges
+mkdir -p /var/www/
+ln -s /srv/letsencrypt/.acme-challenges /var/www/letsencrypt
+</code></pre>
+</div>
+
+<p>Finally we need to specify the site(s) that will be protected by Letsencrypt ssl certificates.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>echo "www.example.com" &gt;&gt; /srv/letsencrypt/domains.txt
+</code></pre>
+</div>
+
+<p>Read more about the domains.txt file format <a href="https://github.com/lukas2511/letsencrypt.sh#domainstxt">here</a></p>
+
+<h2 id="configure-nginx-without-the-catch-22">Configure Nginx (without the Catch-22)</h2>
+
+<p>Up to now, the steps I’ve shown have been the same as almost any other Letsencrypt+Nginx guide you’ve seen online. However most of other guides will tell you to configure Nginx in a way that requires manual intervention.</p>
+
+<p>A basic Letsencrypt Nginx configuration file looks like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># DONT USE THIS, IT WONT WORK.
+
+# /etc/nginx/sites-enabled/example.conf
+# HTTP server
+server {
+	listen      80;
+	server_name www.example.com;
+	location '/.well-known/acme-challenge' {
+		default_type "text/plain";
+		alias /var/www/letsencrypt;
+	}
+	location / {
+		return 301 https://$server_name$request_uri;
+	}
+}
+# HTTPS
+server {
+	listen       443;
+	server_name  www.example.com;
+	ssl                  on;
+	ssl_certificate      /srv/letsencrypt/certs/www.example.com/fullchain.pem;
+	ssl_certificate_key  /srv/letsencrypt/certs/www.example.com/privkey.pem;
+
+	...
+}
+</code></pre>
+</div>
+
+<p>There’s a problem with this though. If you try starting up your Nginx server with this config, it’ll throw an error because the SSL certificate files don’t exist. And you can’t start the letencrypt.sh command to generate the SSL certificates without a working Nginx server to serve up the acme-challenge folder. Classic catch 22.</p>
+
+<p>Here’s the solution: we’re going to break up the Nginx configuration into 2 separate configuration files, one for the  HTTP endpoint with letsencrypt challenge files and one for the HTTPS endpoint serving the actual web application.</p>
+
+<p>We’ll then place them both in the <code class="highlighter-rouge">sites-available</code> folder rather than the standard <code class="highlighter-rouge">sites-enabled</code> folder. By default, any configuration files in the <code class="highlighter-rouge">sites-enabled</code> folder are automatically parsed by Nginx when it’s restarted, however we want to control this process.</p>
+
+<p>The HTTP Nginx configuration file will be located at: <code class="highlighter-rouge">/etc/nginx/sites-available/http.example.conf</code> and look like:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># HTTP server
+server {
+	listen      80;
+	server_name www.example.com;
+	location '/.well-known/acme-challenge' {
+		default_type "text/plain";
+		alias /var/www/letsencrypt;
+	}
+	location / {
+		return 301 https://$server_name$request_uri;
+	}
+}
+</code></pre>
+</div>
+
+<p>The HTTPS Nginx configuration file will be located at <code class="highlighter-rouge">/etc/nginx/sites-available/https.example.conf</code> and look like:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># HTTPS
+server {
+	listen       443;
+	server_name  www.example.com;
+	ssl                  on;
+	ssl_certificate      /srv/letsencrypt/certs/www.example.com/fullchain.pem;
+	ssl_certificate_key  /srv/letsencrypt/certs/www.example.com/privkey.pem;
+
+	#Include actual web application configuration here.
+}
+</code></pre>
+</div>
+
+<h2 id="controlling-nginx">Controlling Nginx</h2>
+
+<p>Before we do anything else, we’ll need to first stop the running Nginx service.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>service nginx stop
+</code></pre>
+</div>
+
+<p>Then we need to enable the HTTP endpoint by creating a symlink from the <code class="highlighter-rouge">sites-available</code> file to the <code class="highlighter-rouge">sites-enabled</code> folder, and starting the Nginx service</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Enable the http endpoint"</span>
+ln -s /etc/nginx/sites-available/http.example.conf /etc/nginx/sites-enabled/http.example.conf
+
+<span class="nb">echo</span> <span class="s2">"Starting nginx service..."</span>
+service nginx start
+</code></pre>
+</div>
+
+<p>At this point we have a working HTTP endpoint which will correctly serve up any files in the <code class="highlighter-rouge">acme-challenge</code> folder. Lets generate some certificates.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Generate Letsencrypt SSL certificates"</span>
+/srv/letsencrypt/letsencrypt.sh --cron
+</code></pre>
+</div>
+
+<p>After the certificates are generated successfully by Letsencrypt.sh, we’ll have to enable our HTTPS endpoint, which is where all standard traffic is being redirected to.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Enable the https endpoint"</span>
+ln -s /etc/nginx/sites-available/https.example.conf /etc/nginx/sites-enabled/https.example.conf
+</code></pre>
+</div>
+
+<p>Finally, we need to tell Nginx update its configuration, as we’ve just added the HTTPS endpoint, but we want to do it without any downtime. Thankfully the Nginx developers have provided us a way to do that.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Reload nginx service..."</span>
+service nginx reload
+</code></pre>
+</div>
+
+<p>Now we have a working HTTPS enabled web application. The only thing left to do is automate the certificate renewal.</p>
+
+<h2 id="downtime-free-automatic-certificate-renewal">Downtime-Free Automatic Certificate Renewal</h2>
+
+<p>Automatically renewing your SSL certificate isn’t just a cool feature of Letsencrypt.sh, its actually almost a requirement. By default Letsencrypt certificates expire every 90 days, so renewing it manually would pretty annoying. Thankfully it only takes a single command to completely automate this process.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Register Letsencrypt to run weekly"</span>
+<span class="nb">echo</span> <span class="s2">"5 8 * * 7 root /srv/letsencrypt/letsencrypt.sh --cron &amp;&amp; service nginx reload"</span> &gt; /etc/cron.d/letsencrypt.sh
+chmod u+x  /etc/cron.d/letsencrypt.sh
+</code></pre>
+</div>
+
+<p>That command will register a new cron task to run every week that will run the letsencrypt.sh command. If the letsencrypt.sh script detects that the certificate will expire within 30 days, the certificates will be renewed automatically, and the Nginx server will reload, without any downtime.</p>
+
+<h2 id="fin">Fin</h2>
+
+<p>At this point you should have a working SSL protected web application, with automatic certificate renewal, at the cost of a handful of bash commands.</p>
+
+<p>If you’re looking for an example of how this process can be used to automatically protect a website running inside a Docker container, look no further than my minimal <a href="https://github.com/AnalogJ/letsencrypt-http01-docker-nginx-example">letsencrypt-http01-docker-nginx-example</a> repo.</p>
+
+<div class="github-widget" data-repo="AnalogJ/letsencrypt-http01-docker-nginx-example"></div>
+
+<p>If you would like to see a more real world use of Letsencrypt with Nginx and automation you should check my <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> repo.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

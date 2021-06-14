@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Dropbox as a service Server 2008</title>
+	  <link>/dropbox-as-a-service-server-2008</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-11-28T02:00:00-06:00</pubDate>
+	  <guid>/dropbox-as-a-service-server-2008</guid>
+	  <description><![CDATA[
+	     <p><strong>What I did</strong>
+So here are the steps that I took in order to get everything working. Quite a few steps but I wanted it detailed enough so that anyone could follow.</p>
+
+<ul>
+  <li>Right click the Dropbox icon in your system tray and select Preferences</li>
+  <li>Deselect Show desktop notifications</li>
+  <li>Deselect Start Dropbox on system startup</li>
+  <li>Download and install Windows Server 2003 Resource Kit Tools. It will warn you about incompatibility, but you can safely ignore this (or at least I did).</li>
+  <li>Open the Command Console (Run –&gt; cmd).</li>
+  <li>Enter sc create DropboxService binPath= C:\Program Files (x86)\Windows Resource Kits\Tools\srvany.exe DisplayName= “Dropbox Service”</li>
+  <li>Open RegEdit and navigate to HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DropboxService\</li>
+  <li>Create a new key named Parameters</li>
+  <li>Create a string value called Application and enter the full path to your Dropbox executable. Typically C:\Users****\AppData\Roaming\Dropbox\bin\Dropbox.exe</li>
+  <li>Open Services (Start Menu –&gt; Administrative Tools –&gt; Services)</li>
+  <li>Locate your Dropbox Service, right click and select properties.</li>
+  <li>Set the service to Autostart</li>
+  <li>Under the Log on tab, check Allow service to interact with desktop.</li>
+  <li>Press Apply</li>
+  <li>Start the service</li>
+  <li>You will get a popup asking for permissions to display the Dropbox configuration - Accept.</li>
+  <li>Add your user info</li>
+</ul>
+
+<p>Done!</p>
+
+<hr />
+
+<ul>
+  <li>Download Windows Server 2003 Resource Kit Files (2008 can use these)</li>
+  <li>Install it into my own workstation, copied files srvany and instsrv into server C:\windows\system32</li>
+  <li>Start command prompt with elevated rights with the <em>user of choice</em></li>
+  <li>Install : “Dropbox 1.1.45.exe” /D=C:\Program Files\Dropbox</li>
+  <li>Run through setup, determine local folder etc</li>
+  <li>Start Dropbox, Preferences -&gt; uncheck “Show desktop notifications” and “Start Dropbox on system startup”</li>
+  <li>Exit dropbox</li>
+  <li>Create Service -&gt; C:\Windows\System32\instsrv.exe” DropBoxService “C:\Windows\System32\srvany.exe -&gt; Success</li>
+  <li>Regedit -&gt; HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DropBoxService</li>
+  <li>Create KEY Parameters</li>
+  <li>Create String value “Application”, value C:\Program Files\Dropbox\Dropbox.exe /home</li>
+  <li>Create String value AppDirectory, value C:\Program Files\Dropbox</li>
+  <li>Services -&gt; DropBoxService -&gt; Properties -&gt; Log on -&gt; Use <em>user of choice</em></li>
+  <li>Start service</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Create a Service on Server 2008</title>
+	  <link>/create-a-service-on-server-2008</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-10-02T02:00:00-05:00</pubDate>
+	  <guid>/create-a-service-on-server-2008</guid>
+	  <description><![CDATA[
+	     <p>http://support.microsoft.com/kb/251192
+How to create a service from an exe on server 2008</p>
+
+<p><code class="highlighter-rouge">sc create CustomUTorrent binPath= "D:\uTorrent\uTorrent.exe" start= boot start= auto error= ignore obj= &lt;Domain\Username&gt; password= &lt;Password&gt;</code></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

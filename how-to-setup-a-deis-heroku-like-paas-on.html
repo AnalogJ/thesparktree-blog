@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS" />
+    <meta name="twitter:description" content="Prerequisites Install and Configure the Azure CLI # If Node.js is installed on your system, use the following command to install the xplat-cli: sudo npm install..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_deis.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS" />
+    <meta property="og:description" content="Prerequisites Install and Configure the Azure CLI # If Node.js is installed on your system, use the following command to install the xplat-cli: sudo npm install..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_deis.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on",
+        "image": "https://blog.thesparktree.com/assets/images/cover_deis.jpg",
+        "description": "Prerequisites Install and Configure the Azure CLI # If Node.js is installed on your system, use the following command to install the xplat-cli: sudo npm install..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_deis.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2014-11-22">22 Nov 2014</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/coreos'>Coreos</a>,
+                    
+                
+                    
+                       <a href='/tag/deis'>Deis</a>,
+                    
+                
+                    
+                       <a href='/tag/azure'>Azure</a>,
+                    
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <h1 id="prerequisites">Prerequisites</h1>
+
+<h2 id="install-and-configure-the-azure-cli">Install and Configure the Azure CLI</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># If Node.js is installed on your system, use the following command to install the xplat-cli:</span>
+sudo npm install azure-cli -g
+
+<span class="c">#To download the publish settings for your account, use the following command:</span>
+azure account download
+
+<span class="c">#This will open your default browser and prompt you to sign in to the Azure Management Portal. After signing in, a .publishsettings file will be downloaded. Make note of where this file is saved.</span>
+
+<span class="c">#Next, import the .publishsettings file by running the following command, replacing [path to .publishsettings file] with the path to your .publishsettings file:</span>
+azure account import <span class="o">[</span>path to .publishsettings file]
+</code></pre>
+</div>
+
+<h2 id="azure-configuration">Azure Configuration</h2>
+<p>Ok, we’re ready to provision our cluster. We’ll first need to create an affinity group for this cluster so the hosts selected for the CoreOS VMs are close to each other:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>azure account affinity-group create myapp-affinity -l "East US" -e "MyApp Affinity Group"
+</code></pre>
+</div>
+
+<p>Next, create a cloud service for this cluster. We are going to assign containers to each of the hosts in this cluster to serve web traffic so we want to load balance incoming requests across them using a cloud service. This cloud service name needs to be unique across all of Azure, so choose a unique one:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>azure service create --affinity-group myapp-affinity myapp-cloud-service-name
+</code></pre>
+</div>
+
+<p>Finally, we will create a virtual private network for our cluster to live inside.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#TODO: this isnt working
+azure network vnet create --affinity-group myapp-affinity myapp-network
+</code></pre>
+</div>
+
+<h2 id="configure-coreos-cloud-configyml-file">Configure CoreOS cloud-config.yml file</h2>
+
+<p>The first thing we need to do is get a discovery token for etcd. ‘etcd’ is a distributed key-value store built on the Raft protocol and acts as a store for configuration information for CoreOS. Fleet, another part of the CoreOS puzzle, is a low-level init system built on ‘etcd’ that provides the functionality of Systemd over a distributed cluster.</p>
+
+<p>This discovery token is configured in the cloud-init file called cloud-config.yml. This configures the CoreOS image once it is provisioned by Azure and, in particular, it injects the etcd discovery token into the virtual machine so that it knows which CoreOS cluster it belongs to. Its important to have a new and unique value for this, otherwise your cluster could fail to initialize correctly.</p>
+
+<p>Let’s provision a new one for our cluster:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>curl https://discovery.etcd.io/new
+</code></pre>
+</div>
+
+<p>This will fetch a discovery URL that looks something like https://discovery.etcd.io/e6a84781d11952da545316cb90c9e9ab. Copy this and edit the <a href="https://raw.githubusercontent.com/deis/deis/master/contrib/coreos/user-data.example">cloud-config.yml</a> file and paste this discovery token into it.</p>
+
+<p><a href="https://raw.githubusercontent.com/deis/deis/master/contrib/coreos/user-data.example">Dies Cloud-Config Example File</a></p>
+
+<h2 id="create-azure-coreos-vm-cluster">Create Azure CoreOS VM Cluster</h2>
+
+<p>Run the folllowing commands to create your Azure VMs. Feel free to configure the size and ports, but be sure to create atleast 3 vms. Deis provisions 3 router services by default, and will hang if only less than 3 servers are present. (https://github.com/deis/deis/issues/2469)</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>azure vm create <span class="se">\</span>
+--custom-data<span class="o">=</span>cloud-config.yml <span class="se">\</span>
+--vm-size<span class="o">=</span>Basic_A1 <span class="se">\</span>
+--ssh<span class="o">=</span>22 <span class="se">\</span>
+--ssh-cert<span class="o">=</span>../path/to/cert <span class="se">\</span>
+--no-ssh-password <span class="se">\</span>
+--vm-name<span class="o">=</span>coreos1 <span class="se">\</span>
+--virtual-network-name<span class="o">=</span>myapp-network <span class="se">\</span>
+--affinity-group<span class="o">=</span>myapp-affinity <span class="se">\</span>
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+
+azure vm create <span class="se">\</span>
+--custom-data<span class="o">=</span>cloud-config.yml <span class="se">\</span>
+--vm-size<span class="o">=</span>Basic_A1 <span class="se">\</span>
+--ssh<span class="o">=</span>2222 <span class="se">\</span>
+--ssh-cert<span class="o">=</span>../path/to/cert <span class="se">\</span>
+--no-ssh-password <span class="se">\</span>
+--vm-name<span class="o">=</span>coreos2 <span class="se">\</span>
+--virtual-network-name<span class="o">=</span>myapp-network <span class="se">\</span>
+--affinity-group<span class="o">=</span>myapp-affinity <span class="se">\</span>
+--connect
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+
+azure vm create <span class="se">\</span>
+--custom-data<span class="o">=</span>cloud-config.yml <span class="se">\</span>
+--vm-size<span class="o">=</span>Basic_A1 <span class="se">\</span>
+--ssh<span class="o">=</span>2223 <span class="se">\</span>
+--ssh-cert<span class="o">=</span>../path/to/cert <span class="se">\</span>
+--no-ssh-password <span class="se">\</span>
+--vm-name<span class="o">=</span>coreos3 <span class="se">\</span>
+--virtual-network-name<span class="o">=</span>myapp-network <span class="se">\</span>
+--affinity-group<span class="o">=</span>myapp-affinity <span class="se">\</span>
+--connect
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+</code></pre>
+</div>
+
+<p>Use the following command to find alternative/newer versions of CoreOS</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>azure vm image list | grep  "CoreOS"
+</code></pre>
+</div>
+
+<p>Let’s quickly ssh into the first machine in the cluster and check to make sure everything looks ok:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>ssh core@myapp-cloud-service-name.cloudapp.net -p 22 -i ../path/to/cert
+</code></pre>
+</div>
+
+<p>Let’s first make sure etcd is up and running:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo etcdctl ls --recursive
+# /coreos.com
+# /coreos.com/updateengine
+# /coreos.com/updateengine/rebootlock
+# /coreos.com/updateengine/rebootlock/semaphore
+</code></pre>
+</div>
+
+<p>And that fleetctl knows about all of the members of the cluster:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>sudo fleetctl list-machines
+# MACHINE     IP      METADATA
+# 36a636af... 10.0.0.4    region=us-east
+# 40078616... 10.0.0.5    region=us-east
+# f6ebd7d1... 10.0.2.4    region=us-east
+</code></pre>
+</div>
+
+<p>Finally lets exit from the CoreOS cluster and install the local management tools</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>exit
+</code></pre>
+</div>
+
+<h2 id="install-deis-control-utility">Install Deis Control Utility</h2>
+<p>The Deis Control Utility, or <code class="highlighter-rouge">deisctl</code> for short, is a command-line client used to configure and manage the Deis Platform.</p>
+
+<h3 id="building-from-installer">Building from Installer</h3>
+
+<p>To install the latest version of deisctl, change to the directory where you would like to install the binary. Then, install the Deis Control Utility by downloading and running the install script with the following command:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir /tmp/deisctl
+cd /tmp/deisctl
+curl -sSL http://deis.io/deisctl/install.sh | sh -s 1.0.1
+</code></pre>
+</div>
+
+<p>This installs deisctl to the current directory, and refreshes the Deis systemd unit files used to schedule the components. Link it to /usr/local/bin, so it will be in your PATH:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cp /tmp/deisctl/deisctl /usr/local/bin/deisctl
+</code></pre>
+</div>
+
+<p>Always use a version of deisctl that matches the Deis release. Verify this with <code class="highlighter-rouge">deisctl --version</code>.</p>
+
+<h2 id="install-the-deis-platform">Install the Deis Platform</h2>
+
+<p>Ensure your SSH agent is running and select the private key that corresponds to the SSH key added to your CoreOS nodes:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="nb">eval</span> <span class="sb">`</span>ssh-agent -s<span class="sb">`</span>
+ssh-add ~/.ssh/deis
+</code></pre>
+</div>
+
+<p>Export it to the DEISCTL_TUNNEL environment variable (substituting your own cloud app service name):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>export DEISCTL_TUNNEL="myapp-cloud-service-name.cloudapp.net"
+</code></pre>
+</div>
+
+<p>This is the IP address where deisctl will attempt to communicate with the cluster. You can test that it is working properly by running deisctl list. If you see a single line of output, the control utility is communicating with the nodes.</p>
+
+<p>Before provisioning the platform, we’ll need to add the SSH key to Deis so it can connect to remote hosts during deis run:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deisctl config platform set sshPrivateKey=~/.ssh/deis
+</code></pre>
+</div>
+
+<p>We’ll also need to tell the controller which domain name we are deploying applications under:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deisctl config platform set domain=example.com
+</code></pre>
+</div>
+
+<p>Once finished, run this command to provision the Deis platform:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deisctl install platform
+</code></pre>
+</div>
+
+<p>You will see output like the following, which indicates that the units required to run Deis have been loaded on the CoreOS cluster:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>● ▴ ■
+■ ● ▴ Installing Deis...
+▴ ■ ●
+
+Scheduling data containers...
+...
+Deis installed.
+Please run `deisctl start platform` to boot up Deis.
+</code></pre>
+</div>
+
+<p>Run this command to start the Deis platform:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deisctl start platform
+</code></pre>
+</div>
+
+<p>Once you see “Deis started.”, your Deis platform is running on a cluster! You may verify that all of the Deis units are loaded and active by running the following command:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>deisctl list
+</code></pre>
+</div>
+
+<p>All of the units should be active.</p>
+
+<p>Now that you’ve finished provisioning a cluster, we can get started using the platform.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li>http://azure.microsoft.com/en-us/documentation/articles/xplat-cli/</li>
+  <li>https://coreos.com/docs/launching-containers/launching/fleet-using-the-client/</li>
+  <li>https://coreos.com/docs/running-coreos/cloud-providers/azure/</li>
+  <li>https://github.com/timfpark/coreos-azure</li>
+  <li>http://docs.deis.io/en/latest/installing_deis/install-deisctl/</li>
+  <li>http://docs.deis.io/en/latest/installing_deis/install-platform/</li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Build Automation & Infrastructure guy @Adobe. I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS&amp;url=https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/how-to-setup-a-deis-heroku-like-paas-on" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/how-to-setup-a-deis-heroku-like-paas-on'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_sails.jpg)" href="/reusing-sailsjs-waterline-models-in-background">
+            <section class="post">
+                <h2>Reusing SailsJS + Waterline Models in Background Tasks</h2>
+                <p>Its been a while since I first attempted to design a background tasks/workers pattern for...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_ubuntu.png)" href="/debugging-upstart-jobs-on-ubuntu-1404">
+            <section class="post">
+                <h2>Debugging Upstart Jobs on Ubuntu 14.04</h2>
+                <p>Before you begin, you should be (intimately) familiar with the Upstart Cookbook. It’s an incredible...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2021</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="//load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>   
+</body>
+</html>

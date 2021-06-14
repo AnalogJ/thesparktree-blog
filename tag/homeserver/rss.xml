@@ -1,0 +1,2364 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Home Server - Disk Management</title>
+	  <link>/disk-management</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-11-20T03:19:33-06:00</pubDate>
+	  <guid>/disk-management</guid>
+	  <description><![CDATA[
+	     <h1 id="adding-a-new-disk-to-your-homeserver">Adding a new disk to your homeserver</h1>
+
+<h2 id="identify-your-new-devices">Identify your new devices</h2>
+
+<ol>
+  <li>Take photos of your drives before inserting them. Specifically, you’ll want to track the serial number, manufacturer and model.
+This will make identifying the new drives in a large system much easier.</li>
+  <li>Install the drives and power on your server.</li>
+  <li>Get a list of your mounted drives using <code class="highlighter-rouge">cat /etc/mtab | grep /dev/</code>.
+If you use specific drive mounting folder structure, you can be fairly certain these devices do not correspond with your newly added drives.</li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/dev/sdg /mnt/drive4 ext4 rw,seclabel,relatime 0 0
+/dev/sdb /mnt/drive5 ext4 rw,seclabel,relatime 0 0
+/dev/sdf /mnt/drive1 ext4 rw,seclabel,relatime 0 0
+/dev/sdd /mnt/drive2 ext4 rw,seclabel,relatime 0 0
+</code></pre>
+</div>
+
+<ol>
+  <li>List all device detected by your system, and ignore references to devices that you already recognize.
+    <div class="highlighter-rouge"><pre class="highlight"><code>$ ls -alt /dev/sd*
+brw-rw----. 1 root disk 8, 32 Nov 21 16:40 /dev/sdc
+brw-rw----. 1 root disk 8, 64 Nov 21 16:23 /dev/sde
+brw-rw----. 1 root disk 8,  1 Nov 21 16:01 /dev/sda1
+brw-rw----. 1 root disk 8,  2 Nov 21 16:01 /dev/sda2
+brw-rw----. 1 root disk 8,  0 Nov 21 16:01 /dev/sda
+brw-rw----. 1 root disk 8, 16 Nov 21 16:01 /dev/sdb
+brw-rw----. 1 root disk 8, 80 Nov 21 16:01 /dev/sdf
+brw-rw----. 1 root disk 8, 96 Nov 21 16:01 /dev/sdg
+brw-rw----. 1 root disk 8, 48 Nov 21 16:01 /dev/sdd
+</code></pre>
+    </div>
+    <p>In this case, all we care about are <code class="highlighter-rouge">/dev/sdc</code> and /dev/sde`</p>
+  </li>
+  <li>Get information about these unknown devices, to match against the Manufacturer, Model &amp; Serial number of the inserted drives.</li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ fdisk -l
+
+...
+
+Disk /dev/sde: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+Disk /dev/sdc: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</code></pre>
+</div>
+
+<p>The models listed match our disk models, but lets get their serial numbers to be sure.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ udevadm info --query=all --name=/dev/sdc | grep SERIAL
+E: ID_SERIAL_SHORT=Y5HXXXXX
+
+$ udevadm info --query=all --name=/dev/sde | grep SERIAL
+E: ID_SERIAL_SHORT=9LGXXXXXX
+</code></pre>
+</div>
+<p>Once we’ve confirmed these serial numbers match the devices we added, it’s time to format the devices.</p>
+
+<h2 id="format">Format</h2>
+
+<p>We’ll be using <a href="https://github.com/trapexit/backup-and-recovery-howtos">trapexit’s excellent backup &amp; recovery guide</a> as a reference here.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ mkfs.ext4 -m 0 -T largefile4 -L &lt;label&gt; /dev/&lt;device&gt;
+
+mke2fs 1.42.9 (4-Feb-2014)
+Discarding device blocks: done
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+16 inodes, 4096 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=0
+1 block group
+32768 blocks per group, 32768 fragments per group
+16 inodes per group
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+</code></pre>
+</div>
+
+<ul>
+  <li>-m <reserved-blocks-percentage>: Reserved blocks for super-user. We set it to zero because these drives aren't used in a way where that really matters.a</reserved-blocks-percentage></li>
+  <li>-T <usage-type>: Specifies how the filesystem is going to be used so optimal paramters can be chosen. Types are defined in `/etc/mke2fs.conf`. We set it to `largefile4` because we expect fewer, large files relative to typical usage. If you expect a large number of files or are unsure simply remove the option all together.</usage-type></li>
+  <li>-L <label>: Sets the label for the filesystem. A suggested format is: SIZE-MANUFACTURE-N. For example: <code class="highlighter-rouge">2.0TB-Seagate-0</code> for the first 2.0TB Seagate drive installed.</label></li>
+</ul>
+
+<p>It’s generally a good idea to format the raw device rather than creating partitions.</p>
+
+<ol>
+  <li>The partition is mostly useless to us since we plan on using the entire drive for storage.</li>
+  <li>We won’t need to worry about MBR vs GPT.</li>
+  <li>We won’t need to worry about block alignment which can effect performance if misaligned.</li>
+  <li>When a 512e/4k drive is moved between a native SATA controller and a USB SATA adaptor there won’t be partition block misalignment. Often USB adapters will report 4k/4k to the OS while the drive will report 512/4k causing the OS to fail to find the paritions or filesystems. This can be fixed but no tools exist to do the procedure automatically.</li>
+</ol>
+
+<h2 id="mount">Mount</h2>
+<p>Next we’ll need to mount the devices.</p>
+
+<p>Lets make the mount directories, following our folder naming structure.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir -p /mnt/drive3
+mkdir -p /mnt/drive6
+</code></pre>
+</div>
+<p>Next we can actually mount the devices the new directories</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mount /dev/sde /mnt/drive3
+mount /dev/sdc /mnt/drive6
+</code></pre>
+</div>
+
+<p>These mounts are just for testing, and are not persistent. Since we’re using Systemd, we can create mount config files
+and tell Systemd to automatically mount our drives and manage them.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>systemctl edit --force --full mnt-drive3.mount
+
+[Mount]
+What=/dev/disk/by-uuid/e1378723-7861-49b9-8e01-0bd063f0ecdd
+Where=/mnt/drive3
+Type=ext4
+
+[Install]
+WantedBy=local-fs.target
+</code></pre>
+</div>
+
+<p>Finally  we need to “enable” the systemd service:</p>
+
+<p><code class="highlighter-rouge">systemctl enable mnt-drive3.mount</code></p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</title>
+	  <link>/ultimate-media-server-build-mediadepot</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-25T03:19:33-06:00</pubDate>
+	  <guid>/ultimate-media-server-build-mediadepot</guid>
+	  <description><![CDATA[
+	     <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></li>
+  <li><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></li>
+  <li><strong><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></strong></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 3</strong>, where I’ll be discussing the software I use to run my ultimate media server, specifically focusing on installing and
+configuring CoreOS for MediaDepot.</p>
+
+<hr />
+
+<p>The hardware and build process for <strong>“The Ultimate Media Server”</strong> was outlined in previous posts, but hardware is only
+one part of the solution. Software (OS &amp; Applications) determine the functionality and ultimately the value of our home server.</p>
+
+<p>Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.</p>
+
+<div class="img-gallery">
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba screenshot" />
+  </a>
+</div>
+
+<p>Still interested? Good. Now that we have an idea what the finished product will look like, lets discuss the actual software stack and my requirements.</p>
+
+<div class="github-widget" data-repo="mediadepot/docs"></div>
+
+<p>While this blog post will describe the step by step instructions for setting up CoreOS &amp; Mediadepot, then <a href="https://www.github.com/mediadepot/docs">mediadepot/docs</a>
+repo contains additional documentation that you might find interesting.</p>
+
+<p>Given that our goal of building the <strong>“The Ultimate Media Server”</strong> is pretty hard to quantify, lets give ourselves some constraints and requirements that we can actually track.</p>
+
+<ol>
+  <li>The server will be self hosted, with only <strong>one physical node</strong> (if you need a multi-node media server, this wont work for you)</li>
+  <li>The server will be running <strong>headless (no monitor is required)</strong></li>
+  <li>The server will be running a <strong>minimal OS/hypervisor</strong>. This is to limit the amount of OS maintenance required, and ensure that all software is run in a maintainable &amp; isolated way.</li>
+  <li>The server will be using <strong>JBOD disk storage</strong> (allowing you to aggregate and transparently interact with multiple physical disks as a single volume)
+    <ul>
+      <li><strong>Redundancy is should be supported but is not a requirement.</strong></li>
+    </ul>
+  </li>
+  <li>The server will provide a <strong>automation friendly folder structure</strong> for use by media managers (sickrage, couchpotato, sonar, plex, etc)</li>
+  <li>The server will provide a <strong>monitoring</strong> solution with a web GUI.</li>
+  <li>The server will provide a routing method to running web applications via a custom domain <strong>*.depot.lan</strong></li>
+  <li>The server will provide a method that user <strong>applications can use to notify the user</strong> when events have occurred (download started, completed, media added)</li>
+  <li>The server will provide a way to <strong>backup application configuration</strong> to a secondary location.</li>
+</ol>
+
+<p>The first two items on the list are already done. The hardware chosen in <a href="https://blog.thesparktree.com/ultimate-media-server-build-hardware">Part 1</a> was only for a single server.
+The headless requirement (<strong>#2</strong>) is solved by the IPMI functionality built into our SuperMicro X11SSL-CF motherboard.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_kvm.png" alt="IPMI" style="max-height: 500px;" /></p>
+
+<p>IPMI provides us with the ability to remotely manage the server, including the ability to see what’s “running” on the server using a virtual display + KVM.</p>
+
+<h4 id="coreos">CoreOS</h4>
+
+<p>Requirement <strong>#3</strong> is where this blog post really starts.
+Rather than going with a traditional virtualization/hypervisor solution like VMWare ESXI or Proxmox, I’m going to evangelize
+the use of CoreOS Container Linux as the base Operating System for your Home Server</p>
+
+<p>So what is CoreOS?</p>
+
+<blockquote>
+  <p>As an operating system, Container Linux provides only the minimal functionality required for deploying applications inside software containers,
+together with built-in mechanisms for service discovery and configuration sharing.
+Container Linux provides no package manager as a way for distributing payload applications, requiring instead all applications to run inside their containers.</p>
+
+  <p>https://en.wikipedia.org/wiki/Container_Linux</p>
+</blockquote>
+
+<p>Basically CoreOS is an incredibly slim Linux OS that is designed to do one thing, and one thing only: run Docker containers.
+As mentioned in the wikipedia article, CoreOS does not have a package manager and requires that all user applications run in docker containers,
+drastically reducing the amount of OS maintenance required (<strong>#3</strong>)</p>
+
+<h4 id="jbod-storage">JBOD Storage</h4>
+
+<p>This latest iteration of my Home Server follows atleast a half dozen other Home Server’s I’ve built over the years. While I’ve used various
+software and hardware RAID solutions in the past, it’s been my experience that JBOD (Just-A-Bunch-Of-Drives) solutions work best for
+home servers.</p>
+
+<ul>
+  <li>JBOD allows you to easily mix-and-match drives, letting your server grow with you.</li>
+  <li>Performance &amp; Redundancy may not be as important as Raw Storage &amp; Simplicity for home servers</li>
+  <li>While disk failures can result in data loss, you only lose the content of that drive, rather the whole drive array (depending on RAID mode)</li>
+</ul>
+
+<p>While I have played with various JBOD file systems (mhddfs, greyhole, zfs), I’ve found that <a href="https://github.com/trapexit/mergerfs">MergerFS</a>
+is simple and bulletproof, without any weird file system hacks to get JBOD working.</p>
+
+<h4 id="folder-structure">Folder Structure</h4>
+
+<p>Next up is finding a folder structure that works for all the data we need to store on our server. While this seems like a fairly
+trivial problem, once we start using automatic media downloaders like SickChill, CouchPotato, Sonarr &amp; Radarr, things become much more complicated.</p>
+
+<p>Here’s the structure that I’ve been using for years:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">/media/temp/blackhole/*</code> - temporarily contains <code class="highlighter-rouge">.torrent</code> files. These files can be added manually via SMB, or automatically by apps like sickrage, couchpotato, sonarr, etc.</li>
+  <li><code class="highlighter-rouge">/media/temp/processing</code> - a cache directory used by your torent client. Temporarily holds current download files. Once complete they are moved into the correct subfolder of <code class="highlighter-rouge">/media/storage/downloads</code></li>
+  <li><code class="highlighter-rouge">/media/storage/downloads/*</code> - contains completed torrent downloads. Files added here are automatically detected by media managers (sickrage, couchpotato, etc) then renamed/reorganized and moved to their
+final storage directory <code class="highlighter-rouge">/media/storage/*</code></li>
+  <li><code class="highlighter-rouge">/media/storage/*</code> - contains the final renamed/organized media, to be used by your media streamer of choice (Plex/Emby/etc).
+All subfolders are automatically created as SMB shares</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/media
+├── storage/
+│   ├── downloads/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   ├── movies/
+│   ├── music/
+│   ├── tvshows/
+├── temp/
+│   ├── blackhole/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   └── processing/
+
+</code></pre>
+</div>
+
+<p>This structure is automation friendly, easy to manage via the commandline, and customizable.</p>
+
+<h4 id="monitoring">Monitoring</h4>
+
+<p>While Corporate and Enterprise monitoring solutions have a lot of features, for a home server I’ve found that theres
+really only 3 things that I need:</p>
+<ul>
+  <li>a nice light-weight dashboard that tracks CPU, Disk &amp; Memory usage</li>
+  <li>a way to track the S.M.A.R.T health status of my storage disks (and get notified if something has changed)</li>
+  <li>a way to manage the Dockerized applications running on my server, and restart/update them if necessary</li>
+</ul>
+
+<p>While <a href="https://prometheus.io/docs/visualization/grafana/">Graphana + Prometheus</a> solutions are common for generating nice server dashboards, it’s not quite as light-weight as
+I like. Netdata is extremely light-weight, extensible, gorgeous, and works out of the box.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png" alt="netdata" style="max-height: 500px;" /></p>
+
+<p>On Linux, the defacto standard for S.M.A.R.T disk monitoring is <a href="https://www.smartmontools.org/">smartmontools</a>, so that’s an easy choice.
+With a bit of customization, we can also get notifications via PushBullet or PushOver.</p>
+
+<p>Finally, we’ll need a Docker manager with a web interface that we can use to remotely manage our Dockerized applications.
+Once again, there’s alot of alternatives, but there’s only one that has the functionality that want with the lightweight footprint that
+I desire: <a href="https://www.portainer.io/">Portainer</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png" alt="portainer" style="max-height: 500px;" /></p>
+
+<h4 id="routing--subdomains">Routing &amp; Subdomains</h4>
+
+<p>Subdomains is a quality of life improvement that becomes almost a necessity when you’re running more than 3 or 4 services on your server.
+Remembering <code class="highlighter-rouge">sickrage.depot.lan</code> and <code class="highlighter-rouge">couchpotato.depot.lan</code> is much more reasonable than <code class="highlighter-rouge">10.0.1.100:54338</code> and <code class="highlighter-rouge">10.0.1.100:54221</code>.
+Having those subdomains map automatically to the relevant Docker container is the responsibility of a reverse proxy called <a href="https://traefik.io/">Traefik</a>
+Once configured it’ll automatically watch for new (or updated) Docker containers and automatically assign them a subdomain.
+No more ports.</p>
+
+<p>Routing is a bit more complicated. Now that you have these nice subdomains for applications on your server, how do you tell all your
+devices (including phones, laptops, tablets, etc) that these new websites exist on your home network rather than the internet?</p>
+
+<p>Traditionally you’d need to update your OS host file (located at <code class="highlighter-rouge">/etc/hosts</code> or <code class="highlighter-rouge">c:\Windows\System32\Drivers\etc\hosts</code>) with
+a new entry per domain, but that gets old fast, and doesn’t really work for locked down mobile devices like Tablets &amp; Phones.</p>
+
+<p>The solution here is to run a tiny (notice a pattern here?) DNS service on the server. This DNS service is configured to
+capture all requests for <code class="highlighter-rouge">*.depot.lan</code> and respond with the server’s IP address, while redirecting all other DNS requests to
+the public internet.</p>
+
+<p>Unlike the hosts file, DNS configuration is user customizable even on mobile &amp; tablet devices. Now all we need to do is
+update our devices to use this new DNS service. It introduces a bit of latency, but thankfully most mobile devices (laptops/tables/phones)
+configure DNS on a network by network basis, meaning your custom DNS service will only be activated when your on your home network.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>If you’ve been following along so far (or skipped ahead), you may have noticed a significant lack of code snippets or
+instructions for how to get this all setup.</p>
+
+<p>You’re in luck. All the steps required to customize a CoreOS based Home Media Server as I’ve described are codified in an Ignition project.</p>
+
+<div class="github-widget" data-repo="mediadepot/ignition"></div>
+
+<p>It’s all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I’m open to PR’s.</p>
+
+<p>If you’re not familiar with Ignition, its the official configuration management solution for CoreOS.
+You can take the <a href="https://github.com/mediadepot/ignition/blob/master/ignition.yaml">configuration I wrote</a> and customize it for your needs. In addition the Ignition configuration references each feature
+separately, so you can disable any features that are irrelevant to your installation.</p>
+
+<p>Once you’ve modified the ignition.yaml file, you’ll need to “transpile” it to a JSON format that ignition actually understands.
+To do that, you’ll need to install the <a href="https://github.com/coreos/container-linux-config-transpiler/">Container Linux Config Transpiler</a>,
+but we’ll just use a simple Docker image with the Config Transpiler pre-installed.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker run --rm -v $(pwd):/data keinos/coreos-transpiler ct -strict -pretty -in-file /data/ignition.yaml -out-file /data/ignition.json -files-dir=/data/files/  -platform=custom
+</code></pre>
+</div>
+
+<p>With that all out of the way, lets get into the installation steps.</p>
+
+<ol>
+  <li>Download bootable CoreOS image from https://coreos.com/os/docs/latest/booting-with-iso.html</li>
+  <li>Create bootable USB/CD with contents of CoreOS image</li>
+  <li>Start server and boot from CoreOS USB/CD.</li>
+  <li>Determine the OS installation disk
+    <div class="language-bash highlighter-rouge"><pre class="highlight"><code> sudo fdisk -l
+
+ <span class="c"># note, the boot disk will probably be /dev/loop0</span>
+</code></pre>
+    </div>
+  </li>
+  <li>Copy the ignition.json config bootstrap file that you created earlier to the file system (using CURL, or another USB)</li>
+  <li>Begin CoreOS installation on specified disk, <strong>NOTE: specified disk will be reformatted</strong>
+    <div class="language-bash highlighter-rouge"><pre class="highlight"><code> sudo coreos-install -d /dev/sda -C stable -i ignition.json
+</code></pre>
+    </div>
+  </li>
+  <li>On installation completion, remove bootable USB/CD</li>
+  <li>Restart server</li>
+  <li>Wait for CoreOS to start and <code class="highlighter-rouge">cloud-init</code> process to complete.</li>
+  <li>Go to <code class="highlighter-rouge">http://admin.depot.lan</code> to see Portainer dashboard and begin setup.</li>
+</ol>
+
+<p>I’ve been drinking the Docker kool-aid for years, and as a configuration management &amp; deployment tool it’s only gotten better and more popular.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ultimate Media Server Build - Part 2 - Build Log</title>
+	  <link>/ultimate-media-server-build-log</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-25T03:19:33-06:00</pubDate>
+	  <guid>/ultimate-media-server-build-log</guid>
+	  <description><![CDATA[
+	     <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></li>
+  <li><strong><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></strong></li>
+  <li><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 2</strong>, where I’ll be showing photos from the actual build, and pointing out issues (and solutions) working with
+such a small case.</p>
+
+<hr />
+
+<p>Before starting my new build, I needed to pull some hardware from my old server. I also wanted to clean and box up the remaining parts
+as I was hoping to re-sell them to make up some of the cost of my new server.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/old_server_1.jpg" alt="old server" style="max-height: 500px;" /></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/old_server_2.jpg" alt="old server" style="max-height: 500px;" /></p>
+
+<p>After that I started by unboxing the U-NAS NSC-810A box</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_1.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_2.jpg" alt="new server" style="max-height: 500px;" /></p>
+
+<p>The footprint of the new server vs the old was very similar, with the NSC-810A being almost unnoticeably larger, while supporting
+micro-ATX motherboards.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/800vs810A.jpg" alt="800 vs 810A" style="max-height: 500px;" />
+<small>credit to <a href="https://forums.servethehome.com/index.php?members/nev_neo.1731/">nev_neo</a> from <a href="https://forums.servethehome.com/index.php?threads/u-nas-nsc-810a-matx-chassis.12897/page-6#post-147716">serve the home</a></small></p>
+
+<p>Now that I had the NSC-810A out, it was time to tear it down. I wanted to replace the stock 120mm case fans with some
+quieter cooling fans, and replace the provided thin SATA cables with my SAS-SATA breakout cables.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_1.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_2.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_3.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_4.jpg" alt="new server" style="max-height: 500px;" /></p>
+
+<p>After the case teardown, I got to work unboxing my Supermicro X11SSL-CF motherboard, Xeon E3-1275 and 64GB of DDR4 ECC RAM.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard.jpg" alt="motherbaord" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/ram.jpg" alt="ram" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/cpu.jpg" alt="cpu" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_ram_slot_order.png" alt="ram" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_mounted.jpg" alt="mounted" style="max-height: 500px;" /></p>
+
+<p>This is actually where I noticed that the SAS port was not what I was expecting.
+The Supermicro X11SSL-CF has a mini-SAS HD port (SFF-8644) rather than a mini-SAS port (SFF-8088), something not mentioned on
+the Supermicro spec website.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_minisas_hd.jpg" alt="minisas hd" style="max-height: 500px;" /></p>
+
+<p>Pre-case-install, I wanted to test out the hardware, so I wired up the power supply to the motheboard, and attached a linux live-USB.</p>
+
+<p>During this process, I noticed the next oddity with my hardware, the 8-pin power supply.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_8pin.jpg" alt="8pin" style="max-height: 500px;" /></p>
+
+<p>Unfortunately my Seasonic SS-350M1U does not have an 8pin motherboard power supply cable, only a 4pin.
+After taking a look at the Supermicro documentation however, it seems that I may be in the clear. In the X11SSL-CF manual,
+the secondary power supply pin-diagram states that 4 of the 8 pins are set to ground, and are unnecessary, saving me from
+purchasing a molex-4pin power supply adapter.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_8pin_manual.png" alt="manual" style="max-height: 500px;" /></p>
+
+<p>After verifying that the CPU/Motherboard/RAM combo was working, it was time to wire up the case.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_1.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_2.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_3.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_4.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_5.jpg" alt="wiring" style="max-height: 500px;" /></p>
+
+<p>As you can see above, my Nvidia Quadro P2000 was uncomfortably close to the top of the case, and I was concerned that it may
+short against the top of the case. The NSC-810A comes with a handy plastic shield, which I ended up cutting and placing on the
+video card as added protection.</p>
+
+<p>Finally, I started loading in my hard drives</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/harddrive.jpg" alt="harddrive" style="max-height: 500px;" /></p>
+
+<p>Here’s the final product.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/complete.jpg" alt="harddrive" style="max-height: 500px;" /></p>
+
+<h2 id="ipmi-configuration">IPMI Configuration</h2>
+
+<p>After closing up the case and placing the server in its final location, I began noticing the case fans (and CPU fans) were pulsating.
+I did some quick reading and determined that this was due to the fan speed thresholds set on my Supermicro motherboard. Basically
+the Noctua (and Cougar) fans are very quiet, and run at low RPM. This low RPM is below the standard threshold speed set in the motherboard config.
+The motherboard then thinks that the fan has failed, and to compensate it will rev up the remaining fans, at which point the Noctua or Cougar fan
+will speed up as well, and the motherboard will sense it and notify the fans to begin normal operations. Rinse &amp; repeat.</p>
+
+<p>Here’s how I fixed this issue.</p>
+
+<p>First I needed to get the IPMI tools installed on my OS. Since I’m running CoreOS, that’s a bit more work than normal</p>
+
+<h3 id="setup-ipmitool-on-coreos">Setup ipmitool on CoreOS</h3>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>`$ sudo modprobe ipmi_si ipmi_devintf # make sure that ipmi kernel modules are loaded.
+$ toolbox --bind=/dev/ipmi0 # start the CoreOS toolbox container
+$ dnf install ipmitool # install  ipmitool
+$ ipmitool -I open channel info 1 # verify that ipmitool is working
+</code></pre>
+</div>
+
+<h3 id="set-fan-thresholds">Set fan thresholds</h3>
+
+<p>Now that we have the IPMI tools installed, lets update the fan thresholds:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+# Noctua - https://noctua.at/en/nh-l9i/specification
+ipmitool sensor thresh FAN3 lower 300 400 500
+
+# Cougar FAN1
+ipmitool sensor thresh FAN1 lower 400 500 600
+
+#Cougar FAN4
+ipmitool sensor thresh FAN4 lower 400 500 600
+
+</code></pre>
+</div>
+
+<h3 id="reboot-bmc">Reboot BMC</h3>
+
+<p>Next try to reboot BMC by going to IPMI web interface » Maintenance » Unit Reset.</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ultimate Media Server Build - Part 1 - Hardware</title>
+	  <link>/ultimate-media-server-build-hardware</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-06T03:19:33-06:00</pubDate>
+	  <guid>/ultimate-media-server-build-hardware</guid>
+	  <description><![CDATA[
+	     <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><strong><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></strong></li>
+  <li><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></li>
+  <li><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 1</strong>, where we’ll be talking about the Hardware. Specifically the hardware I chose to build my server, the
+alternatives I explored and compromised I had to consider.</p>
+
+<hr />
+
+<h1 id="hardware">Hardware</h1>
+
+<p>Since most of you just care about the part list and the price, lets get that out of the way first (note, <strong>affiliate links</strong>):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Type</th>
+      <th style="text-align: left">Item</th>
+      <th style="text-align: left">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><strong>CPU</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2snR6Bd">Intel - Xeon E3-1275 V6 3.8 GHz Quad-Core Processor</a></td>
+      <td style="text-align: left">$367.97</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>CPU Cooler</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2Md8P7z">Noctua - NH-L9i 33.84 CFM CPU Cooler</a></td>
+      <td style="text-align: left">$39.95</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Motherboard</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2RPHNs8">Supermicro - X11SSL-CF Micro ATX LGA1151 Motherboard</a></td>
+      <td style="text-align: left">$275.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Memory</strong></td>
+      <td style="text-align: left"><a href="https://pcpartpicker.com/product/LXDzK8/crucial-32gb-2-x-16gb-ddr4-2400-memory-ct9029050">Crucial - 32 GB (2 x 16 GB) DDR4-2400 Memory</a></td>
+      <td style="text-align: left">$380.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Power</strong></td>
+      <td style="text-align: left"><a href="https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box">Seasonic SS-350M1U Seasonic Power Supply SS-350M1U EPS 1U ATX12V v23.1 &amp; EPS12V 80PLUS 350W Brown Box</a></td>
+      <td style="text-align: left">$80.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Case</strong></td>
+      <td style="text-align: left"><a href="http://www.u-nas.com/xcart/product.php?productid=17640">U-NAS NSC-810A Server Chassis</a></td>
+      <td style="text-align: left">$245.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Boot Drive</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2VW45Y7">Samsung 500GB 860 EVO 2.5” SSD</a></td>
+      <td style="text-align: left">$82.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Video Card</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2D6dKUI">PNY - Quadro P2000 5 GB Video Card</a></td>
+      <td style="text-align: left">$425.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2CibYyh">Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet</a></td>
+      <td style="text-align: left">$17.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2D63ITt">Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)</a></td>
+      <td style="text-align: left">$26.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2VLMX7n">EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)</a></td>
+      <td style="text-align: left">$9.98</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><strong>Total</strong></td>
+      <td style="text-align: left"><strong>$3421.22</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Yeah, you read that right, ~3k for my ultimate media server, and thats using server grade hardware thats already 2 years old. This is an expensive hobby.</p>
+
+<p>Let’s break it down and discuss each item, and why it was chosen over the alternatives.</p>
+
+<h2 id="case">Case</h2>
+<p>Though its not traditionally important, in a home server the case you choose sets a lot more limitations than a traditional pc or even a rack mounted server.</p>
+
+<p>In my case, I wanted the following:</p>
+
+<ul>
+  <li>support for at-least 8 hot-swappable hard drives</li>
+  <li>room for a dedicated SSD boot disk</li>
+  <li>adequate ventilation for a micro-ATX (or a mini-ITX) motherboard</li>
+  <li>look more like an appliance than a computer tower</li>
+  <li>have the smallest footprint possible.</li>
+</ul>
+
+<p>I decided to go with the <a href="http://www.u-nas.com/xcart/product.php?productid=17640">NSC-810A by U-NAS</a>. It’s a bit on the expensive side when it comes to a case, but it provides me with the room to use a
+micro-ATX motherboard, while still supporting 8 hot-swappable hard drives in a small footprint. And it doesn’t look that bad either,
+which is important for a server that’s sitting on my shelf, rather than a server rack in the basement.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/unas-nsc-810A.jpg" alt="nsc-810a" style="max-height: 600px;" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model Number</td>
+      <td>NSC-810A</td>
+    </tr>
+    <tr>
+      <td>Hot Swap Drive Bays</td>
+      <td>8x 3.5”</td>
+    </tr>
+    <tr>
+      <td>Internal Drive Bays</td>
+      <td>1x 2.5”</td>
+    </tr>
+    <tr>
+      <td>Motherboard</td>
+      <td>Micro ATX</td>
+    </tr>
+    <tr>
+      <td>PCIe Slots</td>
+      <td>2x</td>
+    </tr>
+    <tr>
+      <td>Power Supply Form Factor</td>
+      <td>1U Flex</td>
+    </tr>
+    <tr>
+      <td>Dimensions(L x W x H)</td>
+      <td>31.5cm x 27.5cm x 19.7cm</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="http://www.u-nas.com/xcart/product.php?productid=17640">source</a></p>
+
+<h3 id="compromises">Compromises</h3>
+
+<ul>
+  <li>Cable extensions are required for PSU</li>
+  <li>Cable extensions are required for Front-Panel headers</li>
+  <li>Riser cables/cards are required for PCIe expansion cards</li>
+</ul>
+
+<h2 id="cpu">CPU</h2>
+
+<p>When choosing a CPU, there’s a few requirements I had to consider</p>
+
+<ul>
+  <li>My server would be running 24x7 so the CPU should be fairly efficient</li>
+  <li>There would be lots of applications running at the same time, so a high core count would be preferable.</li>
+  <li>A higher clock speed would ensure that video transcodes would complete faster
+    <ul>
+      <li>My plan includes a dedicated video card for hardware transcodes, so this does not apply</li>
+    </ul>
+  </li>
+  <li>Uptime and stability are almost more important than raw performance, so ECC memory would be preferred.</li>
+  <li>I want a modern (but cost effective) CPU that will be able to handle my workload for years</li>
+</ul>
+
+<p>Here’s a helpful table I put together so I could quickly compare CPU’s as they are referenced in different ways.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Generation</th>
+      <th>Year</th>
+      <th>Xeon Family Number</th>
+      <th>Core Family Name</th>
+      <th>Socket</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3</td>
+      <td>2012</td>
+      <td>v2</td>
+      <td>Ivy Bridge</td>
+      <td>1155/H2</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>2013</td>
+      <td>V3</td>
+      <td>Haswell</td>
+      <td>1150, 2011-1</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>2015-Jun</td>
+      <td>v4</td>
+      <td>Broadwell</td>
+      <td>1150, 2011</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>2015-Sept</td>
+      <td>v5</td>
+      <td>Skylake</td>
+      <td>1151, 2066</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>2017-Jan</td>
+      <td>V6</td>
+      <td>Kaby Lake</td>
+      <td>1151, 2066</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>2017-Oct</td>
+      <td> </td>
+      <td>Coffee Lake</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Given these requirements I decided to go with a Xeon V6 processor. Specifically the <a href="https://amzn.to/2snR6Bd">Xeon E3-1275V6</a>.</p>
+
+<p>You might think that the Xeon <a href="https://amzn.to/2snR6Bd">Xeon E3-1275V6</a> is probably overkill for a simple NAS, and you’re not wrong.
+The reason I chose is is that my server is not a simple NAS, it’ll be running a bunch of applications in parallel 24x7 and I
+wanted the highest multi-core and CPU clock I could get without breaking the bank.</p>
+
+<p>If you’re not going to be running as many workloads on your home server as I am feel free to dial back the power (and cost) of your CPU. <strong>However I would stay away from the E3-1220V6 or below as it only has 2 cores vs 4 cores for E3-1230V6 and above</strong></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/xeon-e3-1275V6.jpg" alt="xeon e3-1275V6" style="max-height: 600px;" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Code Name</td>
+      <td>Kaby Lake</td>
+    </tr>
+    <tr>
+      <td>Processor Number</td>
+      <td>E3-1275V6</td>
+    </tr>
+    <tr>
+      <td>Launch Date</td>
+      <td>Q1’17</td>
+    </tr>
+    <tr>
+      <td>Cores</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Threads</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>Base Clock</td>
+      <td>3.80 GHz</td>
+    </tr>
+    <tr>
+      <td>Max Clock</td>
+      <td>4.20 GHz</td>
+    </tr>
+    <tr>
+      <td>TDP</td>
+      <td>73 W</td>
+    </tr>
+    <tr>
+      <td>Socket</td>
+      <td>LGA1151</td>
+    </tr>
+    <tr>
+      <td>Max RAM</td>
+      <td>64GB</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://ark.intel.com/products/97478/Intel-Xeon-Processor-E3-1275-v6-8M-Cache-3-80-GHz-">source</a></p>
+
+<h3 id="compromises-1">Compromises</h3>
+
+<p>You’ll want to consider the applications you’re running on your server:</p>
+
+<ul>
+  <li>The rule of thumb for ZFS is 1GB RAM for every 1TB of storage.
+    <ul>
+      <li>With 8 storage drives you could potentially have 96TB of storage (8*12TB) which is more than the Max RAM.</li>
+    </ul>
+  </li>
+  <li>Socket 1151 has been replaced by Socket 2066, so if you want to eventually upgrade to a newer CPU, you wont be able to.</li>
+</ul>
+
+<h2 id="cpu-fan">CPU Fan</h2>
+
+<p>Given that we’ve selected a small form factor case and a powerful CPU, ventilation and cooling are going to become very important.
+Noctura is well known in the PC market for their quiet but powerful cooling solutions.
+They have a CPU fan thats targeted specifically towards small form factor cases, and is compatible with our LGA1151 CPU socket:
+<a href="https://amzn.to/2Md8P7z">Noctua - NH-L9i</a></p>
+
+<p>Thats not enough though. We’ll need to verify that the Thermal Design Power (TDP) of our chosen CPU is compatible with the Noctura fan.</p>
+
+<blockquote>
+  <p>The thermal design power (TDP), sometimes called thermal design point, is the maximum amount of heat generated by a computer chip or component (often a CPU, GPU or system on a chip) that the cooling system in a computer is designed to dissipate under any workload.
+https://en.wikipedia.org/wiki/Thermal_design_power</p>
+</blockquote>
+
+<p>Thankfully Noctura releases TDP guidelines for all their fans, including the <a href="https://noctua.at/en/nh_l9i_tdp_guidelines">NH-L9i</a>. Though our exact CPU model is not listed as compatible, we can see that the fan can handle ~91W TDP from Kaby Lake processors, which higher than our expected TDP of 71W.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/noctua-nh-l9i.jpg" alt="noctua nh-l9i" style="max-height: 600px;" /></p>
+
+<h2 id="motherboard">Motherboard</h2>
+
+<p>Now that we’ve chosen our Case and CPU, it’s time to find a compatible motherboard. 
+Given the size constraints of our case and socket constraints of our CPU, we’re looking for something that matches the following requirements:</p>
+
+<ul>
+  <li>Socket LGA1151 compatible, specifically the Xeon V6 family.</li>
+  <li>Micro-ATX</li>
+  <li>Can support 9+ SATA drives (8 storage drives + 1 OS drive)</li>
+  <li>At least one 16x PCIe slot (we want to use a dedicated video card for transcoding, see <a href="#video-card">Video Card</a>)</li>
+  <li>Support for 64GB of RAM</li>
+  <li>Remote management capability (low priority)</li>
+</ul>
+
+<p>For “enthusiast” server grade hardware, theres a couple of trusted names:</p>
+
+<ul>
+  <li>Supermicro</li>
+  <li>ASRock Rack</li>
+  <li>ASUS</li>
+</ul>
+
+<p>I ended up focusing on Supermicro as I was able to find a broader range of server motherboards.</p>
+
+<p>If you’re looking at Supermicro motherboards I highly recommend the following resources:</p>
+
+<ul>
+  <li><a href="https://www.supermicro.com/support/resources/MB_matrix.php">Supermicro Motherboard Matrix</a> - compare/filter all Supermicro motherboards</li>
+  <li><a href="https://www.supermicro.com/products/Product_Naming_Convention/Naming_MBD_Intel_UP.cfm">Supermicro Product Naming Conventions</a> - helped me decode the motherboard feature just by glancing at model numbers</li>
+</ul>
+
+<p>After comparing features and looking at prices, I settled on the <a href="https://amzn.to/2RPHNs8">X11SSL-CF motherboard by Supermicro</a>.</p>
+
+<p>Before we dive into why, lets take a look at some other motherboards I considered, but ultimately decided against:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Cost (USD)</th>
+      <th>Issue(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSZ-TLN4F.cfm">X11SSZ-TLN4F</a></td>
+      <td>$357.41</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSZ-F.cfm">X11SSZ-F</a></td>
+      <td>$230.72</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSM-F.cfm">X11SSM-F</a></td>
+      <td>$197</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSL-F.cfm">X11SSL-F</a></td>
+      <td>$197</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSi-LN4F.cfm">X11SSi-LN4F</a></td>
+      <td>$229.69</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-LN4F.cfm">X11SSH-LN4F</a></td>
+      <td>$227.63</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-F.cfm">X11SSH-F</a></td>
+      <td>$213.21</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-CTF.cfm">X11SSH-CTF</a></td>
+      <td>$408</td>
+      <td>No x16 PCIe slot, expensive</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>My 2 reasons for filtering out motherboards were:</p>
+
+<ul>
+  <li>Not enough SATA/No SAS expansion (solvable via <a href="https://www.amazon.com/SAS9211-8I-8PORT-Int-Sata-Pcie/dp/B002RL8I7M">HBA controller card</a> but loses PCIe slot)</li>
+  <li>No x16 PCIe slot (solvable via <a href="https://www.moddiy.com/products/PCI%252dExpress-PCI%252dE-16X-to-16X-Riser-Card-Flexible-Ribbon-Extender-Cable-w%7B47%7DMolex-%252b-Solid-Capacitor.html">powered 8x-16x PCIE riser card</a> but I’m uncomfortable with the power supply)</li>
+</ul>
+
+<p>While there are solutions for each of the problems above I went with a no-compromises motherboard that gave me everything I wanted out of the box.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model Number</td>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSL-CF.cfm">X11SSL-CF</a></td>
+    </tr>
+    <tr>
+      <td>Socket</td>
+      <td>LGA1151</td>
+    </tr>
+    <tr>
+      <td>Processor Support</td>
+      <td>Xeon E3-1200 v6/v5 or 7th/6th Gen. Core i3</td>
+    </tr>
+    <tr>
+      <td>Chipset</td>
+      <td>C232</td>
+    </tr>
+    <tr>
+      <td>RAM Slots</td>
+      <td>4 DIMM</td>
+    </tr>
+    <tr>
+      <td>RAM Type</td>
+      <td>Unbuffered ECC UDIMM DDR4 2400MHz</td>
+    </tr>
+    <tr>
+      <td>RAM Max</td>
+      <td>64GB</td>
+    </tr>
+    <tr>
+      <td>PCIe Slots</td>
+      <td>1 PCI-E 3.0 x8 (in x16),  1 PCI-E 3.0 x4 (in x8),1 PCI-E 3.0 x1</td>
+    </tr>
+    <tr>
+      <td>SAS</td>
+      <td>2x mini-SAS HD (SFF8643) SAS3</td>
+    </tr>
+    <tr>
+      <td>Remote Management</td>
+      <td><a href="https://www.supermicro.com/en/solutions/management-software/bmc-resources">IPMI</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/supermicro-x11ssl-cf.jpg" alt="supermicro x11ssl-cf" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-2">Compromises</h3>
+
+<p>While this motherboard works great for my requirements, you should pay attention to the following compromises:</p>
+
+<ul>
+  <li>The Chipset is C232, which does not support Intel iGPU/onboard Video
+    <ul>
+      <li>C236 is focused for desktop use and supports Intel iGPU</li>
+    </ul>
+  </li>
+  <li>DDR4 ECC UDIMM is expensive and hard to find</li>
+  <li>Supermicro motherboards are notorious for RAM incompatibility (here’s the <a href="https://www.supermicro.com/support/resources/memory/display.cfm?mspd=2.4&amp;mtyp=95&amp;id=5E439CF38EB300CF19AD9C0E862DCBF9&amp;prid=84936&amp;type=DDR4%201.2V&amp;ecc=1&amp;reg=0&amp;fbd=0">official compatibility list</a>)</li>
+  <li>v1.x of the BIOS does not work with Xeon V6 CPU’s, you need to upgrade to v2.x
+    <ul>
+      <li>boot using a Xeon v5 and then flash the BIOS</li>
+      <li>RMA the board and get the manufacturer to update the BIOS</li>
+      <li>buy a license for IPMI (~$20) and update the BIOS using the management console.</li>
+    </ul>
+  </li>
+  <li>1Gigabit Ethernet (not 10Gigabit Ethernet)</li>
+  <li>Supermicro motherboards with an onboard SAS controller is more expensive, look at LSI HBA controller cards if you have room.</li>
+</ul>
+
+<h2 id="memory-ram">Memory (RAM)</h2>
+<p>Our options for RAM are limited by our motherboard and CPU:</p>
+
+<ul>
+  <li>64GB max</li>
+  <li>16GB max per DIMM slot</li>
+  <li>4 DIMM slots</li>
+  <li>must be DDR4</li>
+  <li>must be ECC</li>
+  <li>must be Unbuffered</li>
+  <li><em>should</em> be on the <a href="https://www.supermicro.com/support/resources/memory/display.cfm?mspd=2.4&amp;mtyp=95&amp;id=5E439CF38EB300CF19AD9C0E862DCBF9&amp;prid=84936&amp;type=DDR4%201.2V&amp;ecc=1&amp;reg=0&amp;fbd=0">official compatibility list</a></li>
+  <li>must not cost and arm and a leg</li>
+</ul>
+
+<p>When it comes to ECC UDIMM DDR4 RAM, its that last point that’s the problem. DDR4 RAM is expensive, and RAM for our chosen motherboard/cpu even more so.</p>
+
+<p>I ended up going with Crucial RAM that was compatible on paper, even though it wasn’t on the official compatibility list because I wanted to save money and it had been tested working on the same model motherboard.</p>
+
+<h2 id="power-supply-psu">Power Supply (PSU)</h2>
+
+<p>We’re looking for a PSU that is:</p>
+
+<ul>
+  <li>1U Flex form factor</li>
+  <li>300-350W
+    <ul>
+      <li>8*10W per disk</li>
+      <li>Video Card</li>
+      <li>65-250W Motherboard/CPU</li>
+    </ul>
+  </li>
+  <li>Modular if possible (saves space)</li>
+  <li><a href="https://www.tomshardware.com/reviews/psu-buying-guide,2916-5.html">80 PLUS Certified</a> - Power efficient since we’re running 24x7</li>
+  <li>Quiet (server PSU’s are known to be jet-engine loud)</li>
+</ul>
+
+<p>The only real PSU that matches these requirements is the Seasonic SS-300M1U and Seasonic SS-350M1U. I decided to go with the <a href="https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box">SS-350M1U</a> as I felt the extra power was necessary with my dedicated video card. With just storage drives you may be fine with just the SS-300M1U.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Seasonic SS-350M1U</td>
+    </tr>
+    <tr>
+      <td>Wattage</td>
+      <td>350W</td>
+    </tr>
+    <tr>
+      <td>Efficiency</td>
+      <td>80 PLUS</td>
+    </tr>
+    <tr>
+      <td>Cabling</td>
+      <td>Modular</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="http://www2.seasonic.com/product/ss-350-m1u-active-pfc-f0/">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/seasonic-SS-350M1U.png" alt="seasonic SS-350M1U" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-3">Compromises</h3>
+
+<ul>
+  <li>It seems that the SS-300M1U and SS-350M1U PSU’s are end-of-life and are no longer manufactured. Unfortunately I was unable to find a replacement, so I purchased mine used on Ebay.</li>
+  <li>It does not have an 8-pin power connector, only a 4-pin. That was seemingly ok with my motherboard, but YMMV.</li>
+</ul>
+
+<h2 id="video-card">Video Card</h2>
+
+<p>While a video card is optional for most servers, I’m building a dedicated streaming/transcoding server for Plex and the iGPU just isn’t enough.</p>
+
+<p>I need a video card that:</p>
+
+<ul>
+  <li>can handle a large number of simultaneous transcodes</li>
+  <li>supports a large number of codecs</li>
+  <li>only takes up 1 PCIe slot</li>
+  <li>doesn’t have significant power requirements</li>
+  <li>can handle heavy, long duration usage</li>
+  <li>can fit in a small form factor case</li>
+</ul>
+
+<p>Again, there wasn’t much to choose from. The <a href="https://amzn.to/2D6dKUI">Nvidia Quadro P2000</a>  (released 2017) is the first enterprise video card that supports <a href="https://developer.nvidia.com/video-encode-decode-gpu-support-matrix">unlimited concurrent transcodes</a>. Later versions of the video card add additional features while costing significantly more. It’s the best cost-effective solution for a transcode heavy server like mine.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Nvidia Quadro P2000</td>
+    </tr>
+    <tr>
+      <td>GPU Memory</td>
+      <td>5GB</td>
+    </tr>
+    <tr>
+      <td>Interface</td>
+      <td>PCIe x16</td>
+    </tr>
+    <tr>
+      <td>Transcodes</td>
+      <td>Unlimited</td>
+    </tr>
+    <tr>
+      <td>Max Power Consumption</td>
+      <td>75W</td>
+    </tr>
+    <tr>
+      <td>Form Factor</td>
+      <td>4.40” H x 7.90” L, Single Slot</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.pny.com/nvidia-quadro-p2000">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/nvidia-quadro-p2000.jpeg" alt="nvidia quadro p2000" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-4">Compromises</h3>
+
+<ul>
+  <li>requires a PCIe x16 slot (uncommon in micro-ATX motherboards)</li>
+  <li>additional power consumption</li>
+  <li>iGPU is more cost effective for infrequent transcoding usage</li>
+</ul>
+
+<h2 id="boot-drive">Boot Drive</h2>
+
+<p>Here’s what I considered when choosing my boot drive:</p>
+
+<ul>
+  <li>a 2.5” drive that mounts in the NSC-810A boot drive bay</li>
+  <li>has fast I/O as I’ll be running multiple docker containers &amp; applications on my server concurrently</li>
+  <li>should be atleast 300GB large, as the boot drive will act like a cache drive for all my applications (some of which are media heavy like Plex) and will be the primary drive for new downloads (until the downloads are complete and moved to a storage drive automatically)</li>
+  <li>S.M.A.R.T capable so that I can monitor the health of the drive using automated tools.</li>
+  <li>Low power usage</li>
+</ul>
+
+<p>I ended up going with a  <a href="https://amzn.to/2VW45Y7">Samsung 500GB 860 EVO 2.5” SSD</a> drive as it checked off all of the boxes.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Samsung 500GB 860 EVO</td>
+    </tr>
+    <tr>
+      <td>Capacity</td>
+      <td>500GB</td>
+    </tr>
+    <tr>
+      <td>Form Factor</td>
+      <td>2.5”</td>
+    </tr>
+    <tr>
+      <td>Max Seq Read</td>
+      <td>Up to 550 MB/s</td>
+    </tr>
+    <tr>
+      <td>Max Seq Write</td>
+      <td>Up to 520 MB/s</td>
+    </tr>
+    <tr>
+      <td>NAND Type</td>
+      <td>Samsung 64-Layer V-NAND</td>
+    </tr>
+    <tr>
+      <td>S.M.A.R.T. Support</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Max Power Consumption</td>
+      <td>4.0W</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.samsung.com/us/computing/memory-storage/solid-state-drives/ssd-860-evo-2-5--sata-iii-500gb-mz-76e500b-am/">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/samsung-500gb-evo-860.jpg" alt="samsung 860 evo" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-5">Compromises</h3>
+<ul>
+  <li>
+    <p>The Samsung 860 EVO is a TLC NAND type drive:</p>
+
+    <blockquote>
+      <p>Storing 3 bits per cell, TLC flash is the cheapest form of flash to manufacture. The biggest disadvantage to this type of flash is that it is only suitable for consumer usage, and would not be able to meet the standards for industrial use. Read/write life cycles are considerably shorter at 3,000 to 5,000 cycles per cell.	 
+  <a href="https://www.mydigitaldiscount.com/everything-you-need-to-know-about-slc-mlc-and-tlc-nand-flash.html">SLC, MLC, TLC</a></p>
+    </blockquote>
+  </li>
+</ul>
+
+<p>While this concerning, I’ve mitigated the issue with the following:</p>
+<ul>
+  <li>The boot drive contains very little important data, all completed downloads and persistent data is automatically moved off onto the storage drives</li>
+  <li>Application data is backed up into the cloud using <code class="highlighter-rouge">duplicati</code>.</li>
+  <li>S.M.A.R.T will notify me when my drive begins to fail</li>
+  <li>The drive is incredibly cheap for the performance it provides.</li>
+</ul>
+
+<h2 id="storage">Storage</h2>
+
+<p>Storage one of the most important areas of our built, but its also one of the most flexible. 
+Our server is designed to use JBOD (Just-a-bunch-of-disks) meaning we can add storage as necessary, and our disks can be of varying sizes (unlike RAID).</p>
+
+<p>However, even with this flexibility, there are a couple of things we’re looking for:</p>
+
+<ul>
+  <li>S.M.A.R.T support to ensure that we can monitor the health of our drives</li>
+  <li>Read speed performance</li>
+  <li>Good price to GB ratio</li>
+  <li>NAS type storage drives, power efficient</li>
+  <li>Large cache</li>
+</ul>
+
+<p>I went with the <a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Western Digital - Red</td>
+    </tr>
+    <tr>
+      <td>Capacity</td>
+      <td>8TB</td>
+    </tr>
+    <tr>
+      <td>Cache</td>
+      <td>256MB</td>
+    </tr>
+    <tr>
+      <td>RPM</td>
+      <td>5400</td>
+    </tr>
+    <tr>
+      <td>S.M.A.R.T. Support</td>
+      <td>Yes</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.wd.com/products/internal-storage/wd-red.html">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/wd-nas-red-8tb.jpg" alt="wd nas red" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-6">Compromises</h3>
+<ul>
+  <li>You can also <a href="https://imgur.com/gallery/IsZxx">shuck white label versions of this drive from EasyStore 8TB</a></li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the CoreOS Kernel - Part 2 - Kernel SDK</title>
+	  <link>/customize-coreos-kernel-part-2</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-02T03:19:33-06:00</pubDate>
+	  <guid>/customize-coreos-kernel-part-2</guid>
+	  <description><![CDATA[
+	     <p>After running into a roadblock while attempting to <a href="./customize-coreos-kernel-part-1">build the Intel I915 driver as a kernel module</a> for CoreOS,
+it became clear that we would need to build a completely custom CoreOS kernel with the drivers and features we need enabled.</p>
+
+<p>Thankfully the CoreOS developers have provided us with a set of tools and documentation to help make this process a bit easier:</p>
+
+<p><a href="https://coreos.com/os/docs/latest/sdk-modifying-coreos.html">CoreOS Container Linux developer SDK</a></p>
+
+<p>CoreOS is all open source and made up of a couple dozen git repositories, which are then glued together and compiled by the tools included in the
+SDK.</p>
+
+<p>The SDK tools are meant to be installed on a computer running Linux, however to make things easier for myself I created a CentOS VM using a
+simple Vagrantfile:</p>
+
+<pre><code class="language-vagrantfile">
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+
+    config.vm.provider "virtualbox" do |v|
+        v.name = "coreos_builder"
+        v.memory = 11264
+        v.cpus = 4
+    end
+
+    config.vm.provision "shell", path: "provisioner.sh"
+end
+
+</code></pre>
+
+<p>You’ll want to give as much CPU and RAM as you can, as the build and compilation steps are time consuming (I’m talking multiple hours here).</p>
+
+<h1 id="building-vanilla-coreos">Building Vanilla CoreOS</h1>
+
+<p>The first thing I want to do is build a vanilla version of CoreOS without any changes. To do this we’ll create a <code class="highlighter-rouge">provisioner.sh</code> script
+and populate it as follows:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/usr/bin/env bash</span>
+
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+whoami
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create
+
+cork enter
+grep NAME /etc/os-release
+
+./set_shared_user_password.sh mediadepot
+./setup_board
+./build_packages
+./build_image
+
+EOF
+
+</span></code></pre>
+</div>
+
+<p>As you can see the <code class="highlighter-rouge">Prerequsites</code> section is pretty straight forward, we download &amp; install the SDK dependencies as listed
+in their documentation and download the <code class="highlighter-rouge">cork</code> tool.</p>
+
+<p>Then the script gets a bit interesting. We tell Vagrant to execute the following commands as the <code class="highlighter-rouge">vagrant</code> user, rather than
+the default <code class="highlighter-rouge">root</code> user used during provisioning. This is due to the fact that the <code class="highlighter-rouge">cork</code> tool <a href="https://github.com/coreos/mantle/issues/958">expects to be run as a regular user
+not root</a>.</p>
+
+<p>So we’ll verify that we’re running as <code class="highlighter-rouge">vagrant</code> using <code class="highlighter-rouge">whoami</code>, then configure the <code class="highlighter-rouge">git</code> tool</p>
+
+<p>Then we’ll go back to the steps mentioned in the SDK guide, creating a folder for the SDK to manage, and finally running the <code class="highlighter-rouge">cork</code>
+commands.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">cork create</code> will download and unpack the SDK into the current directory</li>
+  <li><code class="highlighter-rouge">cork enter</code> will enter a <a href="https://wiki.archlinux.org/index.php/chroot"><code class="highlighter-rouge">chroot</code></a> with additional SDK tools that we can then use to
+download &amp; compile our coreos image</li>
+</ul>
+
+<p>Now that we have a <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code> script, we can verify our VM configuration and run <code class="highlighter-rouge">vagrant up</code> to build and provision
+our VM.</p>
+
+<p><code class="highlighter-rouge">vagrant up</code> took more than 4 hours to complete on my machine (how long did it take you?). Once complete, you should be greeted with a success
+message that looks like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete.png" alt="sdk complete" /></p>
+
+<p>At this point we’ve verified that our base tooling is installed correctly, and that we can build CoreOS images. Now we need to start
+our kernel customizations.</p>
+
+<h1 id="forking-coreos-source-repos">Forking CoreOS Source Repos</h1>
+
+<p>As I mentioned earlier, CoreOS is broken up into a couple dozen git repos, but the primary repo is called <a href="https://github.com/coreos/manifest"><code class="highlighter-rouge">coreos/manifest</code></a>.</p>
+
+<p>Looking at the <a href="https://github.com/coreos/manifest/blob/master/master.xml">master.xml</a> makes it clear why <code class="highlighter-rouge">manifest</code> is so
+important: <strong>It references all the other git repos that are used when building CoreOS</strong></p>
+
+<p>The first thing we’re going to do is fork and clone repo so that we can customize the repos used to ones that contain our changes.</p>
+
+<p>I forked <code class="highlighter-rouge">coreos/manifest</code> to <a href="https://github.com/mediadepot/coreos-manifest">mediadepot/coreos-manifest</a> and then ran
+<code class="highlighter-rouge">git clone git@github.com:mediadepot/coreos-manifest.git</code></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-manifest"></div>
+
+<p>You may have noticed that there’s a ton of branches in this repo. These branches are all prefixed with <code class="highlighter-rouge">build-</code>. These <code class="highlighter-rouge">build-</code> branches
+are how CoreOS manages versioning and directly matches the major version specified in <a href="https://coreos.com/releases/">https://coreos.com/releases/</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/build_branches.png" alt="build branches" /></p>
+
+<p>In my case I want to build my custom image off of the current CoreOS Stable version which is <code class="highlighter-rouge">1911.4.0</code>.</p>
+
+<p>To do this, I’ll checkout the <code class="highlighter-rouge">build-1911</code> branch, and then create a new branch ontop of that:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+</code></pre>
+</div>
+
+<p>Now you’ll have a branch built off the latest stable release that’s ready to work with.</p>
+
+<p>Now we’ll want to look at the master.xml file and determine the referenced repos that we need to fork.
+Since we only to customize the CoreOS kernel, there’s only a couple of repos that are relevant, we can leave the rest unchanged.</p>
+
+<ul>
+  <li><a href="https://github.com/coreos/coreos-overlay">coreos/coreos-overlay</a> - contains Container Linux specific packages and Gentoo packages that differ from their upstream Gentoo versions.
+This is also where the CoreOS kernel customizations are contained.</li>
+  <li><a href="https://github.com/coreos/init">coreos/init</a> - contains <code class="highlighter-rouge">coreos_installer</code> script which is executed from bootable ISO. Needs to be modified to point to our custom image webhost.</li>
+  <li><strong>(OPTIONAL)</strong> <a href="https://github.com/coreos/scripts">coreos/scripts</a> - contains various scripts used for packaging/maintaining CoreOS. We only care about this repo because we can use
+it to change the release version file that gets written to the server after installation, which is great for validation</li>
+</ul>
+
+<p>As with coreos/manifest, we’ll fork these repos, and create a new branch that is based on the build-1911 branch.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone git@github.com:mediadepot/coreos-overlay.git
+cd coreos-overlay
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-init.git
+cd coreos-init
+git checkout master
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from master"
+git push
+
+cd ..
+git clone git@github.com:mediadepot/coreos-scripts.git
+cd coreos-scripts
+git checkout build-1911
+git checkout -b mediadepot
+git commit --allow-empty -m "Mediadepot branch created from build-1911"
+git push
+
+</code></pre>
+</div>
+
+<h1 id="modify-the-manifest">Modify the Manifest</h1>
+
+<p>At this point we’ve forked our target repos, but the manifest doesn’t know about them. It’s time to remedy that.</p>
+
+<p>We’re going to modify <code class="highlighter-rouge">master.xml</code> so that references to <code class="highlighter-rouge">coreos/scripts</code> and <code class="highlighter-rouge">coreos/coreos-overlay</code> point to our new
+repos and branches</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## HOST ##
+cat coreos-manifest/master.xml
+
+&lt;project path="src/scripts"
+    name="mediadepot/coreos-scripts"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+
+...
+  &lt;project path="src/third_party/init"
+    name="mediadepot/coreos-init"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+...
+&lt;project path="src/third_party/coreos-overlay"
+    name="mediadepot/coreos-overlay"
+    revision="mediadepot"
+    groups="minilayout" /&gt;
+</code></pre>
+</div>
+
+<p>Note the changes to the <code class="highlighter-rouge">name</code> attribute and the addition of the <code class="highlighter-rouge">revision="mediadepot"</code> attribute.</p>
+
+<h1 id="making-changes">Making Changes</h1>
+<p>Before we go further, lets list all the changes we need to make to the CoreOS source.</p>
+
+<ol>
+  <li>Customize the linux kernel options to enable the <code class="highlighter-rouge">i915</code> driver</li>
+  <li>Customization of <code class="highlighter-rouge">coreos_install</code> script to point to our custom image storage</li>
+  <li>Customize the OS_NAME in <code class="highlighter-rouge">/etc/lsb_release</code>, for easy verification</li>
+  <li><strong>(OPTIONAL)</strong> Sign up for Google Cloud Platform, create a storage bucket and service account</li>
+</ol>
+
+<h2 id="custom-kernel">Custom Kernel</h2>
+<p>Let’s start by making changes to the <code class="highlighter-rouge">coreos-overlay</code> since that’s where the linux kernel customization code for CoreOS exists.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-overlay"></div>
+
+<p>The file containing the kernel config options for our CoreOS build can be found in
+<a href="https://github.com/mediadepot/coreos-overlay/blob/mediadepot/sys-kernel/coreos-modules/files/amd64_defconfig-4.14">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</a></p>
+
+<p>However we still need to determine the kernel options that we need to enable.</p>
+
+<p>Once again we go back to the <code class="highlighter-rouge">coreos_developer_container</code> that we used in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1#configure-kernel-options">Customize CoreOS Kernel - Part 1</a></p>
+
+<p>We’ll run <code class="highlighter-rouge">make menuconfig</code> in the <code class="highlighter-rouge">usr/src/linux</code> directory to select all our kernel options, follow the remaining steps in the previous post,
+ and then we’ll run a new command: <code class="highlighter-rouge">scripts/diffconfig .config.old .config</code></p>
+
+<p>The output from this command is basically a diff listing all the changes necessary to enable your selected kernel customizations from the base CoreOS kernel.</p>
+
+<p>We’ll need to massage the output a bit by removing <code class="highlighter-rouge">+</code> characters, transitions and prefixing each line with <code class="highlighter-rouge">CONFIG_</code>. We’ll end up with something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CONFIG_AGP=y
+CONFIG_BACKLIGHT_CLASS_DEVICE=m
+CONFIG_DMA_SHARED_BUFFER=y
+CONFIG_DRM=m
+CONFIG_FB_SYS_COPYAREA=y
+CONFIG_FB_SYS_FILLRECT=y
+CONFIG_FB_SYS_FOPS=y
+CONFIG_FB_SYS_IMAGEBLIT=y
+CONFIG_I2C=y
+CONFIG_I2C_ALGOBIT=y
+CONFIG_LOGO=y
+CONFIG_REGMAP_I2C=y
+CONFIG_RTC_I2C_AND_SPI=y
+CONFIG_SYNC_FILE=y
+CONFIG_ACPI_I2C_OPREGION=y
+CONFIG_ACPI_VIDEO=m
+CONFIG_BACKLIGHT_GENERIC=m
+CONFIG_DRM_BRIDGE=y
+CONFIG_DRM_FBDEV_EMULATION=y
+CONFIG_DRM_FBDEV_OVERALLOC=100
+CONFIG_DRM_I915=m
+CONFIG_DRM_I915_CAPTURE_ERROR=y
+CONFIG_DRM_I915_COMPRESS_ERROR=y
+CONFIG_DRM_I915_USERPTR=y
+CONFIG_DRM_KMS_FB_HELPER=y
+CONFIG_DRM_KMS_HELPER=y
+CONFIG_DRM_MIPI_DSI=y
+CONFIG_DRM_PANEL=y
+CONFIG_DRM_PANEL_BRIDGE=y
+CONFIG_HDMI=y
+CONFIG_INTEL_GTT=m
+CONFIG_INTERVAL_TREE=y
+CONFIG_LOGO_LINUX_CLUT224=y
+CONFIG_LOGO_LINUX_MONO=y
+CONFIG_LOGO_LINUX_VGA16=y
+</code></pre>
+</div>
+
+<p>We can now paste this content at the bottom of our <code class="highlighter-rouge">sys-kernel/coreos-modules/files/amd64_defconfig-4.14</code> file and commit
+the change to our branch.</p>
+
+<p>We’ll also want to customize the <code class="highlighter-rouge">coreos-base/coreos-init/coreos-init-9999.ebuild</code> file, pointing this package to our forked repo:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CROS_WORKON_PROJECT="mediadepot/coreos-init"
+CROS_WORKON_LOCALNAME="init"
+CROS_WORKON_REPO="git://github.com"
+
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+else
+	CROS_WORKON_COMMIT="mediadepot"
+	KEYWORDS="amd64 arm arm64 x86"
+fi
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-overlay/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-overlay</code> repo</a></p>
+
+<h2 id="iso-installer-custom-hosting">ISO Installer Custom Hosting</h2>
+<p>If you’ve been following along so far, you may think that creating a custom <code class="highlighter-rouge">.bin</code> file is enough, but I learned the hard way that’s incorrect.</p>
+
+<p>The <code class="highlighter-rouge">build_image</code> command in the <code class="highlighter-rouge">provisioner.sh</code> script will build a <code class="highlighter-rouge">.bin</code> file for us, but we need a bootable <code class="highlighter-rouge">.iso</code>.
+Thankfully the CoreOS devs created a tool called <code class="highlighter-rouge">image_to_vm.sh</code> which (confusingly) can be used to create bootable <code class="highlighter-rouge">.iso</code> images.</p>
+
+<p>Not so fast.</p>
+
+<p><strong>While we now have a bootable <code class="highlighter-rouge">.iso</code> that uses our custom kernel, the <code class="highlighter-rouge">coreos-install</code> script in the <code class="highlighter-rouge">.iso</code> actually
+downloads a vanilla <code class="highlighter-rouge">.bin</code> file from the public CoreOS mirror and installs that <code class="highlighter-rouge">.bin</code> to the host machine.</strong></p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-init"></div>
+
+<p>We’ll need open our fork of <code class="highlighter-rouge">coreos/init</code>: <a href="https://github.com/mediadepot/coreos-init"><code class="highlighter-rouge">mediadepot/coreos-init</code></a> and update the <a href="https://github.com/mediadepot/coreos-init/blob/mediadepot/bin/coreos-install"><code class="highlighter-rouge">coreos-install</code></a> script:</p>
+
+<ul>
+  <li>to point to our custom BASE_URL (where we’ll be hosting our images)</li>
+  <li>remove some GPG signing requirements (I know, I know, we’ll add them back later)</li>
+</ul>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-init/compare/master...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-init</code> repo</a></p>
+
+<h2 id="customize-coreos-release">Customize CoreOS Release</h2>
+<p>This next change is optional, but was a nice indicator to verify that the custom kernel build and installation is working
+as intended. We’ll modify our <code class="highlighter-rouge">coreos-scripts</code> repo, changing the OS_NAME from “Container Linux by CoreOS” to
+“MediaDepot CoreOS”. This simple change will allow us to verify that our customized image (with our kernel changes)
+was correctly installed on our server.</p>
+
+<div class="github-widget" data-repo="mediadepot/coreos-scripts"></div>
+
+<p>We’ll make this change in <code class="highlighter-rouge">build_library/set_lsb_release</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat coreos-scripts/build_library/set_lsb_release
+
+...
+
+OS_NAME="MediaDepot CoreOS"
+</code></pre>
+</div>
+
+<p>Here’s a <a href="https://github.com/mediadepot/coreos-scripts/compare/build-1911...mediadepot:mediadepot">diff showing my changes to the <code class="highlighter-rouge">mediadepot/coreos-scripts</code> repo</a></p>
+
+<h1 id="hosting-coreos-images">Hosting CoreOS images</h1>
+<p>Once we build our custom <code class="highlighter-rouge">.bin</code> and <code class="highlighter-rouge">.iso</code> files, we’ll need to get them off our VM and onto a webserver
+that we can use to host our images.</p>
+
+<p>The <code class="highlighter-rouge">coreos_install</code> script expects your <code class="highlighter-rouge">.bin</code> file to exist in a specific folder structure:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>${BASE_URL}/${COREOS_VERSION}/coreos_production_image.bin.bz2
+${BASE_URL}/current/version.txt
+</code></pre>
+</div>
+<p><code class="highlighter-rouge">${BASE_URL}/current/version.txt</code> should be the <code class="highlighter-rouge">version.txt</code> generated for the most recent build. Its how <code class="highlighter-rouge">coreos_installer</code> knows which is the current version.</p>
+
+<h2 id="automatic-deployment-to-gcp-storage">Automatic Deployment to GCP Storage</h2>
+
+<p>While we could just manually upload these files to our webserver, the CoreOS developers have added built in support for GCP
+hosting into their scripts. All we need to do is provide the credentials to our GCP account.</p>
+
+<p>We’ll need to do the following:</p>
+
+<ol>
+  <li>Create a GCP Account</li>
+  <li><a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new GCP Project</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/creating-buckets">Create a Storage Bucket</a></li>
+  <li><a href="https://cloud.google.com/storage/docs/access-control/making-data-public#buckets">Make sure the Bucket is Publically Readable</a></li>
+  <li><a href="https://cloud.google.com/iam/docs/creating-managing-service-accounts">Create a new Service Account</a>
+    <ul>
+      <li>Make sure you give it the <code class="highlighter-rouge">Storage Account Admin</code> role (it will need permissions to upload and overwrite files)</li>
+      <li>Create a Private Key, and export as JSON.</li>
+    </ul>
+  </li>
+  <li>Rename your Private Key JSON file on your host machine, and move it to the following path <code class="highlighter-rouge">~/.config/gcloud/application_default_credentials.json</code></li>
+</ol>
+
+<p>Once you’ve done that setup, we’ll need to pass this key file from your host machine into Vagrant, and then update the <code class="highlighter-rouge">provisioner.sh</code> script to handle the credentials.
+We’ll do that in the next section:</p>
+
+<h1 id="building-our-customized-coreos-image">Building our customized CoreOS Image</h1>
+<p>Now we’re finally ready to build our custom CoreOS images, lets look at our updated <code class="highlighter-rouge">Vagrantfile</code> and <code class="highlighter-rouge">provisioner.sh</code></p>
+
+<div class="github-widget" data-repo="mediadepot/vagrant-coreos-kernel-builder"></div>
+
+<h2 id="vagrantfile">Vagrantfile</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat Vagrantfile
+
+Vagrant.configure<span class="o">(</span><span class="s2">"2"</span><span class="o">)</span> <span class="k">do</span> |config|
+    config.vm.box <span class="o">=</span> <span class="s2">"centos/7"</span>
+    config.vm.provider <span class="s2">"virtualbox"</span> <span class="k">do</span> |v|
+        v.name <span class="o">=</span> <span class="s2">"coreos_builder"</span>
+        v.memory <span class="o">=</span> 11264
+        v.cpus <span class="o">=</span> 4
+    end
+
+    <span class="c"># create the gsutil config file. It'll be created on the Host and copied into the VM, where it'll be parsed and a boto file will be created in the chroot.</span>
+    config.vm.provision <span class="s2">"file"</span>, <span class="nb">source</span>: <span class="s2">"~/.config/gcloud/application_default_credentials.json"</span>, destination: <span class="s2">"/home/vagrant/.config/gcloud/application_default_credentials.json"</span>
+
+    config.vm.provision <span class="s2">"shell"</span>, path: <span class="s2">"provisioner.sh"</span>
+end
+
+</code></pre>
+</div>
+
+<p>Note the change copying the <code class="highlighter-rouge">application_default_credentials.json</code> from the Host into the VM above.</p>
+
+<h2 id="provisionersh">Provisioner.sh</h2>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>cat provisioner.sh
+
+<span class="c">#!/usr/bin/env bash</span>
+<span class="nb">set</span> -e
+<span class="nb">set</span> -o pipefail
+<span class="c">## Prerequisites</span>
+
+yum install -y <span class="se">\</span>
+    ca-certificates <span class="se">\</span>
+    curl <span class="se">\</span>
+    git <span class="se">\</span>
+    bzip2
+
+<span class="nb">cd</span> /usr/bin <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    curl -L -o cork https://github.com/coreos/mantle/releases/download/v0.11.1/cork-0.11.1-amd64 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    chmod +x cork <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    which cork
+
+<span class="c">## Using Cork</span>
+<span class="c"># https://coreos.com/os/docs/latest/sdk-modifying-coreos.html=</span>
+
+<span class="nb">exec </span>sudo -u vagrant /bin/sh - <span class="sh">&lt;&lt; 'EOF'
+set -e
+set -o pipefail
+whoami
+
+git config --global user.email "jason@thesparktree.com" &amp;&amp; \
+git config --global user.name "Jason Kulatunga"
+
+mkdir -p ~/coreos-sdk
+cd ~/coreos-sdk
+cork create --manifest-url=https://github.com/mediadepot/coreos-manifest.git --manifest-branch=mediadepot
+#
+cork enter
+grep NAME /etc/os-release
+env
+
+./set_shared_user_password.sh mediadepot &amp;&amp; \
+./setup_board --board 'amd64-usr' &amp;&amp; \
+./build_packages --board 'amd64-usr' &amp;&amp; \
+./build_image --board 'amd64-usr' prod --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+./image_to_vm.sh --from=../build/images/amd64-usr/developer-latest --format=iso --board=amd64-usr --upload_root "gs://mediadepot-coreos" --upload &amp;&amp; \
+
+# mark this current build as the latest.
+gsutil cp ../build/images/amd64-usr/developer-latest/version.txt "gs://mediadepot-coreos/boards/amd64-usr/current/version.txt"
+
+cat ../build/images/amd64-usr/developer-latest/version.txt
+EOF
+
+
+
+</span></code></pre>
+</div>
+
+<p>The primary change we made was to add <code class="highlighter-rouge">--manifest-url</code> and <code class="highlighter-rouge">--manifest-branch</code> flags to to the <code class="highlighter-rouge">cork create</code> command, specifying
+our forked repo and branch.</p>
+
+<p>You’ll also note the following changes:</p>
+<ul>
+  <li><code class="highlighter-rouge">./setup_board</code> and <code class="highlighter-rouge">--board</code> -  <strong>when building a custom CoreOS manifest, you need to specify a board otherwise your build will fail</strong>. While I’m not quite clear why its necessary, running <code class="highlighter-rouge">setup_board</code> and passing a <code class="highlighter-rouge">--board 'amd64-usr'</code> parameter to subsequent commands seemed to fix the issues.</li>
+  <li><code class="highlighter-rouge">--upload</code> and <code class="highlighter-rouge">--upload_root</code> - this informs the relevant scripts that they should check for boto credentials and upload the completed files to the specified GCP storage bucket (with the correct folder structure)</li>
+  <li><code class="highlighter-rouge">gsutil cp</code> - this command will copy a file to the storage bucket, specifying that the “current” version is the one that we just uploaded.</li>
+</ul>
+
+<p>All that left now is to run <code class="highlighter-rouge">vagrant destroy -f &amp;&amp; vagrant up</code>.</p>
+
+<p><code class="highlighter-rouge">vagrant destroy -f</code> will completely destroy our existing VM, the one we used to build our vanilla CoreOS source. Then we’ll
+go rebuild a new VM and provision it with our new script using <code class="highlighter-rouge">vagrant up</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/sdk_complete_custom.png" alt="sdk complete custom" /></p>
+
+<h1 id="installing-our-custom-image">Installing our custom Image</h1>
+
+<p>Now that we’ve created our custom <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files, and made them accessible by our servers, it’s time to create a bootable USB drive or CD, and install CoreOS on our server.</p>
+
+<p>We’ll be creating a bootable USB key.
+My favorite tools for doing this are <a href="https://www.balena.io/etcher/">balenaEtcher</a> (macOS, Windows, Linux) and <a href="https://rufus.ie/en_IE.html">Rufus</a> (Windows).
+First we’ll the <code class="highlighter-rouge">coreos_production_iso_image.iso</code> from the GCP storage bucket, and then follow the instructions for our chosen tool, making sure to select our <code class="highlighter-rouge">.iso</code> as the base image.</p>
+
+<h2 id="create-an-ignitionjson-file">Create an ignition.json file.</h2>
+<p>As part of CoreOS’s headless and security decisions, password authentication is disabled by default. This means that without adding an SSH key for the <code class="highlighter-rouge">core</code> user, we won’t be able to login
+to our new server.</p>
+
+<p>CoreOS supports a couple of methods for configuration management, but the current recommended one is <code class="highlighter-rouge">ignition</code>. Since all we want to do is SSH onto our server and
+verify that our custom CoreOS install is working, lets create a barebones <code class="highlighter-rouge">ignition.json</code> file on our computer.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cat ignition.json
+{
+  "ignition": {
+    "config": {},
+    "security": {
+      "tls": {}
+    },
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEA0QIsn450XjpKdoAicWqu6pgoc7h+lUokibTF75NcLVhrhnOn8aVpV+MemlE6kt6wjZDK7WyTEX1+/4dIFwH92+TJwBRKG8Yd0aTFHjWZg7K/dZAak041sF21D9K+7R0PtZK/B6szbdN9bZtwss2ebuzMu9Pxw3Rzq/PsPfl9nzs="
+        ]
+      }
+    ]
+  },
+  "storage": {
+  },
+  "systemd": {
+  }
+}
+</code></pre>
+</div>
+
+<p>You’ll want to ensure that you replace my ssh public key in <code class="highlighter-rouge">sshAuthorizedKeys</code> with yours (check <code class="highlighter-rouge">~/.ssh/id_rsa.pub</code>)</p>
+
+<p>After that we’ll want to place it somewhere accessible to the server we’ll be installing CoreOS on. <a href="https://transfer.sh/">https://transfer.sh/</a> works in a pinch.</p>
+
+<p><code class="highlighter-rouge">curl --upload-file ./ignition.json https://transfer.sh/ignition.json</code></p>
+
+<h2 id="boot-our-server-from-usb">Boot our Server from USB</h2>
+
+<p>Next we’ll boot our server from this USB. There’s many ways to do this, so you’ll need to figure this out on your own, usually there’s an option in your BIOS to boot from a specific disk/USB.</p>
+
+<p>Once we’ve booted into CoreOS from the USB, it’s time to download our <code class="highlighter-rouge">ignition.json</code> file and run the CoreOS installer.
+This should install our customized version of CoreOS, if everything worked correctly.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+# replace the URL below with your transfer.sh url.
+curl -O -L https://transfer.sh/vteIu/ignition.json
+
+cat ignition.json # make sure the public key here matches the public key on your host machine
+
+# determine the correct hard disk to install CoreOS on
+sudo fdisk -l
+
+# start the CoreOS installer
+# make sure you replace `/dev/sda` with the correct hard disk for your machine.
+# YOU WILL LOSE DATA IF YOU SELECT THE WRONG DISK
+
+sudo coreos-install -d /dev/sda -V current -i ignition.json
+</code></pre>
+</div>
+
+<p>Once <code class="highlighter-rouge">coreos-install</code> completes, you’ll need to eject your USB drive and restart your server. On startup the config from
+the <code class="highlighter-rouge">ignition.json</code> file we specified will be used to configure the Server, allowing us to ssh as the <code class="highlighter-rouge">core</code> user.</p>
+
+<h2 id="validate-custom-coreos-install">Validate Custom CoreOS install</h2>
+
+<p>After we ssh onto our server (<code class="highlighter-rouge">ssh core@{{SERVER_IP}}</code>) we can verify that our custom CoreOS image has been installed:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>## SERVER ##
+
+cat /etc/lsb-release
+
+DISTRIB_ID="MediaDepot CoreOS"
+DISTRIB_RELEASE=1911.4.0+2018-12-22-0018
+DISTRIB_CODENAME="Rhyolite"
+DISTRIB_DESCRIPTION="MediaDepot CoreOS 1911.4.0+2018-12-22-0018 (Rhyolite)"
+</code></pre>
+</div>
+
+<h1 id="automatic-custom-coreos-builds">Automatic Custom CoreOS Builds</h1>
+
+<p>In Part 3 of this series I’ll discuss the steps required to re-enable the automatic CoreOS kernel updates,
+including GPG signing &amp; validation of the <code class="highlighter-rouge">.iso</code> and <code class="highlighter-rouge">.bin</code> files.</p>
+
+<h1 id="fin">Fin</h1>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the CoreOS Kernel - Part 1 - Kernel Modules</title>
+	  <link>/customize-coreos-kernel-part-1</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-12-09T03:19:33-06:00</pubDate>
+	  <guid>/customize-coreos-kernel-part-1</guid>
+	  <description><![CDATA[
+	     <h1 id="story-time">Story Time</h1>
+
+<p>As a Devops &amp; Infrastructure guy, I’m pretty comfortable with jumping into the unknown, be it infrastructure, architecture or application code.
+With a bit of help from Google I can usually come up with a working solution, even if the end result needs a bit of polish afterwards.</p>
+
+<p>That self-assurance was checked on my latest project: <strong>building a dockerized home server.</strong></p>
+
+<p>I’ve touched on my home server a bit in the past, and I’ll be doing a follow up post on it later, but here’s a quick summary of what it does:</p>
+
+<ul>
+  <li>Its a home server, so it needed to be physically small and quiet, but easy to upgrade.</li>
+  <li>Storage space was more important than content archival, so a JBOD disk array was required</li>
+  <li>All applications should run in Docker where possible, for ease of installation, minimizing conflicts and updating.</li>
+  <li><strong>OS needed to be as minimal as possible, since all work was done in Docker containers</strong></li>
+</ul>
+
+<p>I’ve had a Home Server that checked off the first three items for a while, but not that last one. Professionally, I’ve been lucky enough to
+use (and abuse) a Kubernetes cluster which builds our Jenkins jobs. That Kubernetes cluster was built ontop of <del>CoreOS</del> Container Linux, which
+I’ve grown to love. It checks off that last requirement perfectly.</p>
+
+<p>So I did what any tinkerer would do, I started up a CoreOS VM, rebuilt my entire software stack for another OS, learned a compeletely new
+configuration management tool (<a href="https://github.com/mediadepot/ignition">Ignition</a> is pretty slick), and finally wiped my server’s OS and installed CoreOS
+&amp; my dockerized applications.</p>
+
+<p>This is where our story actually begins, which will eventually lead me down a rabbit hole of device drivers &amp; kernel modules.</p>
+
+<p><strong>The <code class="highlighter-rouge">/dev/dri</code> folder was missing on CoreOS.</strong></p>
+
+<p>I eventually got around to starting up Plex on my homeserver, and while everything looked fine, I noticed that the container was not automatically doing Hardware Transcoding
+for video, like it should be.
+After doing a bunch of debugging I determined that I needed to compile the CoreOS Kernel with a couple of extra options enabled:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)</code></li>
+  <li><code class="highlighter-rouge">Intel 8xx/9xx/G3x/G4x/HD Graphics</code></li>
+</ul>
+
+<p>Here’s <strong>Problem #1</strong>. If you’re unfamiliar with CoreOS, all you need to know is that unlike traditional OS’s the CoreOS kernel is
+continuously updated, similar to how Google Chrome is always kept up-to date. This means that <strong>any local modifications I make to the kernel
+will be completely lost on the next kernel update</strong>.</p>
+
+<p>Thankfully kernel developers have provided a way to load code into the kernel, without recompiling the whole thing: kernel modules.</p>
+
+<h1 id="compiling-coreos-kernel-modules-in-tree-or-out-of-tree">Compiling CoreOS Kernel Modules (In-Tree or Out-Of-Tree)</h1>
+<p>Here’s where we end story time and actually start coding.</p>
+
+<p>CoreOS is so minimal that it doesn’t even have a any compilers or even a package manager installed.
+In fact, it’s designed such that all real work takes place inside of containers.</p>
+
+<p>But before we can even do much work towards solving Problem #1, we run into <strong>Problem #2: the standard location for storing kernel modules <code class="highlighter-rouge">/lib/modules</code> is read-only in CoreOS.</strong>
+If you think about it, it kind of all makes sense: an OS that auto-updates its kernel needs to ensure that it controls all locations where
+kernel code is loaded from.</p>
+
+<p>We’ll solve Problem #2 first, by creating a <code class="highlighter-rouge">overlay</code> filesystem over the standard <code class="highlighter-rouge">/lib/modules</code> directory. This overlay filesystem will
+leave the underlying directory untouched, while creating a new writable directory where we can place our kernel modules.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nv">modules</span><span class="o">=</span>/opt/modules  <span class="c"># Adjust this writable storage location as needed.</span>
+sudo mkdir -p <span class="s2">"</span><span class="nv">$modules</span><span class="s2">"</span> <span class="s2">"</span><span class="nv">$modules</span><span class="s2">.wd"</span>
+sudo mount <span class="se">\</span>
+    -o <span class="s2">"lowerdir=/lib/modules,upperdir=</span><span class="nv">$modules</span><span class="s2">,workdir=</span><span class="nv">$modules</span><span class="s2">.wd"</span> <span class="se">\</span>
+    -t overlay overlay /lib/modules
+</code></pre>
+</div>
+
+<p>Next we’ll add an entry to <code class="highlighter-rouge">/etc/fstab</code> to ensure that we automatically mount the overlay when the system boots</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="gp">$ </span>cat /etc/fstab
+
+overlay /lib/modules overlay <span class="nv">lowerdir</span><span class="o">=</span>/lib/modules,upperdir<span class="o">=</span>/opt/modules,workdir<span class="o">=</span>/opt/modules.wd,nofail 0 0
+
+</code></pre>
+</div>
+
+<p>Now that Problem #2 is solved, lets go back to Problem #1: the lack of a package manager and compilation tools in CoreOS.
+Thankfully the CoreOS developers provide a <code class="highlighter-rouge">develoment container</code>, which has a bunch of tools that can be used to manipulate CoreOS (and includes a package manager).</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="c"># change to a well known location, with enough space for atleast a 3GB image</span>
+<span class="nb">cd</span> ~
+
+
+<span class="c"># read system configuration files to determine the URL of the development container that corresponds to the current Container Linux version</span>
+
+. /usr/share/coreos/release
+. /usr/share/coreos/update.conf
+<span class="nv">url</span><span class="o">=</span><span class="s2">"http://</span><span class="k">${</span><span class="nv">GROUP</span><span class="k">:-</span><span class="nv">stable</span><span class="k">}</span><span class="s2">.release.core-os.net/</span><span class="nv">$COREOS_RELEASE_BOARD</span><span class="s2">/</span><span class="nv">$COREOS_RELEASE_VERSION</span><span class="s2">/coreos_developer_container.bin.bz2"</span>
+
+<span class="c"># Download, decompress, and verify the development container image.</span>
+
+gpg2 --recv-keys 04127D0BFABEC8871FFB2CCE50E0885593D2DCB4  <span class="c"># Fetch the buildbot key if neccesary.</span>
+curl -L <span class="s2">"</span><span class="nv">$url</span><span class="s2">"</span> |
+    tee &gt;<span class="o">(</span>bzip2 -d &gt; coreos_developer_container.bin<span class="o">)</span> |
+    gpg2 --verify &lt;<span class="o">(</span>curl -Ls <span class="s2">"</span><span class="nv">$url</span><span class="s2">.sig"</span><span class="o">)</span> -
+
+</code></pre>
+</div>
+<p>Now that we’ve downloaded the developement container image (<code class="highlighter-rouge">coreos_developer_container.bin</code>) we can create a container based off of it.
+<strong>Problem #3</strong> rears its ugly head now: <strong>containers created via <code class="highlighter-rouge">systemd-nspawn</code> seem to have a diskspace limit of ~3GB.</strong> This can be fixed by
+doing a couple of additional volume mounts when starting the container:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+
+<span class="nb">cd</span> ~
+mkdir boot src
+
+sudo systemd-nspawn <span class="se">\</span>
+--bind<span class="o">=</span>/tmp <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/boot:/boot"</span> <span class="se">\</span>
+--bind<span class="o">=</span>/lib/modules:/lib/modules <span class="se">\</span>
+--bind<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/src:/usr/src"</span> <span class="se">\</span>
+--image<span class="o">=</span>coreos_developer_container.bin
+</code></pre>
+</div>
+
+<h2 id="inside-coreos-development-container">Inside CoreOS Development Container</h2>
+
+<p>Now that we’re inside the development container, we’ll update the package manager and download the coreos kernel source</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+emerge-gitclone
+emerge -gKv bootengine coreos-sources dracut
+update-bootengine -o /usr/src/linux/bootengine.cpio
+
+</code></pre>
+</div>
+
+<h2 id="configure-kernel-options">Configure Kernel Options</h2>
+<p>The kernel source for the current kernel will be downloaded to the following path <code class="highlighter-rouge">/usr/src/linux-$(uname -r)</code> and symlinked to <code class="highlighter-rouge">/usr/src/linux</code>.
+Lets configure the kernel options to enable the I915 driver (and it’s dependencies) to be built as a kernel module.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ##</span>
+
+<span class="nb">cd</span> /usr/src/linux  <span class="c"># remember, this is a symlink to your exact kernel source code</span>
+
+<span class="c"># lets ensure we're working from a clean copy of the source tree.</span>
+make distclean
+
+<span class="c"># lets copy over the symbols file for the current kernel</span>
+cp /lib/modules/<span class="sb">`</span>uname -r<span class="sb">`</span>/build/Module.symvers .
+
+<span class="c"># lets copy over the .config used to build the current kernel</span>
+gzip -cd /proc/config.gz &gt; /usr/src/linux/.config
+
+<span class="c"># lets backup the current config</span>
+make oldconfig
+
+<span class="c"># lets use the interactive UI to enable the options that we need to enable.</span>
+<span class="c"># remember, "m" means build as module.</span>
+make menuconfig
+
+<span class="c"># next lets prepare the source code to be built</span>
+make prepare <span class="o">&amp;&amp;</span> make modules_prepare
+make -C /usr/src/linux scripts
+
+<span class="c"># (OPTIONAL) finally, lets validate that the options we need are enabled.</span>
+cat .config | grep DRM
+diff .config.old .config
+
+</code></pre>
+</div>
+
+<h2 id="build--install-kernel-modules">Build &amp; Install Kernel Module(s)</h2>
+
+<p>Initially all I did here was build the one module I thought was necessary: <code class="highlighter-rouge">/drivers/drm</code>, but after taking a closer look
+at the output of <code class="highlighter-rouge"><span class="gh">diff .config.old .config</span></code> it’s clear that a couple of other kernel options were enabled as well, and their modules are dependencies for
+the <code class="highlighter-rouge">Intel i915 driver</code> to work correctly.</p>
+
+<p>The general form for building and installing a kernel module looks like the following:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules <span class="o">&amp;&amp;</span> make -C /usr/src/linux <span class="nv">SUBDIRS</span><span class="o">=</span>drivers/gpu/drm modules_install
+</code></pre>
+</div>
+
+<p>However, since there’s additional kernel modules that we need, the full build command looks like:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## DEVELOPMENT CONTAINER ###</span>
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules <span class="o">&amp;&amp;</span> <span class="se">\</span>
+make -C /usr/src/linux <span class="nv">M</span><span class="o">=</span>drivers/gpu/drm <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/acpi <span class="nv">KBUILD_EXTMOD</span><span class="o">=</span>drivers/video modules_install
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">make modules</code> command will build &amp; compile the <code class="highlighter-rouge">.ko</code> files, while the <code class="highlighter-rouge">make modules_install</code> command will copy them to the <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras/</code> directory.
+Lets validate that the kernel modules we require are all there:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>## DEVELOPMENT CONTAINER ##
+ls -alt /lib/modules/$(uname -r)/extras/
+
+# if everything looks good, we can exit from the container back to the host
+
+exit
+
+</code></pre>
+</div>
+
+<h2 id="prepare-kernel-modules">Prepare Kernel Modules</h2>
+<p>So at this point we have a handful of kernel modules, but we’re not quite ready to load them into the kernel yet. We need to run a tool called <code class="highlighter-rouge">depmod</code> first</p>
+
+<blockquote>
+  <p>depmod creates a list of module dependencies by reading each module under <em>/lib/modules/version</em> and determining what symbols
+it exports and what symbols it needs. By default, this list is written to <em>modules.dep</em> in the same directory. If
+filenames are given on the command line, only those modules are examined (which is rarely useful unless all modules are listed).</p>
+</blockquote>
+
+<p>Lets run it on the host, to update the <code class="highlighter-rouge">modules.dep</code> file.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+depmod
+</code></pre>
+</div>
+
+<p>Well that was easy.</p>
+
+<h2 id="load-kernel-modules">Load Kernel Modules</h2>
+
+<p>Here we are at the moment of truth, lets load our kernel modules into the kernel using <code class="highlighter-rouge">modprobe</code>. If we did everything right the command should complete silently for each module.</p>
+
+<blockquote>
+  <p>modprobe intelligently adds or removes a module from the Linux kernel: note that for convenience, there is no difference between _ and - in module names. modprobe looks in the module directory /lib/modules/’uname -r’ for all the modules and other files, except for the optional /etc/modprobe.conf configuration file and /etc/modprobe.d directory (see modprobe.conf(5)). modprobe will also use module options specified on the kernel command line in the form of <module>.<option>.</option></module></p>
+</blockquote>
+
+<p>The modules in <code class="highlighter-rouge">/lib/modules/$(uname -r)/extras</code> should be individually loaded via <code class="highlighter-rouge">modprobe</code>. Note: when using modprobe, you reference kernel modules by name, not path, ie. <code class="highlighter-rouge">modprobe i915</code> not <del><code class="highlighter-rouge">modprobe i915/i915.ko</code></del></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+modprobe acpi_ipmi
+...
+</code></pre>
+</div>
+
+<p>Once we’ve completed the dependent modules, lets load the modules we actually care about <code class="highlighter-rouge">drm</code>, <code class="highlighter-rouge">drm_kms_helper</code> and <code class="highlighter-rouge">i915</code>.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">## HOST ##</span>
+<span class="gp">$ </span>modprobe drm_kms_helper
+modprobe: ERROR: could not insert <span class="s1">'drm_kms_helper'</span>: Unknown symbol <span class="k">in </span>module, or unknown parameter <span class="o">(</span>see dmesg<span class="o">)</span>
+</code></pre>
+</div>
+
+<p>Uh oh. Lets look at the logs in <code class="highlighter-rouge">dmesg</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[83845.709910] drm: Unknown symbol hdmi_vendor_infoframe_init (err 0)
+[83845.710508] drm: Unknown symbol dma_fence_add_callback (err 0)
+[83845.711248] drm: Unknown symbol dma_buf_attach (err 0)
+[83845.711921] drm: Unknown symbol dma_fence_default_wait (err 0)
+[83845.712474] drm: Unknown symbol dma_buf_export (err 0)
+[83845.712884] drm: Unknown symbol dma_buf_map_attachment (err 0)
+[83845.713648] drm: Unknown symbol dma_fence_remove_callback (err 0)
+[83845.714288] drm: Unknown symbol dma_buf_unmap_attachment (err 0)
+[83845.714946] drm: Unknown symbol dma_fence_context_alloc (err 0)
+[83845.715508] drm: Unknown symbol dma_fence_signal (err 0)
+[83845.716182] drm: Unknown symbol dma_buf_get (err 0)
+[83845.716762] drm: Unknown symbol dma_buf_put (err 0)
+[83845.717257] drm: Unknown symbol dma_buf_fd (err 0)
+[83845.717843] drm: Unknown symbol dma_fence_init (err 0)
+[83845.718371] drm: Unknown symbol hdmi_avi_infoframe_init (err 0)
+[83845.719094] drm: Unknown symbol dma_fence_enable_sw_signaling (err 0)
+[83845.719835] drm: Unknown symbol dma_buf_detach (err 0)
+[83845.720422] drm: Unknown symbol dma_fence_release (err 0)
+[83845.721103] drm: Unknown symbol sync_file_get_fence (err 0)
+[83845.721771] drm: Unknown symbol sync_file_create (err 0)
+</code></pre>
+</div>
+
+<p>Looks like we’ve hit <strong>Problem #4: there’s some additional dependencies that we need to enable as modules.</strong></p>
+
+<p>Lets check for <code class="highlighter-rouge">hdmi_vendor_infoframe_init</code> first. In our case we’re building off the linux kernel used by CoreOS, so
+we’ll do a search of the source code in the <code class="highlighter-rouge">github.com/coreos/linux</code> repo.</p>
+
+<p>It looks like the symbol is exported in the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/hdmi.c">drivers/video/hdmi.c</a> file.
+Now lets look at the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Makefile">Makefile in the video directory</a> to determine which kernel config flag controls this file:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>..
+<span class="c"># SPDX-License-Identifier: GPL-2.0</span>
+obj-<span class="k">$(</span>CONFIG_VGASTATE<span class="k">)</span>            +<span class="o">=</span> vgastate.o
+obj-<span class="k">$(</span>CONFIG_HDMI<span class="k">)</span>                +<span class="o">=</span> hdmi.o
+
+obj-<span class="k">$(</span>CONFIG_VT<span class="k">)</span>		  +<span class="o">=</span> console/
+..
+</code></pre>
+</div>
+
+<p>Looks like the <code class="highlighter-rouge">CONFIG_HDMI</code> option controls the inclusion of the <code class="highlighter-rouge">hdmi.c</code> file. Perfect.</p>
+
+<p>Now lets check the <a href="https://github.com/coreos/linux/blob/v4.14.81/drivers/video/Kconfig"><code class="highlighter-rouge">Kconfig</code> file</a> for more information about the <code class="highlighter-rouge">CONFIG_HDMI</code> option.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+config HDMI
+	bool
+
+</code></pre>
+</div>
+
+<p>After looking at the <code class="highlighter-rouge">Kconfig</code> file and the <code class="highlighter-rouge">Makefile</code> closely, it seems that there is no configuration available to build <code class="highlighter-rouge">hdmi.c</code>
+file into a kernel module. This is confirmed when we run <code class="highlighter-rouge">make menuconfig</code>, press <code class="highlighter-rouge">/</code> to search, and enter <code class="highlighter-rouge">HDMI</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/coreos/make_menuconfig.png" alt="make menuconfig" /></p>
+
+<p>Looks like we’ve hit a dead end.</p>
+
+<p><strong>While we can create kernel modules for the <code class="highlighter-rouge">i915</code> and <code class="highlighter-rouge">drm</code> drivers, the <code class="highlighter-rouge">hdmi.c</code> file cannot be compiled as a module, only included
+directly in the kernel as a built-in. In our case <code class="highlighter-rouge">CONFIG_HDMI</code> is set to <code class="highlighter-rouge">n</code> in the CoreOS kernel build.</strong></p>
+
+<h1 id="fin">Fin</h1>
+
+<p>While it looks like I may have to scrap this work and start over from scratch, hopefully your <code class="highlighter-rouge">kernel module</code> does not have any
+dependencies that are unavailable as modules.</p>
+
+<p>If you were lucky enough to build a CoreOS kernel module and load it without any issues, you’ll want to look at
+<a href="https://gist.github.com/dm0-/0db058ba3a85d55aca99c93a642b8a20">automatically building and loading your kernel modules via a service</a>.
+I obviously never got that far.</p>
+
+<p>In Part 2 of this series I’ll walk though the steps as I attempt to build a full custom CoreOS kernel.</p>
+
+<h1 id="special-thanks">Special Thanks</h1>
+
+<p>I’d like to give a special thanks to the following people:</p>
+
+<ul>
+  <li>Abylay Ospan</li>
+  <li>David Michael</li>
+  <li>Ayan Halder</li>
+  <li>Mathieu Levallois</li>
+</ul>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://wiki.gentoo.org/wiki/Intel#Feature_support - Kernel options required for enabling Intel i915 driver</li>
+  <li>https://coreos.com/os/docs/latest/kernel-modules.html - Initial instructions for building a Kernel module</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

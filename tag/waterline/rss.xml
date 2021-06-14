@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Reusing SailsJS + Waterline Models in Background Tasks</title>
+	  <link>/reusing-sailsjs-waterline-models-in-background</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-12-09T17:09:00-06:00</pubDate>
+	  <guid>/reusing-sailsjs-waterline-models-in-background</guid>
+	  <description><![CDATA[
+	     <p>Its been a while since I first attempted to design a background tasks/workers pattern for my SailsJS app that would let me reuse my well defined models. After posting my first attempt:<a href="http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via">Ducktyping SailsJS Core for Background Tasks via Kue</a>, I was introduced to a under-documented but more idiomatic feature that I could use to do the same thing: Sails Hooks.</p>
+
+<h1 id="background-tasks-requirements">Background Tasks Requirements</h1>
+
+<p>Before diving into the code, let me list some of the requirements I had for my background tasks engine:</p>
+
+<ul>
+  <li>Long running tasks - support for task that may take a significant amount of time to execute.</li>
+  <li>Background tasks - can’t block the current request/response and wait for the task to finish.</li>
+  <li>Easily Generated - tasks must be simple to generate manually (via a CLI, script or the node REPL)</li>
+  <li>Simple Integration - task engine shouldn’t require any low-level customization of the SailsJS engine</li>
+  <li>Leverage SailsJS Models + PubSub - should allow me to reuse all the models, services and features as needed Sails (such as PubSub)</li>
+</ul>
+
+<p>The last two requirements are the most important and most difficult. I wanted to leverage all the power of SailsJS models, while still removing the bloat of a webserver that my background tasks didn’t need, and still making sure that I could easily upgrade my SailsJS version.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I decided to build my background tasks on top of the incredible Kue library. Kue is a simple priority job queue backed by redis. A basic background processor might look like this:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="s2">"MyBackgroundTaskName"</span><span class="p">,</span><span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running background task goes here.</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>I like Kue because its simple and lets me reuse my Redis server (which I use for SailsJS Sessions + PubSub). The background task system I built isn’t tied to Kue in any way, you could use any other messaging queue, ActiveMQ, RabbitMQ or whatever.</p>
+
+<h1 id="sails-hooks">Sails Hooks</h1>
+
+<p>The Sails.org website has very little to say about the hooks system, but after doing a little digging in the Github project we find this little nugget:</p>
+
+<blockquote>
+  <p>Sails uses hooks to provide most of it’s core functionality. Sails has a hook for it’s http server, pubsub functionality, interfacing with an ORM (waterline by default), managing Grunt tasks, etc. Sails even uses a hook for loading your custom hooks. It’s called userhooks and it runs after the http server but before the logger. It’s one of the last things that happens as you lift your app.</p>
+</blockquote>
+
+<p>And even a bit of documentation on how to design your own <a href="https://github.com/balderdashy/sails-docs/blob/8fc2694a795bc753277f9b970b835dbb384ebfbe/concepts/extending-sails/Hooks/customhooks.md">custom SailsJS Hook</a></p>
+
+<p>There’s also a bit of additional documentation about the <a href="https://github.com/balderdashy/sails-docs/blob/master/concepts/extending-sails/Hooks/Hooks.md">Hook API purpose</a></p>
+
+<p>As of Dec 2014, here’s what we need if we want to run a minimal SailsJS server, without all those webserver features.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<p>Heres a full list of all the <a href="https://github.com/balderdashy/sails/blob/master/lib/app/configuration/defaultHooks.js">default hooks</a> that can be enabled/disabled in this manner. Note that hooks have dependencies, so you may have to look in the code to figure out exactly whats going on.</p>
+
+<h1 id="pubsub">PubSub</h1>
+
+<p>At this point we have a minimal working application. However one of the greatest things about Sails is its built in support for websockets, making adding realtime/”comet” features a breeze. Unfortunately the default <a href="https://github.com/balderdashy/sails/blob/master/lib/hooks/pubsub">pubsub hook</a> depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/sockets">sockets hook</a>, which depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/http">http hook</a> which starts up the webserver.</p>
+
+<p>I want my background tasks to work exactly as they would in my Sails apps, and that includes the realtime notification features. Luckily SailsJS is opensource and hooks can be overridden. Long story short, I wrote a modified version of the pubsub hook that can push pubsub notifications to a redis queue, just as the standard pubsub hook does. <a href="https://github.com/AnalogJ/pubsub-emitter">AnalogJ/pubsub-emitter on Github</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/pubsub-emitter"></div>
+
+<p>Now our simple looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'pubsub-emitter'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+	<span class="c1">//The SailsJS app is ready</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<h1 id="integrate-kue-with-minimal-sailsjs-app">Integrate Kue with Minimal SailsJS App</h1>
+
+<p>At this point we have a minimal SailsJS environment and a Kue script, all we have left to do is integrate them together.</p>
+
+<p>I like to create my job definitions in a subfolder and dynamically load them into Kue, this way the only thing I need to do to add a new job is create a new file. Theres no hard coded filenames.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// jobs/testJob.js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running job code here.</span>
+	<span class="c1">//SailsJS Models and Services are also available here.</span>
+
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">})</span>
+	<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+		<span class="c1">//do some processing.</span>
+
+		<span class="c1">//call done() when complete (look at the kue docs for more infomation)</span>
+	<span class="p">})</span>
+	<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">done</span><span class="p">,</span><span class="nx">done</span><span class="p">)</span>
+
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Lets create a simple config file so that our web and worker apps always share the same kue configuration.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// config/kue.js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:PORT'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:HOST'</span><span class="p">,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:AUTH'</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">kue</span> <span class="o">=</span> <span class="nx">kue_engine</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>To load the Job definition files dynamically we just need to add a small snippet of code after the SailsJS app is ready</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// worker.js</span>
+
+<span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'lodash'</span><span class="p">),</span>
+<span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">),</span>
+<span class="nx">q</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'q'</span><span class="p">);</span>
+
+<span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'pubsub-emitter'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Starting kue"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">kue</span><span class="p">;</span>
+
+	<span class="c1">//register kue.</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering jobs"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="s1">'/jobs'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering kue handler: "</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'job complete'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Removing completed job: "</span><span class="o">+</span><span class="nx">id</span><span class="p">);</span>
+		<span class="nx">kue</span><span class="p">.</span><span class="nx">Job</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">job</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+		<span class="p">});</span>
+	<span class="p">});</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>And thats all it takes. With these three files we now have a working Background Tasks system that lets us reuse our SailsJS Models/Services, works with PubSub and doesn’t require any changes to core SailsJS code.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

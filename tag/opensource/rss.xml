@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Transparently adding encrypted fields to a Rails app using Mongoid</title>
+	  <link>/transparently-adding-encrypted-fields-to-a-rails</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-12-09T22:06:00-06:00</pubDate>
+	  <guid>/transparently-adding-encrypted-fields-to-a-rails</guid>
+	  <description><![CDATA[
+	     <p>As a software architect, you are in the business of designing new applications while balancing business requirements against future utility. Unfortunately design specifications are not as immutable as we dream they are, and sometimes significant changes must be made after the fact.</p>
+
+<p>In the following guide I’ll be explaining how to safely add encrypted fields to a Ruby on Rails application using MongoDB.</p>
+
+<h1 id="technology-stack">Technology Stack</h1>
+
+<p>Before getting started you should note that this guide was written and tested to work with the following software, however that does not mean it won’t work with your configuration. YMMV.</p>
+
+<ul>
+  <li>Rails 3.2.11</li>
+  <li>Ruby 1.9.3p392</li>
+  <li>Mongoid</li>
+</ul>
+
+<h2 id="mongoid-encrypted-fields-v122">Mongoid-Encrypted-Fields (v1.2.2)</h2>
+<p>We will be using the excellent <a href="https://github.com/KoanHealth/mongoid-encrypted-fields">mongoid-encrypted-fields</a> v1.2.2 gem by KoanHealth to transparently add support for encrypted storage types to Mongoid. <code class="highlighter-rouge">mongoid-encrypted-fields</code> can encrypt the following Mongoid types:</p>
+
+<ul>
+  <li>Date</li>
+  <li>DateTime</li>
+  <li>Hash</li>
+  <li>String</li>
+  <li>Time</li>
+</ul>
+
+<p>Add the following to your <code class="highlighter-rouge">Gemfile</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>gem 'mongoid-encrypted-fields', '~&gt; 1.2.x'
+</code></pre>
+</div>
+
+<h2 id="symmetric-encryption-v310">Symmetric-Encryption (v3.1.0)</h2>
+
+<p>While <code class="highlighter-rouge">mongoid-encrypted-fields</code> provides us with a way to transparently access our encrypted fields, it doesn’t actually do the encryption or decryption itself. The gem allows developers to use an encryption library of their choice, and provides an example implementation using the <a href="https://github.com/mdp/gibberish">gibberish</a> gem. I’m partial to the <a href="https://github.com/reidmorrison/symmetric-encryption">symmetric-encryption</a> library myself, and so that is what I’ll be using in the guide below.</p>
+
+<p>Add the following to your <code class="highlighter-rouge">Gemfile</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>gem 'symmetric-encryption', '~&gt; 3.1.x'
+</code></pre>
+</div>
+
+<h1 id="preparing-your-mongoid-models">Preparing your Mongoid models</h1>
+
+<p>If you’re reading this guide, you’ve most likely already got a working app using Mongoid. Lets use the following model as a simple example of how your current <code class="highlighter-rouge">Customer</code> model might look before adding encryption</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Customer</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Timestamps</span>
+
+  <span class="n">field</span> <span class="ss">:name</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:email</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:website</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:private_data</span><span class="p">,</span> <span class="n">type</span><span class="ss">:Hash</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>At some point you realize that (you forgot to/you have updated specifications that/management wants to) add encryption to the <code class="highlighter-rouge">private_data</code> field. Leveraging the <code class="highlighter-rouge">mongoid-encrypted-fields</code> documentation, all you need to do is change the model to the following:</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="nb">require</span> <span class="s1">'mongoid-encrypted-fields'</span>
+<span class="k">class</span> <span class="nc">Customer</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Document</span>
+  <span class="kp">include</span> <span class="no">Mongoid</span><span class="o">::</span><span class="no">Timestamps</span>
+
+  <span class="n">field</span> <span class="ss">:name</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:email</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:website</span><span class="p">,</span> <span class="n">type</span><span class="ss">:String</span>
+  <span class="n">field</span> <span class="ss">:private_data</span><span class="p">,</span> <span class="ss">type: </span><span class="no">Mongoid</span><span class="o">::</span><span class="no">EncryptedHash</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h1 id="initialize-mongoid-encrypted-fields-and-symmetric-encryption">Initialize mongoid-encrypted-fields and symmetric-encryption</h1>
+
+<p>I won’t get into creating the <code class="highlighter-rouge">symmetric-encryption</code> gem configuration file, as you can follow the instructions in their <a href="https://github.com/reidmorrison/symmetric-encryption#rails-configuration">documentation</a></p>
+
+<p>Assuming that the configuration is correct and located in the config folder you can use the following commands in your rails initializer to initialize both libraries correctly.</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="no">SymmetricEncryption</span><span class="p">.</span><span class="nf">load!</span><span class="p">(</span><span class="s1">'config/symmetric-encryption.yml'</span><span class="p">,</span> <span class="s1">'production'</span><span class="p">)</span>
+<span class="no">Mongoid</span><span class="o">::</span><span class="no">EncryptedFields</span><span class="p">.</span><span class="nf">cipher</span> <span class="o">=</span> <span class="no">SymmetricEncryption</span>
+</code></pre>
+</div>
+
+<h1 id="migrate-previous-data">Migrate previous data</h1>
+
+<p>At this point you’re probably thinking that while this is great and all, you already have data stored in your production database. Don’t worry, we’ll be migrating the existing data next.</p>
+
+<p>The migration task can be done in a Rake task, or using the lovely <code class="highlighter-rouge">mongoid_migration</code> gem.</p>
+
+<p>The thing to note about the steps below is that the <code class="highlighter-rouge">unset</code> and <code class="highlighter-rouge">rename</code> operations are handled by <code class="highlighter-rouge">mongoid</code> not the <code class="highlighter-rouge">mongoid-encrypted-fields</code> gem, and as such the encrypt and decrypt operations are not executed. The <code class="highlighter-rouge">migrate_encrypted_field</code> rake task will not permanently delete your unencrypted data, just rename it. It is reversible if something goes wrong.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake migrate_encrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:migrate_encrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="c1"># Rename the current :private_data field for all customers to :unencrypted_private_data</span>
+	<span class="nb">p</span> <span class="s2">"STEP1 - RENAME private_data to  unencrypted_private_data"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"renaming the :private_data field for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="o">!</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">rename</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">,</span> <span class="ss">:unencrypted_private_data</span><span class="p">);</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">)</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+		<span class="k">else</span>
+		  <span class="nb">p</span> <span class="s2">"unencrypted_private_data found already. skipping"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+
+	<span class="c1"># This step will do the actual data encryption and migration back to the :private_data field</span>
+	<span class="nb">p</span> <span class="s2">"STEP2 - ENCRYPT AND SAVE"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+	  <span class="nb">p</span> <span class="s2">"encrypting the data stored in the :unencrypted_private_data field as :private_data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+	  <span class="n">customer</span><span class="p">[</span><span class="ss">:private_data</span><span class="p">]</span> <span class="o">=</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">];</span>
+	  <span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+	<span class="k">end</span>
+
+	<span class="c1"># This step will verify that the unencrypted data matches the decrypted data. It will not delete the `unencrypted_private_data` field</span>
+	<span class="nb">p</span> <span class="s2">"STEP3 - VERIFY"</span>
+	<span class="n">errored</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+	  <span class="nb">p</span> <span class="s2">"verifying the data stored in the :unencrypted_private_data field matches the encrypted data stored in :private_data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+
+	  <span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>   <span class="c1">#make sure that a unencrypted_private_data exists.</span>
+
+		<span class="k">unless</span> <span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span> <span class="o">!=</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+		  <span class="nb">p</span> <span class="s2">"!!ERROR!! the decrypted data does not match the unencrypted data for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		  <span class="n">errored</span><span class="p">.</span><span class="nf">push</span> <span class="n">credential</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span>
+		<span class="k">end</span>
+	  <span class="k">else</span>
+		<span class="nb">p</span> <span class="s2">"unencrypted_private_data not found. Skipping"</span>
+	  <span class="k">end</span>
+	<span class="k">end</span>
+
+	<span class="k">if</span> <span class="n">errored</span><span class="p">.</span><span class="nf">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+		<span class="nb">p</span> <span class="s2">"The following customers produced errors while migrating, please verify manually"</span>
+		<span class="nb">p</span> <span class="n">errored</span>
+	<span class="k">end</span>
+
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>Once the rake task finishes it will automatically print out any <code class="highlighter-rouge">Customer</code> objects that require manual verification, (something that I never had any problems with). Once you have verified that everything is working correctly it’s time to remove the unneeded <code class="highlighter-rouge">unencrypted_private_data</code> field. Remember, this change cannot be undone.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake remove_unencrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:remove_unencrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="c1"># Permanently remove unencrypted data</span>
+	<span class="nb">p</span> <span class="s2">"STEP4 - PERMANENTLY REMOVE UNENCRYPTED DATA"</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"renaming the :private_data field for </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>   <span class="c1">#make sure that a unencrypted_private_data exists.</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:unencrypted_test</span><span class="p">)</span>
+		  <span class="n">customer</span><span class="p">.</span><span class="nf">save</span>
+
+		<span class="k">else</span>
+			<span class="nb">p</span> <span class="s2">"unencrypted_private_data not found. Skipping"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>If something did go wrong, you can always revert your migration using the following rake task</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rake revert_encrypted_field
+</code></pre>
+</div>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="n">task</span> <span class="ss">:revert_encrypted_field</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+	<span class="no">Customer</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">customer</span><span class="o">|</span>
+		<span class="nb">p</span> <span class="s2">"reverting </span><span class="si">#{</span><span class="n">customer</span><span class="p">[</span><span class="s2">"_id"</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+		<span class="k">if</span> <span class="n">customer</span><span class="p">[</span><span class="ss">:unencrypted_private_data</span><span class="p">]</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">unset</span><span class="p">(</span><span class="ss">:private_data</span><span class="p">)</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">rename</span><span class="p">(</span><span class="ss">:unencrypted_private_data</span><span class="p">,</span> <span class="ss">:private_data</span><span class="p">);</span>
+			<span class="n">customer</span><span class="p">.</span><span class="nf">save!</span>
+		<span class="k">else</span>
+		<span class="nb">p</span> <span class="s2">"did nothing, unencrypted_private_data does not exist"</span>
+		<span class="k">end</span>
+
+	<span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+<p>At this point you should have newly encrypted database field, with all your previous data migrated over. To access your encrypted data transparently, make sure your code is accessing the newly encrypted field as follows:</p>
+
+<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#Transparent (Decrypted) accessor</span>
+<span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span> <span class="c1"># =&gt; &lt;decrypted hash&gt;</span>
+
+<span class="c1">#Encrypted string can be accessed as follows</span>
+<span class="n">customer</span><span class="p">.</span><span class="nf">private_data</span><span class="p">.</span><span class="nf">encrypted</span> <span class="c1"># =&gt; &lt;encrypted string&gt;</span>
+
+<span class="c1"># It can also be accessed using the hash syntax supported by Mongoid</span>
+<span class="n">customer</span><span class="p">[</span><span class="ss">:private_data</span><span class="p">]</span> <span class="c1"># =&gt; &lt;encrypted string&gt;&lt;/encrypted&gt;&lt;/encrypted&gt;&lt;/decrypted&gt;</span>
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

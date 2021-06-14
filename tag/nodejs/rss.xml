@@ -1,0 +1,1679 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>CapsuleCD v2 Released</title>
+	  <link>/capsulecd-v2-released</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-08-06T04:19:33-05:00</pubDate>
+	  <guid>/capsulecd-v2-released</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is made up of a series of scripts/commands that
+make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices:</p>
+
+<ul>
+  <li>bumping <code class="highlighter-rouge">semvar</code> tags</li>
+  <li>regenerating any <code class="highlighter-rouge">*.lock</code> files</li>
+  <li>validates all dependencies exist and are free of vulnerabilities</li>
+  <li>runs unit tests &amp; linters</li>
+  <li>uploads versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag</li>
+  <li>pushing changes back to source control &amp; creating a release</li>
+  <li>and others..</li>
+</ul>
+
+<p>While <code class="highlighter-rouge">CapsuleCD</code> <strong>was</strong> a series of scripts, with the release of <strong>v2</strong> that’s no longer the case.</p>
+
+<p><code class="highlighter-rouge">CapsuleCD</code> has been re-written, and is now available as a <a href="https://github.com/AnalogJ/capsulecd/releases">static binary</a>
+on <a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-darwin-amd64"><code class="highlighter-rouge">macOS</code></a> and
+<a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-linux-amd64"><code class="highlighter-rouge">Linux</code></a>
+(<code class="highlighter-rouge">Windows</code> and <code class="highlighter-rouge">NuGet</code> support is hopefully coming soon)</p>
+
+<p>You no longer need to worry that the version of Ruby used by your library &amp; <code class="highlighter-rouge">gemspec</code> is different than the
+version required by <code class="highlighter-rouge">CapsuleCD</code>. If you maintain any Python or NodeJS libraries, this also means that a Ruby
+runtime for just for CapsuleCD is unnecessary. The <code class="highlighter-rouge">CapsuleCD</code> <a href="https://hub.docker.com/r/analogj/capsulecd/tags/">Docker</a>
+images for other languages are much slimmer, and based off the standard community images with <a href="https://github.com/AnalogJ/capsulecd-docker">minimal changes</a>.</p>
+
+<p>Releasing a new version of your Ruby library hasn’t changed, it’s as easy as downloading the <a href="https://github.com/AnalogJ/capsulecd/releases">binary</a> and running:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>CAPSULE_SCM_GITHUB_ACCESS_TOKEN=123456789ABCDEF \
+CAPSULE_SCM_REPO_FULL_NAME=AnalogJ/gem_analogj_test \
+CAPSULE_SCM_PULL_REQUEST=4 \
+CAPSULE_RUBYGEMS_API_KEY=ASDF12345F \
+capsulecd start --scm github --package_type ruby
+</code></pre>
+</div>
+
+<p>Click below to watch a screencast of <code class="highlighter-rouge">CapuleCD</code> in action:</p>
+
+<p align="center">
+<a href="https://analogj.github.io/capsulecd">
+  <img alt="CapsuleCD screencast" width="800" src="https://cdn.rawgit.com/AnalogJ/capsulecd/v2.0.10/capsulecd-screencast.png" />
+  </a>
+</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower, Pip, etc)</title>
+	  <link>/continuous-delivery-for-versioned</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-04-12T14:13:11-05:00</pubDate>
+	  <guid>/continuous-delivery-for-versioned</guid>
+	  <description><![CDATA[
+	     <p>So you’re the devops/automation guy or gal on your team. You live and die by “<a href="https://memegenerator.net/instance/9449708">Automate all the things</a>”. Or maybe you just like the fact that your automated CI tests have saved you from spending hours debugging in production. That’s awesome, that’s how I got here too.</p>
+
+<p>If I was to ask you about your production deployments, you wouldn’t hesitate to tell me about all the automation you’ve put in place. But if I ask you about your build artifacts/libraries pipeline I’d probably get a cautious look and we would have a conversation like this:</p>
+
+<ul>
+  <li><strong>Me:</strong> How do you release new versions of your Chef cookbooks?</li>
+  <li><strong>You:</strong> We just bump up the version in the <code class="highlighter-rouge">metadata.rb</code> file and commit it.</li>
+  <li><strong>Me:</strong> But you test it right?</li>
+  <li><strong>You:</strong> Oh we have a full CI pipeline for it, every commit is tested.</li>
+  <li><strong>Me:</strong> What about handling the version number embedded in your <code class="highlighter-rouge">Berksfile.lock</code>?</li>
+  <li><strong>You:</strong> Right. We update that by running <code class="highlighter-rouge">berks install</code> after we bump up the version. Then we commit, and push it to Github.</li>
+  <li><strong>Me:</strong> Do you do dependency checking? Lint your cookbook syntax? Run code coverage tools in addition to standard CI?</li>
+  <li><strong>You:</strong> Oh we have a pretty simple/general purpose CI script, never got around to setting those up.</li>
+  <li><strong>Me:</strong> What about actual releases? How do you get your new cookbook version into the community repo (Supermarket) or your Chef Server?</li>
+  <li><strong>You:</strong> We use <code class="highlighter-rouge">knife upload</code> or <code class="highlighter-rouge">berks upload</code>. Or maybe its <code class="highlighter-rouge">knife cookbook upload</code>. Something like that.</li>
+  <li><strong>Me:</strong> And then you create a git tag and push that to Github too right?</li>
+  <li><strong>You:</strong> uhhh.. Of course.</li>
+  <li><strong>Me:</strong> Do you update a <code class="highlighter-rouge">CHANGELOG.md</code> with a list of the changes between versions?</li>
+  <li><strong>You:</strong> Sometimes, if its a big enough change.</li>
+</ul>
+
+<p>This is obviously a very pointed example thats specific to Chef cookbooks, but versioning and releasing your library (written in any language) is just as important as releasing your actual application software. It can be hard to remember all the steps required, especially for more mature libraries which you don’t update very often. This makes it perfect for automating.</p>
+
+<h2 id="capsulecd-infomercial">CapsuleCD Infomercial</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a generic Continuous Delivery pipeline for versioned artifacts and libraries. Don’t worry, I’m not trying to convince you to throw away all your CI scripts and replace your Jenkins server. <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is meant to work with your existing CI, not complete with it. It’s goal is to bring automation to the packaging and deployment stage of your library release cycle.
+Depending how you set it up (and how much you trust your Unit Tests), every Pull Request could automatically start CapsuleCD to generate a new release of your library (Continuous Deployment) or just notify Ops to kick off CapsuleCD (Continuous Delivery).</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h2 id="hows-it-work">How’s it work?</h2>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is configurable CLI application which can be heavily customized. It can support package/release management for libraries written in any language, but comes with built-in support for the following languages:</p>
+
+<ul>
+  <li>Javascript (Bower)</li>
+  <li>Node (Npm)</li>
+  <li>Ruby (Gem)</li>
+  <li>Chef (Cookbooks)</li>
+  <li>Python (Pip)</li>
+</ul>
+
+<p>Like Docker, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> follows the ideology of “batteries included but removable”. Every supported language has a base release pipeline that’s designed to follow the best practices of that language. This includes things like:</p>
+
+<ul>
+  <li>automatically bumping the semvar version number</li>
+  <li>regenerating any <code class="highlighter-rouge">*.lock</code> files/ shrinkwrap files with new version</li>
+  <li>creating any recommended files (eg. <code class="highlighter-rouge">.gitignore</code>)</li>
+  <li>validates all dependencies exist (by vendoring locally)</li>
+  <li>running unit tests</li>
+  <li>source minification</li>
+  <li>linting library syntax</li>
+  <li>generating code coverage reports</li>
+  <li>updating changelog</li>
+  <li>uploading versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag and pushing changes back to source control (github)</li>
+  <li>creating a new release in source control (github) and attaching any common artifacts</li>
+</ul>
+
+<p>As you can see, some steps are only applicable for some languages and not others. Other steps only make sense for public libraries, like uploading them to the community repos. As mentioned earlier, every step listed is configurable, extendable and can be completely overridden if needed.</p>
+
+<h2 id="cavaets">Cavaets</h2>
+
+<p>While <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is very flexible, it’s a bit opinionated. It’s built around Git but only supports Github right now (adding GitLab and Bitbucket support has been left as a community exercise, or if enough people request it). It also works best when paired with a CI server.</p>
+
+<p>I’d also recommend that you run <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> inside a Docker container, so you don’t have to worry about accidentally clobbering your system pip/ruby/cookbook cache between runs. But this won’t be a problem once <a href="https://github.com/AnalogJ/capsulecd/issues/25">vendoring support</a> is added, something that’s at the top of the to-do list.</p>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> was designed around the premise that pull requests precede releasing a new version, but you can also create a release manually from the HEAD of the default branch.</p>
+
+<h2 id="how-do-i-wire-it-up">How do I wire it up?</h2>
+
+<p>Using <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is as easy as:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>gem install capsulecd
+<span class="nv">CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN</span><span class="o">=</span>1234567890ABCDEF <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_REPO_FULL_NAME</span><span class="o">=</span>AnalogJ/lexicon <span class="se">\</span>
+<span class="nv">CAPSULE_RUNNER_PULL_REQUEST</span><span class="o">=</span>10 <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+<p>or with Docker</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker pull AnalogJ/capsulecd:python
+docker run -e <span class="s2">"CAPSULE_SOURCE_GITHUB_ACCESS_TOKEN=1234567890ABCDEF"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_REPO_FULL_NAME=AnalogJ/lexicon"</span> <span class="se">\</span>
+-e <span class="s2">"CAPSULE_RUNNER_PULL_REQUEST=10"</span> <span class="se">\</span>
+AnalogJ/capsulecd:python <span class="se">\</span>
+capsulecd start --source github --package_type python
+</code></pre>
+</div>
+
+<p>Basically what you’re doing is specifying the <code class="highlighter-rouge">GITHUB_ACCESS_TOKEN</code> for the automation user who will be pulling the source from Github, bumping the version, making any code changes, tagging the new version and pushing back to Github.
+The <code class="highlighter-rouge">REPO_FULL_NAME</code> environmental variable is used to specify the repo we’re processing.
+The <code class="highlighter-rouge">PULL_REQUEST</code> number tells <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> which branch to process and create a new release from.</p>
+
+<h2 id="ugh-ruby-my-library-is-written-in-golispjavascriptpythonetc">Ugh, Ruby? My library is written in Go/Lisp/Javascript/Python/etc.</h2>
+
+<p>To be honest, <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> isn’t meant for library developers, its meant for the Ops/Devops team members that maintain the releases. Ruby is a powerful language, and the most popular configuration management tools (Puppet/Chef) are written in Ruby, which means it’s one less language that your Ops guys need to learn (because who really wants to do package management in Lisp).</p>
+
+<h2 id="all-our-rubygems-are-private-how-do-i-override-the-publish-step-to-point-to-our-private-gem-server">All our Rubygems are private, how do I override the publish step to point to our private Gem server?</h2>
+
+<p>Check out the <a href="https://github.com/AnalogJ/capsulecd/blob/master/README.md#step-prepost-hooks-and-overrides">Step pre/post hooks and override</a> section of the README.md</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>I Built That - 2015</title>
+	  <link>/i-built-that-2015</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-01-17T02:37:54-06:00</pubDate>
+	  <guid>/i-built-that-2015</guid>
+	  <description><![CDATA[
+	     <p>Its 2016 now, and like many others, I thought it would be a good idea to review my accomplisments in the last year. Like most devs, I find myself scratching that itch to build by hacking on side projects in my free time.</p>
+
+<p>After looking though my projects in the last year, it’s pretty obvious that I’m missing on the follow-through to completion, and I <strong>HATE</strong> doing documentation. Both flaws I’ll have to focus on in the new year.</p>
+
+<p>This is a list of open source projects that I worked on in 2015.</p>
+
+<h1 id="filefog">Filefog</h1>
+
+<p><a href="https://github.com/filefog/filefog">Filefog</a> is a Nodejs library that lets you run common commands against popular cloud storage providers (like dropbox, google drive, microsoft onedrive) in an agnostic way.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/filefog/filefog">https://github.com/filefog/filefog</a></li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="filefog/filefog"></div>
+
+<h1 id="kickback">Kickback</h1>
+
+<p><a href="https://github.com/AnalogJ/kickback">Kickback</a> is a Google Spreadsheet Addon/Wizard that lets you easily split trip/travel expenses between friends.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/kickback">https://github.com/AnalogJ/kickback</a></li>
+  <li><strong>Language</strong>: Google Apps Script (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires app store submission</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/kickback"></div>
+
+<h1 id="goodreadsjs">Goodreads.js</h1>
+
+<p><a href="https://github.com/AnalogJ/goodreads.js">Goodreads.js</a> is a Nodejs library that wraps the (terrible) Goodreads API.</p>
+
+<ul>
+  <li><strong>Source</strong>: https://github.com/AnalogJ/goodreads.js</li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="tomecast">Tomecast</h1>
+
+<p><a href="http://www.tomecast.com">Tomecast</a> automatically transcribes some of the most popular podcasts (using Google Speech API and Microsoft Project Oxford) and generates a searchable website.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.tomecast.com">http://www.tomecast.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/tomecast">https://github.com/tomecast</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: In-Progress - Transcription stopped.</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="quietthyme">QuietThyme</h1>
+
+<p><a href="http://www.quietthyme.com">QuietThyme</a> is a plugin for Calibre which allows you to access your cloud storage as a library in Calibre, allowing you to add and remove books with ease. Quietthyme also generates an OPDS catalog for your library in the cloud, allowing you to access your books at any time, from any device.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.quietthyme.com">http://www.quietthyme.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/quietthyme.plugin">https://github.com/AnalogJ/quietthyme.plugin</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: Hosting down</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/quietthyme.plugin"></div>
+
+<h1 id="banditio">Bandit.io</h1>
+
+<p><a href="http://www.bandit.io">Bandit.io</a> is a Docker based man-in-the-middle proxy + website that lets you debug all http and https requests and responses on remote devices. Its basically like Charles and Fiddler, but without requiring the debugged device to be on the local network. Its also built ontop of the Chrome Remote Debugging Protocol, meaning the ui looks like the Chrome developer tools.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.bandit.io">http://www.bandit.io</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/banditio.engine">https://github.com/AnalogJ/banditio.engine</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: In-Progress - Requires documentation and hosting</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/banditio.engine"></div>
+
+<h1 id="capsulecd">CapsuleCD</h1>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a set of platform agnostic Continuous Delivery scripts for automating package releases (npm, cookbooks, gems, pip, jars, etc).</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/capsulecd">https://github.com/AnalogJ/capsulecd</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h1 id="mediadepot">MediaDepot</h1>
+
+<p><a href="https://github.com/mediadepot">MediaDepot</a> is Docker based self-hosted media server with the following capabilities:</p>
+
+<ol>
+  <li>Some form of JBOD disk storage (most likely greyhole as that’s what I’m currently using)</li>
+  <li>Media server applications such as plex, sickbeard, couchpotato, etc to manage and view media</li>
+  <li>Utility applications such as ajenti, openvpn, conky, btsync, bittorrent, vnc.</li>
+  <li>Notifications system (so that you are notified whenever any service stops or starts, and when media is added)</li>
+</ol>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/mediadepot">https://github.com/mediadepot</a></li>
+  <li><strong>Language</strong>: Docker + Chef</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Reusing SailsJS + Waterline Models in Background Tasks</title>
+	  <link>/reusing-sailsjs-waterline-models-in-background</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-12-09T17:09:00-06:00</pubDate>
+	  <guid>/reusing-sailsjs-waterline-models-in-background</guid>
+	  <description><![CDATA[
+	     <p>Its been a while since I first attempted to design a background tasks/workers pattern for my SailsJS app that would let me reuse my well defined models. After posting my first attempt:<a href="http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via">Ducktyping SailsJS Core for Background Tasks via Kue</a>, I was introduced to a under-documented but more idiomatic feature that I could use to do the same thing: Sails Hooks.</p>
+
+<h1 id="background-tasks-requirements">Background Tasks Requirements</h1>
+
+<p>Before diving into the code, let me list some of the requirements I had for my background tasks engine:</p>
+
+<ul>
+  <li>Long running tasks - support for task that may take a significant amount of time to execute.</li>
+  <li>Background tasks - can’t block the current request/response and wait for the task to finish.</li>
+  <li>Easily Generated - tasks must be simple to generate manually (via a CLI, script or the node REPL)</li>
+  <li>Simple Integration - task engine shouldn’t require any low-level customization of the SailsJS engine</li>
+  <li>Leverage SailsJS Models + PubSub - should allow me to reuse all the models, services and features as needed Sails (such as PubSub)</li>
+</ul>
+
+<p>The last two requirements are the most important and most difficult. I wanted to leverage all the power of SailsJS models, while still removing the bloat of a webserver that my background tasks didn’t need, and still making sure that I could easily upgrade my SailsJS version.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I decided to build my background tasks on top of the incredible Kue library. Kue is a simple priority job queue backed by redis. A basic background processor might look like this:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="s2">"MyBackgroundTaskName"</span><span class="p">,</span><span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running background task goes here.</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>I like Kue because its simple and lets me reuse my Redis server (which I use for SailsJS Sessions + PubSub). The background task system I built isn’t tied to Kue in any way, you could use any other messaging queue, ActiveMQ, RabbitMQ or whatever.</p>
+
+<h1 id="sails-hooks">Sails Hooks</h1>
+
+<p>The Sails.org website has very little to say about the hooks system, but after doing a little digging in the Github project we find this little nugget:</p>
+
+<blockquote>
+  <p>Sails uses hooks to provide most of it’s core functionality. Sails has a hook for it’s http server, pubsub functionality, interfacing with an ORM (waterline by default), managing Grunt tasks, etc. Sails even uses a hook for loading your custom hooks. It’s called userhooks and it runs after the http server but before the logger. It’s one of the last things that happens as you lift your app.</p>
+</blockquote>
+
+<p>And even a bit of documentation on how to design your own <a href="https://github.com/balderdashy/sails-docs/blob/8fc2694a795bc753277f9b970b835dbb384ebfbe/concepts/extending-sails/Hooks/customhooks.md">custom SailsJS Hook</a></p>
+
+<p>There’s also a bit of additional documentation about the <a href="https://github.com/balderdashy/sails-docs/blob/master/concepts/extending-sails/Hooks/Hooks.md">Hook API purpose</a></p>
+
+<p>As of Dec 2014, here’s what we need if we want to run a minimal SailsJS server, without all those webserver features.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<p>Heres a full list of all the <a href="https://github.com/balderdashy/sails/blob/master/lib/app/configuration/defaultHooks.js">default hooks</a> that can be enabled/disabled in this manner. Note that hooks have dependencies, so you may have to look in the code to figure out exactly whats going on.</p>
+
+<h1 id="pubsub">PubSub</h1>
+
+<p>At this point we have a minimal working application. However one of the greatest things about Sails is its built in support for websockets, making adding realtime/”comet” features a breeze. Unfortunately the default <a href="https://github.com/balderdashy/sails/blob/master/lib/hooks/pubsub">pubsub hook</a> depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/sockets">sockets hook</a>, which depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/http">http hook</a> which starts up the webserver.</p>
+
+<p>I want my background tasks to work exactly as they would in my Sails apps, and that includes the realtime notification features. Luckily SailsJS is opensource and hooks can be overridden. Long story short, I wrote a modified version of the pubsub hook that can push pubsub notifications to a redis queue, just as the standard pubsub hook does. <a href="https://github.com/AnalogJ/pubsub-emitter">AnalogJ/pubsub-emitter on Github</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/pubsub-emitter"></div>
+
+<p>Now our simple looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'pubsub-emitter'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+	<span class="c1">//The SailsJS app is ready</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<h1 id="integrate-kue-with-minimal-sailsjs-app">Integrate Kue with Minimal SailsJS App</h1>
+
+<p>At this point we have a minimal SailsJS environment and a Kue script, all we have left to do is integrate them together.</p>
+
+<p>I like to create my job definitions in a subfolder and dynamically load them into Kue, this way the only thing I need to do to add a new job is create a new file. Theres no hard coded filenames.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// jobs/testJob.js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running job code here.</span>
+	<span class="c1">//SailsJS Models and Services are also available here.</span>
+
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">})</span>
+	<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+		<span class="c1">//do some processing.</span>
+
+		<span class="c1">//call done() when complete (look at the kue docs for more infomation)</span>
+	<span class="p">})</span>
+	<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">done</span><span class="p">,</span><span class="nx">done</span><span class="p">)</span>
+
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Lets create a simple config file so that our web and worker apps always share the same kue configuration.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// config/kue.js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:PORT'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:HOST'</span><span class="p">,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="s1">'REDIS_CONNECTION:AUTH'</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">kue</span> <span class="o">=</span> <span class="nx">kue_engine</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>To load the Job definition files dynamically we just need to add a small snippet of code after the SailsJS app is ready</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">// worker.js</span>
+
+<span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'lodash'</span><span class="p">),</span>
+<span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">),</span>
+<span class="nx">q</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'q'</span><span class="p">);</span>
+
+<span class="nx">require</span><span class="p">(</span><span class="s1">'sails'</span><span class="p">).</span><span class="nx">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'pubsub-emitter'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Starting kue"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">kue</span><span class="p">;</span>
+
+	<span class="c1">//register kue.</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering jobs"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="s1">'/jobs'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering kue handler: "</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'job complete'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Removing completed job: "</span><span class="o">+</span><span class="nx">id</span><span class="p">);</span>
+		<span class="nx">kue</span><span class="p">.</span><span class="nx">Job</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">job</span><span class="p">.</span><span class="nx">remove</span><span class="p">();</span>
+		<span class="p">});</span>
+	<span class="p">});</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>And thats all it takes. With these three files we now have a working Background Tasks system that lets us reuse our SailsJS Models/Services, works with PubSub and doesn’t require any changes to core SailsJS code.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ducktyping SailsJS Core for Background Tasks via Kue</title>
+	  <link>/ducktyping-sailsjs-core-for-background-tasks-via</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-07-21T19:32:00-05:00</pubDate>
+	  <guid>/ducktyping-sailsjs-core-for-background-tasks-via</guid>
+	  <description><![CDATA[
+	     <h1 id="update">Update</h1>
+<p>After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure the SailsJS engine. I’ve written a new post about how to create background tasks in Sails which you can find here:</p>
+
+<p><a href="http://blog.thesparktree.com/post/104779353989/reusing-sailsjs-waterline-models-in-background">Reusing SailsJS + Waterline Models in Background Tasks</a></p>
+
+<p>I recently found myself with a common problem: my application needed to do some long running tasks, and I didn’t to block the current request/response and wait for them to finish. My application is built ontop of the SailsJS library which meant that I could use one of the many express.js libraries that add support for background tasks.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I was able to add support for the incredibly useful <a href="https://github.com/learnboost/kue">Kue</a> library by adding 2 simple files to the config folder.</p>
+
+<h2 id="kue-job-definitions">Kue Job Definitions</h2>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">kue</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="s2">"MyBackgroundTaskName"</span><span class="p">,</span><span class="kd">function</span> <span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">)</span>
+		<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">long_running_background_task</span><span class="p">()</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">processed</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"finished job!"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">processed</span><span class="p">);</span>
+			<span class="nx">done</span><span class="p">();</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"error in job!"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+			<span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nx">done</span><span class="p">();</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Kue is shut down.'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="s1">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">jobs</span> <span class="o">=</span> <span class="nx">jobs</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>##ExpressJS Middleware</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">express</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">express</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">customMiddleware</span><span class="p">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c1">// This should be password protected on your app.</span>
+
+		<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="s1">'/tools/queue'</span><span class="p">,</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'kue'</span><span class="p">).</span><span class="nx">app</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>And with those two additions, everything worked great, for a time.</p>
+
+<h1 id="component-based-architecture">Component based architecture</h1>
+
+<p>The problem I had with my application, and more importantly with Sails, is that the background jobs are tied very closely with the way that Sails worked under the hood. Sails uses a convention based system, similar to Rails, to load up the Models, Controllers, Services and Views. Any changes to my background jobs, which heavily used instance methods in my Models, would require a redeploy of the full application. My log files and error messages were all intertwined as well. My dream of running my background jobs in CoreOS/docker style containers, scalable on demand seemed almost impossible with Sails’s convention based magic.</p>
+
+<p>I started looking into the way that Sails worked under the covers, and I realized that I could duck-type the Sails environment for a standalone application, allowing me to reuse all my Models and Services, without having to run a full Sails web server for my background tasks.</p>
+
+<p>Note: As always, the full working code can be accessed on a gist <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a></p>
+
+<h2 id="global-sails-object-and-required-configuration">Global <code class="highlighter-rouge">sails</code> object and required configuration</h2>
+
+<p>As this is a simple prototype I just used the <code class="highlighter-rouge">global</code> object to define <code class="highlighter-rouge">sails</code>.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// SAILS ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">//resolve the required sails config files.</span>
+<span class="kd">var</span> <span class="nx">config_path</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'config/'</span><span class="p">)</span>
+<span class="nx">global</span><span class="p">.</span><span class="nx">sails</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">config</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="c1">//custom configuration file I use</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">constants</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="s1">'/constants.js'</span><span class="p">).</span><span class="nx">constants</span><span class="p">;</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="s1">'/log.js'</span><span class="p">).</span><span class="nx">log</span><span class="p">.</span><span class="nx">custom</span>
+</code></pre>
+</div>
+
+<h2 id="registering-services">Registering Services</h2>
+
+<p>Registering the services was simple. I just needed to require and attach them to the global object</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE SERVICES</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'api/'</span><span class="p">)</span>
+
+<span class="c1">// load services</span>
+<span class="kd">var</span> <span class="nx">services</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="s1">'/services'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">services</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">service</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Loading service: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">global</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">service</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="sailsmodels-and-waterline">sails.models and Waterline</h2>
+
+<p>Reusing the models incredibly simple as well. I just used Waterline which Sails uses under the covers. My application uses the PostgreSQL Waterline adapter, but you can use any that Waterline supports –MongoDB, Redis, MySQL, …</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">orm</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Waterline</span><span class="p">();</span>
+<span class="c1">// Require any waterline adapters here</span>
+<span class="kd">var</span> <span class="nx">postgresqlAdapter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'sails-postgresql'</span><span class="p">);</span>
+
+
+<span class="c1">// Build A Config Object</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+
+	<span class="c1">// Setup Adapters</span>
+	<span class="c1">// Creates named adapters that have have been required in models</span>
+	<span class="na">adapters</span><span class="p">:</span> <span class="p">{</span>
+		<span class="s1">'sails-postgresql'</span><span class="p">:</span> <span class="nx">postgresqlAdapter</span>
+	<span class="p">},</span>
+
+	<span class="c1">// Build Connections Config</span>
+	<span class="c1">// Setup connections using the named adapter configs</span>
+	<span class="na">connections</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">qtPostgresqlServer</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">adapter</span><span class="p">:</span> <span class="s1">'sails-postgresql'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">user</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">password</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">database</span><span class="p">:</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">path</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">},</span>
+
+	<span class="na">defaults</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">migrate</span><span class="p">:</span> <span class="s1">'alter'</span>
+	<span class="p">}</span>
+
+<span class="p">};</span>
+
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE MODELS</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="s1">'../..'</span><span class="p">,</span> <span class="s1">'api/'</span><span class="p">)</span>
+
+<span class="c1">// load models</span>
+<span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="s1">'/models'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Register model: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="s1">'qtPostgresqlServer'</span><span class="p">;</span>
+
+	<span class="p">..</span><span class="nx">snip</span><span class="p">..</span> <span class="c1">// additional socket publish methods go here. Check the Sails sockets section for more info.</span>
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE INIT</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">function</span> <span class="nx">init_waterline</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+	<span class="c1">// Start Waterline passing adapters in</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">initialize</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+		<span class="p">}</span>
+		<span class="k">else</span><span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Waterline ready"</span><span class="p">)</span>
+
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">models</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// STANDALONE APP IN SAILS-LIKE ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+
+<span class="nx">init_waterline</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">waterline_models</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+		<span class="c1">//register Waterline Models globally by name ie, User.findOne, Item.where()</span>
+		<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+			<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+			<span class="nx">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+		<span class="p">})</span>
+
+		<span class="c1">//test function</span>
+		<span class="nx">User</span><span class="p">.</span><span class="nx">find</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">users</span><span class="p">){</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"SUCCESS!"</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+			<span class="p">})</span>
+
+	<span class="p">})</span>
+</code></pre>
+</div>
+
+<h2 id="sails-sockets-advanced">Sails Sockets (Advanced)</h2>
+
+<p>At this point we have a working sails-like app. My configuration is loaded, my models are accessible via Waterline and they have access to the Sails object and my services.</p>
+
+<p>But wait, what about the Sails pub-sub functionality? One of the greatest features of Sails is its simple and easy to use socket system. Out of the box it can simply update the front-end when a Model event occurs (update, create, delete, etc). Now that we’re doing the model processing outside of Sails, how do we notify Sails and the front-end of model events?</p>
+
+<p>Sails is a production-focused framework, with out of the box support for horizontal scaling via Redis. As long as we publish events to Redis in the same format as Sails does, our socket functionality will be completely transparent.</p>
+
+<p>I initially attempted to do this part via the <a href="https://github.com/Automattic/socket.io-emitter/">socket.io-emitter</a> library, but I wasn’t able to successfully publish Sails compatible events.</p>
+
+<p>Going down to the raw Redis library was the solution.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// REDIS CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="nx">global</span><span class="p">.</span><span class="nx">redis_client</span> <span class="o">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">createClient</span><span class="p">(,</span> <span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">init_redis</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">defer</span><span class="p">();</span>
+	<span class="nx">redis_client</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">"ready"</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Redis ready"</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">);</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span><span class="nx">data</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">"name"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="s2">"args"</span><span class="p">:[{</span>
+			<span class="s2">"verb"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+			<span class="s2">"data"</span> <span class="p">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span>
+			<span class="s2">"id"</span> <span class="p">:</span> <span class="nx">model_id</span>
+		<span class="p">}]</span>
+	<span class="p">};</span>
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="s2">"/sails_model_"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="s2">"_"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="s2">":"</span><span class="o">+</span><span class="nx">action</span><span class="p">,</span>
+			<span class="s2">"5:::"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">id_associated</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span> <span class="nx">verbId</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span><span class="p">{</span>
+		<span class="s2">"verb"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+		<span class="s2">"attribute"</span> <span class="p">:</span> <span class="nx">attribute</span><span class="p">,</span>
+		<span class="s2">"id"</span> <span class="p">:</span> <span class="nx">model_id</span>
+	<span class="p">}</span>
+	<span class="nx">item</span><span class="p">[</span><span class="nx">verbId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">id_associated</span><span class="p">;</span>
+
+
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s2">"name"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="s2">"args"</span><span class="p">:[</span><span class="nx">item</span><span class="p">]</span>
+	<span class="p">};</span>
+
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="s2">"/sails_model_"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="s2">"_"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="s2">":"</span><span class="o">+</span><span class="nx">action</span><span class="o">+</span><span class="s2">":"</span><span class="o">+</span><span class="nx">attribute</span><span class="p">,</span>
+			<span class="s2">"5:::"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The two generate methods above help help us create socket Redis messages in a format that Sails understands. They are prototype methods right now, and may require some additional tweaking over time to fully mimic the Sails socket message structure.</p>
+
+<p>I then had to add the missing <code class="highlighter-rouge">publishCreate</code>, <code class="highlighter-rouge">publishRemove</code>, <code class="highlighter-rouge">publishAdd</code>, <code class="highlighter-rouge">publishUpdate</code> socket helpers to the Waterline models.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Register model: "</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="s1">'qtPostgresqlServer'</span><span class="p">;</span>
+
+	<span class="c1">//add publish methods</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishCreate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="s2">"update"</span><span class="p">,</span><span class="s2">"updated"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishUpdate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="s2">"create"</span><span class="p">,</span><span class="s2">"created"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishAdd</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="s2">"addedTo"</span><span class="p">,</span> <span class="s2">"addedId"</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishRemove</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="s2">"dispatch"</span><span class="p">,</span> <span class="nx">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">,</span> <span class="s2">"remove"</span><span class="p">,</span> <span class="s2">"removedFrom"</span><span class="p">,</span> <span class="s2">"removedId"</span><span class="p">))</span>
+	<span class="p">};</span>
+
+	<span class="p">..</span><span class="nx">etc</span><span class="p">..</span>
+
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nx">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>Now when we call the publish* methods in our background tasks/standalone application, it will publish socket messages just as Sails would.</p>
+
+<h2 id="kue-engine">Kue Engine</h2>
+<p>The whole reason I started this was to process background tasks outside of Sails, so lets add Kue into our app.
+The main runloop now looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">q</span><span class="p">.</span><span class="nx">spread</span><span class="p">([</span><span class="nx">init_redis</span><span class="p">(),</span><span class="nx">init_waterline</span><span class="p">()],</span><span class="kd">function</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">,</span><span class="nx">waterline_models</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+		<span class="nx">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+	<span class="p">})</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Starting kue"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nx">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="s1">'kue'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="c1">//register jobs (located in seperate files)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'include-all'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="s1">'/jobs'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+	<span class="nx">_</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s2">"Registering kue handler: "</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">'SIGTERM'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nx">shutdown</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">"Shutting down kue"</span><span class="p">)</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>Now you should be able to run your application completely outside of Sails, as long as you have the required models, services and config files. You can even mount it into a docker container, like I do.
+As I said, the final gist can be found <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a>. The code is MIT licensed so feel free to hack it apart.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Continuous Deployment with Dokku (Full Guide)</title>
+	  <link>/continuous-deployment-with-dokku-full-guide</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-06-15T15:41:00-05:00</pubDate>
+	  <guid>/continuous-deployment-with-dokku-full-guide</guid>
+	  <description><![CDATA[
+	     <p>So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it.
+You’ve heard of this cool new tool called docker, but you’re not sure if it’s that useful for you, you mostly play with web development.
+You’re a big fan of Heroku however, and wouldn’t it be cool if you could do all your prototyping and development in a Heroku-like environment using Docker?
+Dokku to the rescue.</p>
+
+<h1 id="ubuntu-version">Ubuntu Version</h1>
+
+<p>First thing’s first, lets check what version of Ubuntu we have installed, we want to live on the bleeding edge (LTS) so why not upgrade to the newest version of Ubuntu.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>cat /etc/lsb-release
+<span class="nv">DISTRIB_ID</span><span class="o">=</span>Ubuntu
+<span class="nv">DISTRIB_RELEASE</span><span class="o">=</span>13.10
+<span class="nv">DISTRIB_CODENAME</span><span class="o">=</span>saucy
+<span class="nv">DISTRIB_DESCRIPTION</span><span class="o">=</span><span class="s2">"Ubuntu 13.10"</span>
+</code></pre>
+</div>
+
+<p>Well that’s no fun. Lets upgrade to 14.04, the new hotness.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>sudo apt-get update
+<span class="gp">$ </span>sudo apt-get install update-manager-core
+<span class="gp">$ </span>sudo nano /etc/update-manager/release-upgrades
+</code></pre>
+</div>
+
+<p>Now change normal to lts in opened text file</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Prompt=lts
+</code></pre>
+</div>
+
+<p>Before we get started, lets poke a hole in our firewall, just for fun. (Mostly because our upgrade is going to occur over SSH, and the installer will open up an additional ssh port as a backup)</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>iptables -I INPUT -p tcp --dport 1022 -j ACCEPT
+</code></pre>
+</div>
+
+<p>Now use one of the following commands to upgrade:</p>
+
+<p>Option1:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>sudo apt-get update
+<span class="gp">$ </span>sudo <span class="k">do</span>-release-upgrade -d
+</code></pre>
+</div>
+
+<p>Option2:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo apt-get dist-upgrade -d
+</code></pre>
+</div>
+
+<p>Now you can wait for an un-godly amount of time.</p>
+
+<h1 id="configuring-ubuntu">Configuring Ubuntu</h1>
+<p>Its no fun entering passwords all the time, so lets log into our brand new Ubuntu 14.04 machine with a fancy SSH key.</p>
+
+<p>First lets create a new SSH key, just follow the default instructions.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ssh-keygen
+</code></pre>
+</div>
+
+<p>Now we can see the result in our <code class="highlighter-rouge">~/.ssh</code> folder.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ls ~/.ssh/
+-rw-------. 1 root root 1675 Jul 27 15:01 id_rsa
+-rw-r--r--. 1 root root  406 Jul 27 15:01 id_rsa.pub
+</code></pre>
+</div>
+
+<p>Now lets copy our public key over to the Cloud@Cost machine
+To copy the public key to the machine you want to SSH and fix permissions (you will be prompted for the root password):</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'mkdir -p /root/.ssh'</span>
+<span class="gp">$ </span>scp /root/.ssh/id_rsa.pub root@<span class="o">{</span>server ip address<span class="o">}</span>:/root/.ssh/authorized_keys
+<span class="gp">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'chmod  700 /root/.ssh'</span>
+<span class="gp">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'chmod  600 /root/.ssh/*'</span>
+</code></pre>
+</div>
+
+<p>You should now be able to ssh directly from to Cloud@Cost server without providing a password:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ssh root@{server ip address}
+</code></pre>
+</div>
+
+<h1 id="dokku-for-everyone">Dokku for everyone!</h1>
+<p>Now that we’ve finished with the baby steps, lets get into the meat of the matter. Docker/Dokku!</p>
+
+<p>It starts off simple enough, just run the following command on your Cloud@Cost server.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ wget -qO- https://raw.github.com/progrium/dokku/v0.2.3/bootstrap.sh | sudo DOKKU_TAG=v0.2.3 bash
+</code></pre>
+</div>
+
+<p>Now that Dokku is installed, we have to tell it what domain it’s hosted on. Basically we’ll be accessing our applications on unique subdomains (*.mydomain.com), eg. <code class="highlighter-rouge">mygreatapp.thesparktree.com</code> or <code class="highlighter-rouge">helloworld.thesparktree.com</code>.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ echo "thesparktree.com" &gt;&gt; /home/dokku/VHOST
+</code></pre>
+</div>
+
+<p>Finally, we need to make sure that we can push code and create apps on our Dokku service. We’ll need to add our ssh key to the Dokku user, and specify a short descriptor for our key (eg. <code class="highlighter-rouge">dokkukey</code>). On our host machine, run the following:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ cat ~/.ssh/id_rsa.pub | ssh root@{server ip address} "sudo sshcommand acl-add dokku {key name/descriptor}"
+</code></pre>
+</div>
+
+<h1 id="plugins">Plugins</h1>
+
+<p>The best part about being a developer is being able to <strike>steal</strike> reuse other developers code. Dokku has a pretty vibrant plugin ecosystem, and we’ll install a few of my favorite plugins below. You can see the full list of plugins <a href="https://github.com/progrium/dokku/wiki/Plugins">here</a></p>
+
+<p>All plugins live in the same folder.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd</span> /var/lib/dokku/plugins
+<span class="gp">$ </span>git clone https://github.com/petercip/dokku-pg-plugin.git postgresql
+<span class="c"># the following repo only works with postgres 9.1 - https://github.com/jeffutter/dokku-postgresql-plugin postgresql</span>
+<span class="gp">$ </span>git clone https://github.com/cedricziel/dokku-deployment-keys.git /var/lib/dokku/plugins/deployment-keys
+...other plugins here...
+<span class="gp">$ </span>dokku plugins-install
+</code></pre>
+</div>
+
+<h1 id="deploy-an-app">Deploy an app</h1>
+
+<p>Now that Dokku is all setup, we can push our web app to Dokku. Make sure you don’t have any spaces in your <code class="highlighter-rouge"><span class="p">{</span><span class="err">dokku</span><span class="w"> </span><span class="err">remote</span><span class="w"> </span><span class="err">name</span><span class="p">}</span></code> or <code class="highlighter-rouge"><span class="p">{</span><span class="err">application</span><span class="w"> </span><span class="err">name</span><span class="p">}</span></code>.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span><span class="nb">cd </span>node-js-sample
+<span class="gp">$ </span>git remote add <span class="o">{</span>dokku remote name<span class="o">}</span> dokku@<span class="o">{</span>server ip address<span class="o">}</span>:<span class="o">{</span>application name<span class="o">}</span>
+<span class="gp">$ </span>git push <span class="o">{</span>dokku remote name<span class="o">}</span> master
+</code></pre>
+</div>
+
+<p>You can now see your application’s url by typing:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ dokku url {application name}
+</code></pre>
+</div>
+
+<p>Lets start up the postgresql container.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>dokku postgresql:create <span class="o">{</span>application name<span class="o">}</span>
+<span class="gp">$ </span>dokku postgresql:link <span class="o">{</span>application name<span class="o">}</span> <span class="o">{</span>application name<span class="o">}</span>
+</code></pre>
+</div>
+
+<h1 id="setting-environmental-variables">Setting Environmental variables.</h1>
+<p>You have your app running pushed to Dokku, but it’s not working (of course its not, when has something ever worked the first time). Lets set some of the required environmental variables that your app needs to work properly.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>dokku config &lt;app&gt; <span class="c"># display the config vars for an app</span>
+<span class="gp">$ </span>dokku config:get &lt;app&gt; KEY 3 display a config value <span class="k">for </span>an app
+<span class="gp">$ </span>dokku config:set &lt;app&gt; <span class="nv">KEY1</span><span class="o">=</span>VALUE1 <span class="o">[</span><span class="nv">KEY2</span><span class="o">=</span>VALUE2 ...] <span class="c"># set one or more config vars</span>
+<span class="gp">$ </span>dokku config:unset &lt;app&gt; KEY1 <span class="o">[</span>KEY2 ...] <span class="c"># unset one or more config vars</span>
+</code></pre>
+</div>
+
+<p>so we could do something like:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ dokku config:set {application name} NODE_ENV=development
+</code></pre>
+</div>
+
+<h1 id="adding-ssl">Adding SSL</h1>
+
+<p>But wait, something’s wrong. Where’s that green lock in the corner of your browser… without it, how are you going to stop the hackers and the NSA from breaking into your Twitter clone? Don’t worry, I got you covered.</p>
+
+<p>Since this is just a web server for testing applications, lets assume you can get away with a simple SSL cert. Possibly even one that expires yearly. Check out StartSSL for a free SSL certificate.</p>
+
+<p><a href="https://launchbylunch.com/posts/2014/Jan/23/blog-tech-stack/">This SSL guide</a> has some good instructions under the SSL section.
+At the end of the process you should have the following files:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>secure.key - The unencrypted version of your private key (be very careful no one else has access to this file!)
+secure.key.secure - The encrypted version of your private key (does not need to be copied to server)
+server.csr - Your new certificate (bundle)
+</code></pre>
+</div>
+
+<p>If you had any intermediate certificates, you should just concatenate them to the server.csr file to create a certificate bundle.
+Now copy the <code class="highlighter-rouge">secure.key</code> and <code class="highlighter-rouge">server.csr</code> to the <code class="highlighter-rouge">/home/dokku/{application name}/tls</code> folder on your cloud@cost server. Create the <code class="highlighter-rouge">tls</code> folder if it doesn’t exist. Rename the <code class="highlighter-rouge">secure.key</code> file to <code class="highlighter-rouge">server.key</code> and rename the <code class="highlighter-rouge">server.csr</code> to <code class="highlighter-rouge">server.crt</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ls -al
+-rw-r--r-- 1 dokku  dokku  7241 Jun 15 12:58 server.crt
+-rw-r--r-- 1 dokku  dokku  1676 Jun 15 12:58 server.key
+</code></pre>
+</div>
+
+<p>Redeployment of the application will be needed to apply TLS configuration. Once it is redeployed, the application will be accessible by <code class="highlighter-rouge">https://</code> (redirection from<code class="highlighter-rouge">http://</code> is applied as well).</p>
+
+<h1 id="continuous-deployment">Continuous Deployment.</h1>
+
+<p>So you’ve gotten through this wonderful guide, and you’re thinking.. Its a sunday night, and I still have some time to kill. That’s great. Let’s finish up by setting up continuous deployment for our application using Wercker. Wercker is a SAAS similar to CircleCI, TravisCI and Jenkins. The nice thing about Wercker is that it has free accounts with the limitation that only one build can occur at a time.</p>
+
+<p>There’s no need to walk you through creating an account with Wercker. Wercker is based around a <code class="highlighter-rouge">werker.yml</code> file that you add to your project root. Here’s what mine looks like.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">box</span><span class="pi">:</span> <span class="s">wercker/nodejs</span>
+<span class="c1"># Build definition</span>
+<span class="s">build</span><span class="pi">:</span>
+  <span class="c1"># The steps that will be executed on build</span>
+  <span class="s">steps</span><span class="pi">:</span>
+    <span class="c1"># A step that executes `npm install` command</span>
+    <span class="pi">-</span> <span class="s">npm-install</span>
+    <span class="c1"># A step that executes `npm test` command</span>
+    <span class="pi">-</span> <span class="s">npm-test</span>
+    <span class="c1"># A custom script step, name value is used in the UI</span>
+    <span class="c1"># and the code value contains the command that get executed</span>
+    <span class="pi">-</span> <span class="s">script</span><span class="pi">:</span>
+      <span class="s">name</span><span class="pi">:</span> <span class="s">echo nodejs information</span>
+        <span class="s">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="no">echo "node version $(node -v) running"</span>
+          <span class="no">echo "npm version $(npm -v) running"</span>
+<span class="s">deploy</span><span class="pi">:</span>
+  <span class="s">steps</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">add-to-known_hosts</span><span class="pi">:</span>
+        <span class="s">hostname</span><span class="pi">:</span> <span class="s">$SERVER_HOSTNAME</span>
+    <span class="pi">-</span> <span class="s">add-ssh-key</span><span class="pi">:</span>
+        <span class="s">keyname</span><span class="pi">:</span> <span class="s">DOKKU</span>
+    <span class="pi">-</span> <span class="s">script</span><span class="pi">:</span>
+        <span class="s">name</span><span class="pi">:</span> <span class="s">Initialize new repository</span>
+        <span class="s">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="no">rm -rf .git</span>
+          <span class="no">git init</span>
+          <span class="no">git config --global user.name "wercker"</span>
+          <span class="no">git config --global user.email "pleasemailus@wercker.com"</span>
+          <span class="no">git remote add dokku dokku@$SERVER_HOSTNAME:build</span>
+    <span class="pi">-</span> <span class="s">script</span><span class="pi">:</span>
+        <span class="s">name</span><span class="pi">:</span> <span class="s">Add everything to the repository</span>
+        <span class="s">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="no">git add .</span>
+          <span class="no">git commit -m "Result of deploy $WERCKER_GIT_COMMIT"</span>
+    <span class="pi">-</span> <span class="s">script</span><span class="pi">:</span>
+        <span class="s">name</span><span class="pi">:</span> <span class="s">Push to dokku</span>
+        <span class="s">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="no">git push dokku master -f</span>
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">wercker.yml</code> file is broken up into two parts, the <code class="highlighter-rouge">build</code> and <code class="highlighter-rouge">deploy</code> sections. This <code class="highlighter-rouge">wercker.yml</code> file is for a node application. Once the build finishes, and the tests pass, the application deploys to our Dokku server, automatically.</p>
+
+<p>I’m going to assume that you’ve already connected your bitbucket/github account, and added your project. Lets jump straight into the configuration.
+First lets got to the <code class="highlighter-rouge">settings</code> tab, and add a new SSH key. Wercker will generate the private key pair for us, we just have to name the key, and copy the public key that they give us.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782lvfFkZ1rzg9b0.png" alt="Ssh Keys" /></p>
+
+<p>We can then add the key to our Dokku server by modifying the <code class="highlighter-rouge">authorized_keys</code> file or using <code class="highlighter-rouge">sudo sshcommand acl-add dokku {key name/descriptor}</code></p>
+
+<p>Then, we should add a new <code class="highlighter-rouge">Deploy Target</code> to our Wercker project, pointing to our Cloud@Cost server. Select <code class="highlighter-rouge">Custom deploy</code> from the dropdown.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782yw22Zh1rzg9b0.png" alt="Custom Deploy Target" /></p>
+
+<p>Create a new environmental variable called <code class="highlighter-rouge">SERVER_HOSTNAME</code> and specify your dokku server hostname or ipaddress.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782y5dmXQ1rzg9b0.png" alt="Env Variable" /></p>
+
+<p>Create one more environmental variable called <code class="highlighter-rouge">DOKKU</code> and point it to the SSH keypair you created earlier</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n7830psbV91rzg9b0.png" alt="Env Variable Populated" /></p>
+
+<p>Make sure you hit the <code class="highlighter-rouge">Save</code> button, otherwise Wercker will ignore your configuration changes.</p>
+
+<p>Now make a test commit to your master branch, and push it to github/bitbucket. Your commit should automatically deploy via Wercker to your Dokku box.</p>
+
+<h1 id="fin">Fin.</h1>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>npm errors with infinite loop</title>
+	  <link>/npm-errors-with-infinite-loop</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-05-21T16:35:02-05:00</pubDate>
+	  <guid>/npm-errors-with-infinite-loop</guid>
+	  <description><![CDATA[
+	     <p>Occasionally I’ll be working with a nodejs project and when I attempt to run <code class="highlighter-rouge">$ npm install</code> I’ll see what appears to be an infinite loop with the same package partially installing and then failing over and over.</p>
+
+<p>I found a fix on the npm github issue tracker and I’ve added it here for posterity</p>
+
+<p><code class="highlighter-rouge">rm -rf ~/.npm</code></p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Creating a Sails Application using Passport Authentication</title>
+	  <link>/creating-a-sails-application-using-passport</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-02-20T18:58:00-06:00</pubDate>
+	  <guid>/creating-a-sails-application-using-passport</guid>
+	  <description><![CDATA[
+	     <h1 id="creating-a-sails-application-using-passport-authentication">Creating a Sails Application using Passport Authentication</h1>
+
+<ol>
+  <li>
+    <p><code class="highlighter-rouge">$ mkdir sails-passport-authentication</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ sails new .</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ sails generate user</code></p>
+  </li>
+  <li>
+    <p>Populate the <code class="highlighter-rouge">User</code> model</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/models/User.js
+
+ module.exports = {
+
+   attributes: {
+       firstName: {
+           type: 'string'
+       },
+       lastName: {
+           type: 'string'
+       },
+       email: {
+           type: 'email'
+       },
+       provider: {
+           type: 'string'
+       },
+       provider_id:{
+       	  type: 'string'
+       },
+       password: {
+           type: 'string'
+       }
+   }
+
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create the <code class="highlighter-rouge">passport-local</code> login view</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /views/user/login.ejs
+
+ &lt;form action="/user/login" method="post"&gt;
+     &lt;div&gt;
+         &lt;label&gt;Email:&lt;/label&gt;
+         &lt;input type="text" name="email"&gt;&lt;br&gt;&lt;/div&gt;
+     &lt;div&gt;
+         &lt;label&gt;Password:&lt;/label&gt;
+         &lt;input type="password" name="password"&gt;&lt;/div&gt;
+     &lt;div&gt;
+         &lt;input type="submit" value="Submit"&gt;&lt;/div&gt;
+ &lt;/form&gt;
+</code></pre>
+    </div>
+
+    <p>At this point we could run <code class="highlighter-rouge">$ sails lift</code> and access the <code class="highlighter-rouge">passport-local</code> login page by visiting <a href="http://localhost:1337/user/login">http://localhost:1337/user/login</a></p>
+  </li>
+  <li>
+    <p>Create a test user</p>
+
+    <p>Visit <a href="http://localhost:1337/user/create?email=test@test.com&amp;password=12345">http://localhost:1337/user/create?email=test@test.com&amp;password=12345</a> in a browser to create a new user with a username of <code class="highlighter-rouge">test@test.com</code> and a password of <code class="highlighter-rouge">12345</code></p>
+  </li>
+</ol>
+
+<h1 id="enabling-passport-with-local-authentication-requires-a-few-steps">Enabling <code class="highlighter-rouge">passport</code> with local authentication requires a few steps:</h1>
+
+<ol>
+  <li>
+    <p><code class="highlighter-rouge">$ npm install passport --save</code></p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">$ npm install passport-local --save</code></p>
+  </li>
+  <li>
+    <p>Creating the passport middleware configuration file.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/passport.js
+
+ var passport = require('passport'),
+ LocalStrategy = require('passport-local').Strategy;
+
+ passport.serializeUser(function(user, done) {
+     done(null, user.id);
+ });
+
+ passport.deserializeUser(function(id, done) {
+     User.findOneById(id).done(function (err, user) {
+         done(err, user);
+     });
+ });
+
+ passport.use(new LocalStrategy({
+ 		usernameField: 'email',
+ 		passwordField: 'password'
+ 		},
+     function(email, password, done) {
+     User.findOne({ email: email}).done(function(err, user) {
+   		  if (err) { return done(err); }
+   			if (!user) { return done(null, false, { message: 'Unknown user ' + email }); }
+   			if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
+   			return done(null, user);
+   		});
+   	}
+ ));
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Register the required passport connect middleware</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/express.js
+
+ var passport = require('passport');
+
+ module.exports.express = {
+     customMiddleware: function (app) {
+         app.use(passport.initialize());
+         app.use(passport.session());
+     }
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create the UserController actions</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/controllers/UserController.js
+
+ var passport = require('passport');
+ module.exports = {
+     login: function (req,res)
+     {
+         res.view();
+     },
+
+     passport_local: function(req, res)
+     {
+         passport.authenticate('local', function(err, user, info)
+         {
+             if ((err) || (!user))
+             {
+                 res.redirect('/user/login');
+                 return;
+             }
+
+             req.logIn(user, function(err)
+             {
+                 if (err)
+                 {
+                     res.redirect('/user/login');
+                     return;
+                 }
+
+                 res.redirect('/');
+                 return;
+             });
+         })(req, res);
+     },
+
+     logout: function (req,res)
+     {
+         req.logout();
+         res.redirect('/');
+     },
+
+
+
+   /**
+    * Overrides for the settings in `config/controllers.js`
+    * (specific to UserController)
+    */
+   _config: {}
+
+
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Modify routes to handle post to <code class="highlighter-rouge">/user/login</code>.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/routes.js
+
+ module.exports.routes = {
+     '/': {
+         view: 'home/index'
+     },
+     'get /user/login':{
+         controller: 'user',
+         action: 'login'
+     },
+     'post /user/login':{
+         controller: 'user',
+         action: 'passport_local'
+     }
+ }
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Create policy file
+ This policy file will check that the user has been authenticated by <code class="highlighter-rouge">Passport</code> and if not it will redirect them to the login page.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /api/policies/isAuthenticated.js
+
+ module.exports = function(req, res, next) {
+
+     // User is allowed, proceed to the next policy,
+     // or if this is the last policy, the controller
+     // Sockets
+     if(req.isSocket)
+     {
+         if(req.session &amp;&amp;
+             req.session.passport &amp;&amp;
+             req.session.passport.user)
+         {
+             //Use this:
+
+             // Initialize Passport
+             sails.config.passport.initialize()(req, res, function () {
+                 // Use the built-in sessions
+                 sails.config.passport.session()(req, res, function () {
+                     // Make the user available throughout the frontend
+                     //res.locals.user = req.user;
+                     //the user should be deserialized by passport now;
+                     next();
+                 });
+             });
+
+             //Or this if you dont care about deserializing the user:
+             //req.user = req.session.passport.user;
+             //return next();
+
+         }
+         else{
+             res.json(401);
+         }
+
+
+     }
+     else if (req.isAuthenticated()) {
+         return next();
+     }
+     else{
+         // User is not allowed
+         // (default res.forbidden() behavior can be overridden in `config/403.js`)
+         return res.redirect('/account/login');
+     }
+ };
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>Apply policy file
+ The following configuration requires all requests to be authenticated. The only exception is requests to the user controller.</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code> /config/policies.js
+
+ module.exports.policies = {
+     '*': 'isAuthenticated',
+     'user': {
+         '*': true
+     }
+ }
+</code></pre>
+    </div>
+
+    <p>Running <code class="highlighter-rouge">$ sails lift</code> and attempting to access any controller other than <code class="highlighter-rouge">user</code> will redirect you to the <code class="highlighter-rouge">/user/login</code>.</p>
+
+    <p>Note:
+ Policies only apply to controllers, not views. Which means that the root ‘/’ index view will still be accessible until you put it behind a controller. <a href="https://github.com/balderdashy/sails/issues/1132">https://github.com/balderdashy/sails/issues/1132</a></p>
+  </li>
+</ol>
+
+<p>Now test your application by running <code class="highlighter-rouge">$ sails lift</code> then visiting <code class="highlighter-rouge">http://localhost:1337/user/login</code>.
+Just login with the email and password for the user we created initially:</p>
+
+<ul>
+  <li>email: test@test.com</li>
+  <li>password: 12345</li>
+</ul>
+
+<p>You should now be redirected to the homepage.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>AngularJS Interceptors - Globally handle 401 and other Error Messages</title>
+	  <link>/angularjs-interceptors-globally-handle-401-and</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-02-07T22:50:53-06:00</pubDate>
+	  <guid>/angularjs-interceptors-globally-handle-401-and</guid>
+	  <description><![CDATA[
+	     <p>If you’ve built your slick new app using AngluarJS you’re probably using the common pattern of using AngluarJS as your dynamic client side MVVM framework and delegating your server side code to act as a API for the most part.</p>
+
+<p>Traditional server side web frameworks had it easy. If you detected that your user is unauthenticated and is attempting to access a restricted resource your framework would easily handle that by automatically redirecting the user to a login page.</p>
+
+<p>Unfortunately this pattern doesn’t hold up well when building a Single-Page-Application (SPA) using a client side framework and leaving the server side as a simple json API. Since client side frameworks can’t authenticate the user directly for security reasons, there may be times where a user attempts to access an API without knowing that they are unauthorized, or that their session has expired.</p>
+
+<p>In the following guide I’ll explain how to configure an AngularJS Single Page Application to handle <code class="highlighter-rouge">401 Unauthorized</code> and Authenticated requests in a standard way.</p>
+
+<h1 id="technology-stack">Technology Stack</h1>
+
+<p>Before getting started you should note that this guide was written and tested with a NodeJS server API, however that does not mean it won’t work with your configuration. YMMV.</p>
+
+<ul>
+  <li>AngularJS <code class="highlighter-rouge">v1.2.x</code></li>
+  <li>NodeJS <code class="highlighter-rouge">v0.10.x</code></li>
+  <li>ExpressJS <code class="highlighter-rouge">v3.x</code></li>
+  <li>Passport <code class="highlighter-rouge">v0.2.0</code></li>
+</ul>
+
+<h1 id="nodejs-api--passport-authentication">NodeJS API + Passport Authentication</h1>
+
+<p>Protecting API endpoints with Passport is easy. All we need to do is specify a middleware function to handle any endpoints that need to be protected.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="s1">'/api/member/:member_id'</span><span class="p">,</span><span class="nx">requiresAuth</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+	<span class="c1">//do authenticated magic here.</span>
+	<span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">({</span><span class="na">member</span><span class="p">:</span> <span class="nx">member_data</span><span class="p">});</span>
+<span class="p">})</span>
+
+<span class="kd">function</span> <span class="nx">requiresAuth</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">isAuthenticated</span><span class="p">())</span> <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+	<span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
+	<span class="kd">var</span> <span class="nx">json_resp</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">==</span> <span class="s1">'GET'</span><span class="p">)</span> <span class="nx">json_resp</span><span class="p">.</span><span class="nx">returnTo</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">originalUrl</span>
+	<span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="nx">json_resp</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">requiresAuth</code> function returns a 401 error code if the user is not authenticated, which we can then handle in AngularJS via an Interceptor.</p>
+
+<h1 id="angularjs-interceptor">AngularJS Interceptor</h1>
+
+<p>The following AngularJS Interceptor can be used to globally handle any 401 error, and handle them by redirecting the user to the <code class="highlighter-rouge">/login</code> page.</p>
+
+<div class="language-javascript highlighter-rouge"><pre class="highlight"><code><span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApp'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngRoute'</span><span class="p">]).</span>
+<span class="nx">config</span><span class="p">([</span><span class="s1">'$routeProvider'</span><span class="p">,</span> <span class="s1">'$locationProvider'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$routeProvider</span><span class="p">,</span><span class="nx">$locationProvider</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="s1">'/angular/public/index'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="s1">'indexCtrl'</span><span class="p">});</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">'/login'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="s1">'/angular/public/login'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="s1">'loginCtrl'</span><span class="p">});</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="s1">'/members'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="s1">'/angular/member/index'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="s1">'memberIndexCtrl'</span><span class="p">});</span>
+	<span class="c1">//... snipped</span>
+
+
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nx">otherwise</span><span class="p">({</span><span class="na">redirectTo</span><span class="p">:</span> <span class="s1">'/'</span><span class="p">});</span>
+	<span class="nx">$locationProvider</span><span class="p">.</span><span class="nx">html5Mode</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+ <span class="p">}])</span>
+<span class="p">.</span><span class="nx">factory</span><span class="p">(</span><span class="s1">'authHttpResponseInterceptor'</span><span class="p">,[</span><span class="s1">'$q'</span><span class="p">,</span><span class="s1">'$location'</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">$q</span><span class="p">,</span><span class="nx">$location</span><span class="p">){</span>
+	<span class="k">return</span> <span class="p">{</span>
+		<span class="na">response</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">response</span><span class="p">){</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">401</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Response 401"</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">response</span> <span class="o">||</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="nx">response</span><span class="p">);</span>
+		<span class="p">},</span>
+		<span class="na">responseError</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">rejection</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">rejection</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">401</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Response Error 401"</span><span class="p">,</span><span class="nx">rejection</span><span class="p">);</span>
+				<span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">(</span><span class="s1">'/login'</span><span class="p">).</span><span class="nx">search</span><span class="p">(</span><span class="s1">'returnTo'</span><span class="p">,</span> <span class="nx">$location</span><span class="p">.</span><span class="nx">path</span><span class="p">());</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">$q</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">rejection</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}])</span>
+<span class="p">.</span><span class="nx">config</span><span class="p">([</span><span class="s1">'$httpProvider'</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">$httpProvider</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//Http Intercpetor to check auth failures for xhr requests</span>
+	<span class="nx">$httpProvider</span><span class="p">.</span><span class="nx">interceptors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">'authHttpResponseInterceptor'</span><span class="p">);</span>
+<span class="p">}]);</span>
+</code></pre>
+</div>
+
+<p>The previous snippet only handled the 401 error code but you could use the same premise to handle other 4xx and 5xx Error Codes.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Installing a custom version of NodeJS on Ubuntu 13.10</title>
+	  <link>/installing-a-custom-version-of-nodejs-on-ubuntu</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-01-23T15:27:00-06:00</pubDate>
+	  <guid>/installing-a-custom-version-of-nodejs-on-ubuntu</guid>
+	  <description><![CDATA[
+	     <p>The following is the quickest way to install nodejs latest and specific versions node.js on Ubuntu. According to the nodejs <a href="https://gist.github.com/isaacs/579814">official gists</a>, there are a few other ways to install node.js, and you can check out the other possibilities if you prefer.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># Adding yourself to the group to access /usr/local/bin</span>
+<span class="nv">ME</span><span class="o">=</span><span class="k">$(</span>whoami<span class="k">)</span> ; sudo chown -R <span class="nv">$ME</span> /usr/local <span class="o">&amp;&amp;</span> <span class="nb">cd</span> /usr/local/bin
+
+mkdir _node <span class="o">&amp;&amp;</span> <span class="nb">cd</span> <span class="nv">$_</span> <span class="o">&amp;&amp;</span> wget http://nodejs.org/dist/v0.10.24/node-v0.10.24-linux-x64.tar.gz -O - | tar zxf - --strip-components<span class="o">=</span>1
+
+<span class="c"># Making the symbolic link to node</span>
+ln -s <span class="s2">"/usr/local/bin/_node/bin/node"</span> ..
+<span class="c"># Making the symbolic link to npm</span>
+ln -s <span class="s2">"/usr/local/bin/_node/lib/node_modules/npm/bin/npm-cli.js"</span> ../npm
+</code></pre>
+</div>
+
+<p>You can replace the <code class="highlighter-rouge">v.0.11.10</code> in the script above with any version from the list of <a href="http://nodejs.org/dist/">all nodejs versions</a></p>
+
+<p>If you just wanted the official latest release you can also do:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>sudo apt-get install python-software-properties python g++ make
+sudo add-apt-repository ppa:chris-lea/node.js
+sudo apt-get update
+sudo apt-get install nodejs
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

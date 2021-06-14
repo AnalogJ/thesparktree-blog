@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Drawbridge - SSH Config management for Jump/Bastion hosts</title>
+	  <link>/drawbridge-ssh-config-management</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-04-30T04:19:33-05:00</pubDate>
+	  <guid>/drawbridge-ssh-config-management</guid>
+	  <description><![CDATA[
+	     <p>In our architecture we have many environments (test/stage/prod/etc), and each environment can have one or more shards, usually broken up by datacenter/avaliablity zone (us-east-1, us-west-2, etc). Each of our shards are protected by Jump/Bastion hosts, auditing and restricting SSH access to internal components.</p>
+
+<p>For ease of use, tunneling into bastion host protected stacks is usually done by adding entries into your <code class="highlighter-rouge">~/.ssh/config</code> file, however when you start adding dozens of entries, it can be confusing and time consuming.</p>
+
+<p>A while back I made a post on <a href="https://www.reddit.com/r/devops/comments/8aasuw/tools_for_interacting_withmaintaining_configs_for/">/r/devops</a> asking for help finding a tool that would manage/generate ssh config files for all our jump/bastion hosts.</p>
+
+<p>There was some interest (and great discussion), however no-one submitted a tool that solved the actual problem.</p>
+
+<p>Since that post, I’ve worked on an open source tool that implents everything required to work with Bastion/Jump hosts efficiently as a Developer or member of Operations. Its available now on github: <a href="https://github.com/AnalogJ/drawbridge">Drawbridge</a></p>
+
+<h2 id="here-are-some-of-its-features">Here are some of its features:</h2>
+
+<ul>
+  <li>Single binary (available for macOS and linux), only depends on <code class="highlighter-rouge">ssh</code>, <code class="highlighter-rouge">ssh-agent</code> and <code class="highlighter-rouge">scp</code></li>
+  <li>Uses customizable templates to ensure that Drawbridge can be used by any organization, in any configuraton</li>
+  <li>Helps organize your SSH config files and PEM files</li>
+  <li>Generates SSH Config files for your servers spread across multiple environments and stacks.
+    <ul>
+      <li>multiple ssh users/keypairs</li>
+      <li>multiple environments</li>
+      <li>multiple stacks per environment</li>
+      <li>etc..</li>
+    </ul>
+  </li>
+  <li>Can be used to SSH directly into an internal node, routing though bastion, leveraging SSH-Agent</li>
+  <li>Able to download files from internal hosts (through the jump/bastion host) using SCP syntax</li>
+  <li>Supports HTTP proxy to access internal stack urls.</li>
+  <li>Lists all managed config files in a heirarchy that makes sense to your organization</li>
+  <li>Custom templated files can be automatically generated when a new SSH config is created.
+    <ul>
+      <li>eg. Chef knife.rb configs, Pac/Proxy files, etc.</li>
+    </ul>
+  </li>
+  <li>Cleanup utility is built-in</li>
+  <li><code class="highlighter-rouge">drawbridge update</code> lets you update the binary inplace.</li>
+  <li>Pretty colors. The CLI is all colorized to make it easy to skim for errors/warnings</li>
+</ul>
+
+<hr />
+
+<p>You can read more &amp; download it from Github [https://github.com/AnalogJ/drawbridge]</p>
+
+<p>I’m always open to PR’s and feature requests. I’d also love to hear any feedback you guys may have</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

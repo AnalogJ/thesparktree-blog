@@ -1,0 +1,2596 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>OpenLDAP using STARTTLS & LetsEncrypt</title>
+	  <link>/openldap-using-starttls-and-letsencrypt</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-06-13T04:19:33-05:00</pubDate>
+	  <guid>/openldap-using-starttls-and-letsencrypt</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication.</p>
+
+  <p>LDAP provides the communication language that applications use to
+communicate with other directory services servers. Directory services
+store the users, passwords, and computer accounts, and share that
+information with other entities on the network.</p>
+
+  <p><strong>OpenLDAP</strong> is a <a href="https://en.wikipedia.org/wiki/Free_software">free</a>,
+<a href="https://en.wikipedia.org/wiki/Open-source_software" title="Open-source software">open-source</a> implementation of the
+<a href="https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol" title="Lightweight Directory Access Protocol">Lightweight Directory Access Protocol</a>
+(LDAP) developed by the OpenLDAP Project. It is released under its own BSD-style license called the OpenLDAP Public License.<a href="https://en.wikipedia.org/wiki/OpenLDAP#cite_note-4">[4]</a></p>
+</blockquote>
+
+<p>There are 2 commonly used mechanisms to secure LDAP traffic - LDAPS and StartTLS. LDAPS is deprecated in favor of Start TLS [RFC2830].</p>
+
+<p>During some recent infrastructure changes I found out the hard way that <a href="https://issues.jenkins.io/browse/JENKINS-14520">LDAP plugin for Jenkins does not support LDAP over TLS (StartTLS)</a>.
+Given that LDAPS is officially deprecated, I began work on a PR to add StartTLS support myself.</p>
+
+<p>Before I could start coding, I needed to create a local development environment with an LDAP server speaking StartTLS.
+Unfortunately, this was harder than I anticipated, as StartTLS (while officially supported since LDAPv3) is not well documented.</p>
+
+<p>In the following post ,I’ll show you how to get OpenLDAP up and running with StartTLS, using valid certificates from LetsEncrypt.</p>
+
+<p>As always, the code is Open Source and lives on Github:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<h1 id="self-signed-vs-trusted-ca-certificates">Self-Signed vs Trusted CA Certificates</h1>
+
+<p>There are two types of <strong>SSL Certificates</strong> when you’re talking about signing. There are <strong>Self-Signed SSL Certificates</strong> and certificates
+that are signed by a Trusted Certificate Authority (and are usually already trusted by your system).</p>
+
+<p>Most OpenLDAP documentation I was able to find used Self-Signed certifates. While that works fine for most development,
+I am trying to replicate a production-like environment, which means real, trusted certificates. Thankfully, we can utilize
+short-lived trusted certificates provided by LetsEncrypt to secure our test OpenLDAP server.</p>
+
+<h1 id="generate-letsencrypt-certificate">Generate LetsEncrypt Certificate</h1>
+
+<div class="github-widget" data-repo="matrix-org/docker-dehydrated"></div>
+
+<p>The <a href="https://matrix.org/">matrix.org</a> team provide a simple <a href="https://github.com/matrix-org/docker-dehydrated#behaviour">Docker image</a>
+that you can use to generate LetsEncrypt certificates using the DNS-01 challenge. All you need is a custom domain, and a
+<a href="https://github.com/AnalogJ/lexicon">DNS provider with an API</a></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>mkdir data
+
+<span class="c"># We cannot use a wildcard domain with OpenLDAP, so let's pick a simple obvious subdomain.</span>
+<span class="nb">echo</span> <span class="s2">"ldap.example.com"</span> &gt; data/domains.txt
+
+docker run --rm <span class="se">\</span>
+-v <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/data:/data <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_GENERATE_CONFIG</span><span class="o">=</span>yes <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_CA</span><span class="o">=</span><span class="s2">"https://acme-v02.api.letsencrypt.org/directory"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_CHALLENGE</span><span class="o">=</span><span class="s2">"dns-01"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_KEYSIZE</span><span class="o">=</span><span class="s2">"4096"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_HOOK</span><span class="o">=</span><span class="s2">"/usr/local/bin/lexicon-hook"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_RENEW_DAYS</span><span class="o">=</span><span class="s2">"30"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_KEY_RENEW</span><span class="o">=</span><span class="s2">"yes"</span> <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_ACCEPT_TERMS</span><span class="o">=</span>yes <span class="se">\</span>
+-e <span class="nv">DEHYDRATED_EMAIL</span><span class="o">=</span><span class="s2">"myemail@gmail.com"</span> <span class="se">\</span>
+-e <span class="nv">PROVIDER</span><span class="o">=</span>cloudflare <span class="se">\</span>
+-e <span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span><span class="s2">"mycloudflareusername"</span> <span class="se">\</span>
+-e <span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span><span class="s2">"mycloudflaretoken"</span> <span class="se">\</span>
+docker.io/matrixdotorg/dehydrated
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: pay attention to those last 3 environmental variables. They are passed to <a href="https://github.com/AnalogJ/lexicon">lexicon</a>
+and should be changed to match your DNS provider.</p>
+</blockquote>
+
+<p>Once <code class="highlighter-rouge">dehydrated</code> prints its success messge , you should see a handful of new subfolders in <code class="highlighter-rouge">data</code>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>data
+├── accounts
+│ └── xxxxxxxxxxxxxx
+│     ├── account_id.json
+│     ├── account_key.pem
+│     └── registration_info.json
+├── certs
+│ └── ldap.example.com
+│     ├── cert-xxxxxx.csr
+│     ├── cert-xxxxxx.pem
+│     ├── cert.csr -&gt; cert-xxxxxx.csr
+│     ├── cert.pem -&gt; cert-xxxxxx.pem
+│     ├── chain-xxxxxx.pem
+│     ├── chain.pem -&gt; chain-xxxxxx.pem
+│     ├── combined.pem
+│     ├── fullchain-xxxxxx.pem
+│     ├── fullchain.pem -&gt; fullchain-xxxxxx.pem
+│     ├── privkey-xxxxxx.pem
+│     └── privkey.pem -&gt; privkey-xxxxxx.pem
+├── chains
+├── config
+└── domains.txt
+</code></pre>
+</div>
+
+<p>Let’s leave these files alone for now, and continue to standing up and configuring our OpenLDAP server.</p>
+
+<h1 id="deploying-openldap-via-docker">Deploying OpenLDAP via Docker</h1>
+
+<p>Since we’re not actually deploying a production instance (with HA/monitoring/security hardening/etc) we can take
+some short-cuts and use an off-the-shelf Docker image.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>The <a href="https://github.com/AnalogJ/docker-openldap-starttls">analogj/docker-openldap-starttls</a> image we’re using in the
+example below is based on the  <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild/test-openldap</a> Docker image,
+ which provies a vanilla install of OpenLDAP, and adds Futurama characters as test users.</p>
+
+<p>I’ve customized it to add support for custom Domains, dynamic configuration &amp; the ability to enforce StartTLS on the
+serverside (which is great for testing).</p>
+
+<p>Before we start the OpenLDAP container, lets rename and re-organize our LetsEncrypt certificates in a folder structure that the container expects:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir -p ldap
+cp data/fullchain.pem ldap/fullchain.crt
+cp data/cert.pem ldap/ldap.crt
+cp data/privkey.pem ldap/ldap.key
+</code></pre>
+</div>
+
+<p>Next, lets start the OpenLDAP Docker container:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker run --rm \
+-v `pwd`/ldap:/etc/ldap/ssl/ \
+-p 10389:10389 \
+-p 10636:10636 \
+-e LDAP_DOMAIN="example.com" \
+-e LDAP_BASEDN="dc=example,dc=com" \
+-e LDAP_ORGANISATION="Custom Organization Name, Example Inc." \
+-e LDAP_BINDDN="cn=admin,dc=example,dc=com" \
+-e LDAP_FORCE_STARTTLS="true" \
+ghcr.io/analogj/docker-openldap-starttls:master
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: the <code class="highlighter-rouge">LDAP_DOMAIN</code> should be your root domain (<code class="highlighter-rouge">example.com</code> vs <code class="highlighter-rouge">ldap.example.com</code> from your certificate).
+It’s used for test user email addresses.</p>
+
+  <p>Pay attention to the <code class="highlighter-rouge">LDAP_BASEDN</code> and <code class="highlighter-rouge">LDAP_BINDDN</code> variables, they should match your Domain root as well.</p>
+
+  <p><code class="highlighter-rouge">LDAP_FORCE_STARTTLS=true</code> is optional, you can use it to conditionally start your LDAP server with StartTLS enforced.</p>
+</blockquote>
+
+<p>If everything is correct, you should see <code class="highlighter-rouge">slapd starting</code> as your last log message.</p>
+
+<p>Lets test that the container is responding correctly, though the certificate will not match since we’re going to query it
+using <code class="highlighter-rouge">localhost:10389</code></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># LDAPTLS_REQCERT=never tells ldapsearch to skip certificate validation</span>
+<span class="c"># -Z is required if we used LDAP_FORCE_STARTTLS="true" to start the container.</span>
+
+<span class="nv">LDAPTLS_REQCERT</span><span class="o">=</span>never ldapsearch -H ldap://localhost:10389 -Z -x -b <span class="s2">"ou=people,dc=example,dc=com"</span> -D <span class="s2">"cn=admin,dc=example,dc=com"</span> -w GoodNewsEveryone <span class="s2">"(objectClass=inetOrgPerson)"</span>
+
+<span class="c"># ...</span>
+<span class="c"># search result</span>
+<span class="c"># search: 3</span>
+<span class="c"># result: 0 Success</span>
+<span class="c">#</span>
+<span class="c"># numResponses: 8</span>
+<span class="c"># numEntries: 7</span>
+</code></pre>
+</div>
+
+<h1 id="dns">DNS</h1>
+
+<p>Wiring up DNS to correctly resolve to the new container running on you host is left as a exercise for the user.</p>
+
+<p>For testing, I just setup a simple A record pointing <code class="highlighter-rouge">ldap.example.com</code> to my laptop’s private IP address <code class="highlighter-rouge">192.168.0.123</code>.
+It obviously won’t resolve correctly outside my home network, but it works fine for testing.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ping ldap.example.com
+PING ldap.example.com (192.168.0.123): 56 data bytes
+64 bytes from 192.168.0.123: icmp_seq=0 ttl=64 time=0.045 ms
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE: Remember, DNS updates can take a while to propagate. You’ll want to set a low TTL for the new record if your IP will
+be changing constantly (DHCP). You may also need to flush your DNS cache if the changes do not propagate correctly.</p>
+</blockquote>
+
+<h1 id="testing">Testing</h1>
+
+<p>You can test that the container is up and running (and accessible via our custom domain) with some handy <code class="highlighter-rouge">ldapsearch</code> commands:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># List all Users (only works with LDAP_FORCE_STARTTLS=false)
+ldapsearch -H ldap://ldap.example.com:10389 -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Response:
+# ldap_bind: Confidentiality required (13)
+#	additional info: TLS confidentiality required
+
+# Request StartTLS (works with LDAP_FORCE_STARTTLS=true/false)
+ldapsearch -H ldap://ldap.example.com:10389 -Z -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Enforce StartTLS (only works with LDAP_FORCE_STARTTLS=true)
+ldapsearch -H ldap://example:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Query Open LDAP using Localhost url, also works with self-signed certs (-ZZ forces StartTLS)
+LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+</code></pre>
+</div>
+
+<h1 id="how-does-it-work">How does it work?</h1>
+
+<p>Other than my changes that allow you to customize the domain, there are only 2 main changes from <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild’s amazing work</a>.</p>
+
+<ul>
+  <li>
+    <p>A slightly modified <code class="highlighter-rouge">tls.ldif</code> file, which uses the fullchain, private key and certificate provided by LetsEncrypt</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>dn: cn=config
+changetype: modify
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ldap/ssl/fullchain.crt
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ldap/ssl/ldap.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ldap/ssl/ldap.key
+-
+replace: olcTLSVerifyClient
+olcTLSVerifyClient: never
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>A new (conditionally loaded) <code class="highlighter-rouge">force-starttls.ldif</code> file, which tells OpenLDAP to force TLS</p>
+
+    <div class="highlighter-rouge"><pre class="highlight"><code>dn: cn=config
+changetype:  modify
+add: olcSecurity
+olcSecurity: tls=1
+
+</code></pre>
+    </div>
+  </li>
+</ul>
+
+<h1 id="fin">Fin</h1>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>Getting all the details right took some time, but it was worth it. With this containerized setup, its easy to start
+up a fresh “trusted” OpenLDAP image for testing, and conditionally enforce StartTLS.</p>
+
+<p>Thankfully, I was able to use this local containerized OpenLDAP server to finish my work in the
+<a href="https://github.com/jenkinsci/ldap-plugin/pull/97">Jenkins LDAP-Plugin</a>, which I’ll be writing about in a future blog post.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Running Cron in Docker</title>
+	  <link>/cron-in-docker</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-04-26T04:19:33-05:00</pubDate>
+	  <guid>/cron-in-docker</guid>
+	  <description><![CDATA[
+	     <p>Running <code class="highlighter-rouge">cron</code> in a Docker container is incredibly difficult to do correctly.
+This is partially because <code class="highlighter-rouge">cron</code> was designed to run in an environment that looks very different than a docker container,
+and partially because what we traditionally think of as <code class="highlighter-rouge">cron</code> is actually a different tool in each flavor of Linux.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="what-is-cron">What is <code class="highlighter-rouge">cron</code></h2>
+
+<blockquote>
+  <p>The software utility <strong>cron</strong> also known as <strong>cron job</strong> is a time-based job scheduler in Unix-like computer operating
+systems. Users who set up and maintain software environments use cron to schedule jobs (commands or shell scripts) to run
+periodically at fixed times, dates, or intervals. It typically automates system maintenance or administration—though its
+general-purpose nature makes it useful for things like downloading files from the Internet and downloading email at regular
+intervals.</p>
+</blockquote>
+
+<p><a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a></p>
+
+<p>Basically it’s a language/platform/distro agnostic tool for scheduling tasks/scripts to run automatically at some interval.</p>
+
+<h2 id="differences-between-various-versions">Differences between various versions</h2>
+
+<p>Though <code class="highlighter-rouge">cron</code>’s API is standardized, there are multiple implementations, which vary as the default for various distros
+(<a href="http://www.jimpryor.net/linux/dcron.html">dcron</a>, <a href="https://github.com/cronie-crond/cronie">cronie</a>,
+<a href="http://fcron.free.fr/">fcron</a> and <a href="https://directory.fsf.org/wiki/Vixie-cron">vixie-cron</a>)</p>
+
+<p>To add to the complexity, some of <code class="highlighter-rouge">cron</code>’s functionality is actually defined/provided by <code class="highlighter-rouge">anachron</code>. <code class="highlighter-rouge">anacron</code> was
+previously a stand-alone binary which was used to run commands periodically with a frequency defined in days. It works
+a little different from cron; assumes that a machine will not be powered on all the time.</p>
+
+<p>So to summarize, there are multiple <code class="highlighter-rouge">cron</code> implementations, with differing flags &amp; features, some with <code class="highlighter-rouge">anacron</code>
+functionality built-in, and some without. In the following sections I’ll call out different solutions for different
+distros/<code class="highlighter-rouge">cron</code> implementations (keep an eye out for <code class="highlighter-rouge">NOTE:</code> blocks)</p>
+
+<blockquote>
+  <p>NOTE: Installation instructions differ per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; cron</code></li>
+    <li>Alpine: <code class="highlighter-rouge">which crond</code> # comes pre-installed</li>
+    <li>Centos: <code class="highlighter-rouge">yum install -y cronie &amp;&amp; crond -V</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="config-file">Config File</h2>
+
+<p>Let’s start with a simple issue. <code class="highlighter-rouge">cron</code> is designed to run in a multi-user environment, which is great when you’re running
+<code class="highlighter-rouge">cron</code> on a desktop, but less useful when running <code class="highlighter-rouge">cron</code> in a docker container.</p>
+
+<p>Rather than creating a user specific <code class="highlighter-rouge">crontab</code> file, in our Docker container we’ll modify the system-level <code class="highlighter-rouge">crontab</code>.</p>
+
+<p>Let’s create/update a file called <code class="highlighter-rouge">/etc/crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date
+</code></pre>
+</div>
+
+<p>This file will configure <code class="highlighter-rouge">cron</code> to run the <code class="highlighter-rouge">date</code> command every minute. We’ll talk about the output for this command in a later section.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+    <li>Alpine: the crontab file should be written to <code class="highlighter-rouge">/var/spool/cron/crontabs/root</code>, also the format is slightly different (the <code class="highlighter-rouge">user</code> field should be removed).</li>
+    <li>Centos: replace the existing <code class="highlighter-rouge">/etc/crontab</code> which contains <code class="highlighter-rouge">anacron</code> entries</li>
+  </ul>
+</blockquote>
+
+<h2 id="foreground">Foreground</h2>
+
+<p>Now that we have created a <code class="highlighter-rouge">cron</code> config file, we need to start <code class="highlighter-rouge">cron</code>. On a normal system, we would start <code class="highlighter-rouge">cron</code> as a
+daemon, a background process usually managed by service manager. In the Docker world, the convention is 1 process per container,
+ running in the foreground.</p>
+
+<p>Thankfully most <code class="highlighter-rouge">cron</code> implementations support this, even though the flags may be different.</p>
+
+<blockquote>
+  <p>NOTE: Running cron in the foreground differs per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">cron -f -l 2</code></li>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+    <li>Centos: <code class="highlighter-rouge">crond -n</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="environment">Environment</h2>
+
+<p>As mentioned earlier, <code class="highlighter-rouge">cron</code> is designed to work in a multi-user environment, which also means the <code class="highlighter-rouge">cron</code> daemon cannot
+make assumptions about the runtime environment (process environmental variables, etc). The way <code class="highlighter-rouge">cron</code> enforces this is
+by starting each job with a custom environment, using an implementation specific environmental variables file (usually <code class="highlighter-rouge">/etc/environment</code>)</p>
+
+<p>Since using environmental variables is a common configuration mechanism for Docker containers, we need a way to ensure the current
+Docker container environment is passed into the cron sub-processes. The best way to do this is by creating a custom
+entrypoint script which dumps the environment to the <code class="highlighter-rouge">cron</code> environment file, before starting <code class="highlighter-rouge">cron</code> in the foreground.</p>
+
+<p>Create the following <code class="highlighter-rouge">/entrypoint.sh</code> script in your Docker image.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># start cron in the foreground (replacing the current process)</span>
+<span class="nb">exec</span> <span class="s2">"cron -f"</span>
+</code></pre>
+</div>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Centos: unfortunately <code class="highlighter-rouge">cronie</code> doesn’t read variables from <code class="highlighter-rouge">/etc/environment</code>.
+      <ul>
+        <li>You’ll need to manually source it before your script: <code class="highlighter-rouge">* * * * * root . /etc/environment; date</code></li>
+        <li>
+          <p>If you have multiple entries in your <code class="highlighter-rouge">crontab</code>, you can change the default <code class="highlighter-rouge">SHELL</code> for your <code class="highlighter-rouge">crontab</code> file, and make use of <code class="highlighter-rouge">BASH_ENV</code></p>
+
+          <div class="highlighter-rouge"><pre class="highlight"><code>   SHELL=/bin/bash
+   BASH_ENV=/etc/environment
+   * * * * * root echo "${CUSTOM_ENV_VAR}"
+</code></pre>
+          </div>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</blockquote>
+
+<h2 id="stdoutstderr">STDOUT/STDERR</h2>
+
+<p>If you’ve been following along so far, you might be wondering why you’re not seeing any output from <code class="highlighter-rouge">date</code> in your
+terminal. That’s because even though <code class="highlighter-rouge">cron</code> is running in the foreground, the output from its child processes is designed
+to go to a log file (traditionally at <code class="highlighter-rouge">/var/log/cron</code>). Again, this might be fine on a standard linux host, but it’s
+sub-optimal for a Docker container.</p>
+
+<p>Let’s use some shell redirect magic to redirect the <code class="highlighter-rouge">STDOUT</code> and <code class="highlighter-rouge">STDERR</code> from our <code class="highlighter-rouge">cron</code> jobs, to the <code class="highlighter-rouge">cron</code> process
+(running as the primary process in the Docker container, with <a href="https://en.wikipedia.org/wiki/Process_identifier">PID 1</a>).</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code># &gt;/proc/1/fd/1 redirects STDOUT from the `date` command to PID1's STDOUT
+# 2&gt;/proc/1/fd/2 redirects STDERR from the `date` command to PID1's STDERR
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+</code></pre>
+</div>
+
+<p>While <code class="highlighter-rouge">&gt;/proc/1/fd/1 2&gt;/proc/1/fd/2</code> may look intimidating, it’s the most consistent way to pass <code class="highlighter-rouge">cronjob</code> logs to the container’s
+STDOUT, without leveraging clunky solutions like <code class="highlighter-rouge">crond &amp;&amp; tail -f /var/log/cron</code></p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Alpine, as long as you start cron with the following command:</p>
+  <ul>
+    <li>Alpine: <code class="highlighter-rouge">crond -f -l 2</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="cron-package-installation">Cron package installation</h2>
+
+<p>Now that we have a working container with <code class="highlighter-rouge">cron</code>, we should take the time to clean up some of the unused cruft that our
+<code class="highlighter-rouge">cron</code> package installs, specifically configs for <code class="highlighter-rouge">anacron</code>.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+    <li>Alpine: <code class="highlighter-rouge">rm -rf /etc/periodic</code></li>
+    <li>Centos: <code class="highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="kill">Kill</h2>
+
+<p>Finally, as you’ve been playing around, you may have noticed that it’s difficult to kill the container running <code class="highlighter-rouge">cron</code>.
+You may have had to use <code class="highlighter-rouge">docker kill</code> or <code class="highlighter-rouge">docker-compose kill</code> to terminate the container, rather than using <code class="highlighter-rouge">ctrl + C</code> or <code class="highlighter-rouge">docker stop</code>.</p>
+
+<p>Unfortunately, it seems like <code class="highlighter-rouge">SIGINT</code> is not always correctly handled by <code class="highlighter-rouge">cron</code> implementations when running in the foreground.</p>
+
+<p>After researching a couple of alternatives, the only solution that seemed to work was using a process supervisor (like
+<code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code>). Since <code class="highlighter-rouge">tini</code> was merged into Docker 1.13, technically, you can use it transparently by passing
+<code class="highlighter-rouge">--init</code> to your docker run command. In practice you often can’t because your cluster manager doesn’t support it.</p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Centos, SIGTERM works correctly with <code class="highlighter-rouge">cronie</code> in the foreground.</p>
+</blockquote>
+
+<h2 id="putting-it-all-together">Putting it all together</h2>
+
+<p>Let’s see what all of this would look like for an <code class="highlighter-rouge">ubuntu</code> base image.</p>
+
+<p>Create a <code class="highlighter-rouge">Dockerfile</code></p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu
+
+RUN apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; which cron &amp;&amp; \
+    rm -rf /etc/cron.*/*
+
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["cron","-f", "-l", "2"]
+</code></pre>
+
+<p>Create an <code class="highlighter-rouge">entrypoint.sh</code></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+env &gt;&gt; /etc/environment
+
+<span class="c"># execute CMD</span>
+<span class="nb">echo</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+<span class="nb">exec</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+
+</code></pre>
+</div>
+
+<p>Create a <code class="highlighter-rouge">crontab</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+* * * * * root echo "${CUSTOM_ENV_VAR}" &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+
+# An empty line is required at the end of this file for a valid cron file.
+
+</code></pre>
+</div>
+
+<p>Build the Dockerfile and run it with <code class="highlighter-rouge">--init</code> (package <code class="highlighter-rouge">tini</code> or <code class="highlighter-rouge">s6-overlay</code> for containers in production)</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker build -t analogj/cron .
+docker run --rm --name cron -e <span class="nv">CUSTOM_ENV_VAR</span><span class="o">=</span>foobar -v <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/crontab:/etc/crontab analogj/cron
+</code></pre>
+</div>
+
+<p>You should see output like the following:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>foobar
+Tue Apr 27 14:31:00 UTC 2021
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>I’ve put together a working example of dockerized <code class="highlighter-rouge">cron</code> for multiple distros:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="references">References</h2>
+<ul>
+  <li>https://hynek.me/articles/docker-signals/</li>
+  <li>https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</title>
+	  <link>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-28T04:19:33-05:00</pubDate>
+	  <guid>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</guid>
+	  <description><![CDATA[
+	     <p>Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal in most cases. However,
+even them most robust software can run into issues. Which brings us to the <code class="highlighter-rouge">CrashLoopBackOff</code> error. A CrashloopBackOff
+means that you have a pod starting, crashing, starting again, and then crashing again.</p>
+
+<p>Crash loops can happen for a variety of reasons, but (in my opinion) the most difficult to fix are  CrashloopBackOff errors
+associated with a corrupted PersistentVolumeClaim. In this post we’ll discuss a technique you can use to safely detach
+and repair a PersistentVolumeClaim, to fix a CrashloopBackOff error.</p>
+
+<h1 id="detach-the-volume">Detach the Volume</h1>
+
+<p>The first step is to scale our failing deployment to 0. This is because by default PVC’s have a <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"><code class="highlighter-rouge">ReadWriteOnce</code> AccessMode</a>,
+meaning the volume can be mounted as read-write by a single node. If the failing pod is binding to the corrupted volume in <code class="highlighter-rouge">write</code> mode, then our
+debugging container can’t make any changes to it. Even if your PVC is <code class="highlighter-rouge">ReadWriteMany</code>, it’s safer to ensure nothing else is writing to the volume while
+wee make our repairs.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl scale deployment failed-deployment --replicas<span class="o">=</span>0
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre>
+</div>
+
+<h1 id="debugging-pod">Debugging Pod</h1>
+
+<p>Next we’ll need to inspect the deployment config to find the PVC identifier to repair.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl get deployment -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">"{.spec.template.spec.volumes[*].persistentVolumeClaim.claimName}"</span> failed-deployment
+my-pvc-claim
+</code></pre>
+</div>
+
+<p>Now that we know the identifier for the failing PVC, we need to create a debugging pod spec which mounts the PVC.
+In this example we’ll use <code class="highlighter-rouge">busybox</code>, but you could use any debugging tools image here.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="c1"># my-pvc-debugger.yaml</span>
+
+<span class="nn">---</span>
+<span class="s">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="s">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="s">metadata</span><span class="pi">:</span>
+  <span class="s">name</span><span class="pi">:</span> <span class="s">volume-debugger</span>
+<span class="s">spec</span><span class="pi">:</span>
+  <span class="s">volumes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+      <span class="s">persistentVolumeClaim</span><span class="pi">:</span>
+       <span class="s">claimName</span><span class="pi">:</span> <span class="s">&lt;CLAIM_IDENTIFIER_HERE&gt;</span>
+  <span class="s">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">debugger</span>
+      <span class="s">image</span><span class="pi">:</span> <span class="s">busybox</span>
+      <span class="s">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">sleep'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">3600'</span><span class="pi">]</span>
+      <span class="s">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/data"</span>
+          <span class="s">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+</code></pre>
+</div>
+
+<p>Next, lets create a new pod and run a shell inside it.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl create -f /path/to/my-pvc-debugger.yaml
+pod <span class="s2">"volume-debugger"</span> created
+<span class="gp">$ </span>kubectl <span class="nb">exec</span> -it volume-debugger sh
+/ <span class="c">#</span>
+</code></pre>
+</div>
+
+<p>Now that we’re inside the container we can explore the volume which is mounted at <code class="highlighter-rouge">/data</code> and fix the issue.</p>
+
+<h1 id="restore-pod">Restore Pod</h1>
+
+<p>Once we’ve repaired the PVC volume, we can exit the shell within the container and delete the debugger pod.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>/ <span class="c"># logout</span>
+<span class="gp">$ </span>kubectl delete -f /path/to/my-pvc-debugger.yaml
+</code></pre>
+</div>
+
+<p>Next, we’ll scale our deployment back up.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>kubectl scale deployment failed-deployment --replicas<span class="o">=</span>1
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre>
+</div>
+
+<h1 id="fin">Fin</h1>
+
+<p>In a perfect world we should never have to get hands on with our volumes, but occasionally bugs cause if to have to go
+and clean things up. This example shows a quick way to hop into a volume for a container which does not have any user environment.</p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://itnext.io/debugging-kubernetes-pvcs-a150f5efbe95
+    <ul>
+      <li>The guide above is a slightly modified version of Jacob Tomlinson’s work. Copied for ease of reference.</li>
+    </ul>
+  </li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Git Mirror Anywhere using the Dumb Http Protocol</title>
+	  <link>/git-mirror-anywhere-using-dumb-http-protocol</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-08T03:19:33-06:00</pubDate>
+	  <guid>/git-mirror-anywhere-using-dumb-http-protocol</guid>
+	  <description><![CDATA[
+	     <p>Lets talk about <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git</a>. If you’ve done any professional software development, you’ve probably heard about Git.</p>
+
+<blockquote>
+  <p>Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency.</p>
+</blockquote>
+
+<p>It’s a tiny, but powerful piece of software, that most software developers use every day. Even so, under the hood there’s dozens of powerful features that most developers
+don’t even know exist. Today I hope to introduce you to one of them, the “Dumb HTTP Protocol”.</p>
+
+<hr />
+
+<p>I recently found myself in a position needing to mirror a git repo to a firewalled environment where I didn’t want to stand up a dedicated Git server.
+I had access to a blob storage account, that could be used to serve static content over HTTP, but no compute.</p>
+
+<p>While investigating the Git protocol for <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> I had previously learned about something called the “Dumb HTTP Protocol”.
+Unlike the SSH and HTTP Git protocol that most of your are aware of, the Dumb HTTP protocol expects the bare Git repository to be served like normal files from the web server.</p>
+
+<p>At first glance, this looks liked exactly what we want, however, as you read further into the <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_dumb_http">documentation</a>
+you’ll see “Basically, all you have to do is put a bare Git repository under your HTTP document root and set up a specific post-update hook, and you’re done”.</p>
+
+<p>Since we don’t want to run a server at all, a post-hook script seems like a non-starter. Thankfully this is not the case, as long as you are ok with a bit of extra work.</p>
+
+<hr />
+
+<h2 id="the-dumb-http-protocol">The Dumb HTTP Protocol</h2>
+
+<p>Before we go to the solution, lets take a moment to dive into what actually happens when you attempt to clone from a Git remote using the Dumb HTTP protocol.
+Please note, some of the following examples are copied from the Git Documentation.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone http://server/simplegit-progit.git
+</code></pre>
+</div>
+
+<p>The first thing this command does is pull down the <code class="highlighter-rouge">info/refs</code> file. This file is written by the <code class="highlighter-rouge">update-server-info</code> command in the Post hook, and does not normally exist.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/info/refs HTTP/1.0
+
+S: 200 OK
+S:
+S: 95dcfa3633004da0049d3d0fa03f80589cbcaf31	refs/heads/maint
+S: ca82a6dff817ec66f44342007202690a93763949	refs/heads/master
+S: 2cb58b79488a98d2721cea644875a8dd0026b115	refs/tags/v1.0
+S: a3c2e2402b99163d1d59756e5f207ae21cccba4c	refs/tags/v1.0^{}
+</code></pre>
+</div>
+
+<p>The returned content is a UNIX formatted text file describing each ref and its known value.
+The file should not include the default ref named HEAD.</p>
+
+<p>Now you have a list of the remote references and SHA-1s. Next, you look for what the HEAD reference is so you know what to check out when you’re finished:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/HEAD HTTP/1.0
+
+ref: refs/heads/master
+</code></pre>
+</div>
+
+<p>You need to check out the <code class="highlighter-rouge">master</code> branch when you’ve completed the process. At this point, you’re ready to start the walking process. Because your starting point is the <code class="highlighter-rouge">ca82a6</code> commit object you saw in the <code class="highlighter-rouge">info/refs</code> file, you start by fetching that:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/ca/82a6dff817ec66f44342007202690a93763949 HTTP/1.0
+
+(179 bytes of binary data)
+</code></pre>
+</div>
+
+<p>You get an object back – that object is in loose format on the server, and you fetched it over a static HTTP GET request. You can zlib-uncompress it, strip off the header, and look at the commit content:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git cat-file -p ca82a6dff817ec66f44342007202690a93763949
+tree cfda3bf379e4f8dba8717dee55aab78aef7f4daf
+parent 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+author Scott Chacon &lt;schacon@gmail.com&gt; 1205815931 -0700
+committer Scott Chacon &lt;schacon@gmail.com&gt; 1240030591 -0700
+
+Change version number
+</code></pre>
+</div>
+
+<p>Next, you have two more objects to retrieve – <code class="highlighter-rouge">cfda3b</code>, which is the tree of content that the commit we just retrieved points to; and <code class="highlighter-rouge">085bb3</code>, which is the parent commit:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/08/5bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+
+(179 bytes of data)
+</code></pre>
+</div>
+
+<p>To see what packfiles are available on this server, you need to get the objects/info/packs file, which contains a listing of them (also generated by <code class="highlighter-rouge">update-server-info</code>):</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/info/packs
+P pack-816a9b2334da9953e530f27bcac22082a9f5b835.pack
+</code></pre>
+</div>
+
+<p>We’ll stop here. At this point we have a mechanism for retrieving information about the head of each branch, and a mechanism for retrieving the file content associated with a commit.</p>
+
+<h1 id="git-compatible-static-content-repository">Git Compatible Static Content Repository</h1>
+
+<p>So how do we leverage this knowledge to generate a version of our Git repository, that we can serve using a simple HTTP content server (no post-hook.sh necessary)?</p>
+
+<p>First we need to clone a bare version of our Git repository locally.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git clone --bare $GIT_REPO_URL
+</code></pre>
+</div>
+
+<p>Then we’ll run the <code class="highlighter-rouge">git update-server-info</code> command on our bare repository, to generate the info files that Git clients expect.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>cd $REPO_DIR
+git update-server-info
+</code></pre>
+</div>
+
+<p>At this point, we can copy this directory and serve it using a simple HTTP server (eg. S3 over CloudFront, Nginx, Apache, Artifactory, etc.).</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols</li>
+  <li>https://git-scm.com/docs/http-protocol</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</title>
+	  <link>/customize-flatcar-kernel-part-3</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-12-12T03:19:33-06:00</pubDate>
+	  <guid>/customize-flatcar-kernel-part-3</guid>
+	  <description><![CDATA[
+	     <p>It’s been a while since I discussed building kernel modules for CoreOS (in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1">Part 1</a> and <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-2">Part 2</a>)
+and lot’s has changed in the CoreOS world. <a href="https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership">CoreOS was acquired by RedHat</a> and eventually replaced by
+<a href="https://docs.fedoraproject.org/en-US/fedora-coreos/faq/">CoreOS Fedora</a> but the original project lives on in <a href="https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/">FlatCar linux</a>,
+a fork of CoreOS.</p>
+
+<p>Since those last posts, I’ve also started using a dedicated GPU to do hardware transcoding of video files. Unfortunately
+using a dedicated NVidia GPU means I need to change the process I use for building kernel modules.</p>
+
+<hr />
+
+<h1 id="building-a-developer-container">Building a Developer Container</h1>
+
+<p>As with CoreOS, the first step is building a <a href="https://docs.flatcar-linux.org/os/kernel-modules/">FlatCar Development Container</a>.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-developer"></div>
+
+<p>With the help of Github Actions, I’ve created a repository that will automatically generate versioned Docker images for each
+<a href="https://www.flatcar-linux.org/releases/">FlatCar Release Channel</a></p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>curl https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt -o version.txt
+cat version.txt
+<span class="nb">export</span> <span class="k">$(</span>cat version.txt | xargs<span class="k">)</span>
+
+<span class="nb">echo</span> <span class="s2">"Download Developer Container"</span>
+curl -L https://stable.release.flatcar-linux.net/amd64-usr/<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>/flatcar_developer_container.bin.bz2 -o flatcar_developer_container.bin.bz2
+bunzip2 -k flatcar_developer_container.bin.bz2
+mkdir <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo mount -o ro,loop,offset<span class="o">=</span>2097152 flatcar_developer_container.bin <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+sudo tar -cp --one-file-system -C <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span> . | docker import - mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+rm -rf flatcar_developer_container.bin flatcar_developer_container.bin.bz2
+
+docker push mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+</code></pre>
+</div>
+
+<p>While it’s useful to have the Flatcar Development Container easily accessible on Docker Hub, it’s not functional out of
+the box for building Kernel Modules. At the very least we need to provide the kernel source within the container.
+We need to be careful that the source code for the kernel matches the linux kernel deployed with the specific version of
+Flatcar.</p>
+
+<p>To do that, we’ll use a <a href="https://github.com/mediadepot/docker-flatcar-developer/blob/master/Dockerfile">Dockerfile</a>.</p>
+
+<pre><code class="language-Dockerfile">ARG FLATCAR_VERSION
+FROM mediadepot/flatcar-developer:${FLATCAR_VERSION}
+LABEL maintainer="Jason Kulatunga &lt;jason@thesparktree.com&gt;"
+ARG FLATCAR_VERSION
+ARG FLATCAR_BUILD
+
+# Create a Flatcar Linux Developer image as defined in:
+# https://docs.flatcar-linux.org/os/kernel-modules/
+
+RUN emerge-gitclone \
+    &amp;&amp; export $(cat /usr/share/coreos/release | xargs) \
+    &amp;&amp; export OVERLAY_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; export PORTAGE_VERSION="flatcar-${FLATCAR_BUILD}" \
+    &amp;&amp; env \
+    &amp;&amp; git -C /var/lib/portage/coreos-overlay checkout "$OVERLAY_VERSION" \
+    &amp;&amp; git -C /var/lib/portage/portage-stable checkout "$PORTAGE_VERSION"
+
+# try to use pre-built binaries and fall back to building from source
+RUN emerge -gKq --jobs 4 --load-average 4 coreos-sources || echo "failed to download binaries, fallback build from source:" &amp;&amp; emerge -q --jobs 4 --load-average 4 coreos-sources
+
+# Prepare the filesystem
+# KERNEL_VERSION is determined from kernel source, not running kernel.
+# see https://superuser.com/questions/504684/is-the-version-of-the-linux-kernel-listed-in-the-source-some-where
+RUN cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/.config /usr/src/linux/ \
+    &amp;&amp; make -C /usr/src/linux modules_prepare \
+    &amp;&amp; cp /usr/lib64/modules/$(ls /usr/lib64/modules)/build/Module.symvers /usr/src/linux/
+</code></pre>
+
+<h1 id="pre-compiling-nvidia-kernel-driver">Pre-Compiling Nvidia Kernel Driver</h1>
+
+<p>Now that we have a Docker image matching our Flatcar version, the next thing we need to do is build the Nvidia Drivers against
+the kernel source. Again, we’ll be using Github Actions to pre-build our Docker image, meaning we need to take special care
+when we compile the driver, since Docker images share a kernel with the host machine, and the Github Action server is
+definitely running a kernel that is different from the kernel we’ll be running on our actual Flatcar host.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-nvidia-driver"></div>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+./nvidia-installer -s -n <span class="se">\</span>
+  --kernel-name<span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">KERNEL_VERSION</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  --kernel-source-path<span class="o">=</span>/usr/src/linux <span class="se">\</span>
+  --no-check-for-alternate-installs <span class="se">\</span>
+  --no-opengl-files <span class="se">\</span>
+  --no-distro-scripts <span class="se">\</span>
+  --kernel-install-path<span class="o">=</span><span class="s2">"/</span><span class="nv">$PWD</span><span class="s2">"</span> <span class="se">\</span>
+  --log-file-name<span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>/nvidia-installer.log <span class="o">||</span> <span class="nb">true</span>
+
+</code></pre>
+</div>
+
+<p>The important flags for compiling the Nvidia driver for a different kernel are the following:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">--kernel-name</code> - build and install the NVIDIA kernel module for the non-running kernel specified by KERNEL-NAME
+  (KERNEL-NAME should be the output of <code class="highlighter-rouge">uname -r</code> when the target kernel is actually running).</li>
+  <li><code class="highlighter-rouge">--kernel-source-path</code> - The directory containing the kernel source files that should be used when compiling the NVIDIA kernel module.</li>
+</ul>
+
+<p>Now that we can pre-compile the Nvidia driver for Flatcar, we need a way to download the drivers and install them automatically
+since Flatcar is an auto-updating OS.</p>
+
+<h1 id="forklift---auto-updating-kernel-drivers">Forklift - Auto Updating Kernel Drivers</h1>
+
+<div class="github-widget" data-repo="mediadepot/flatcar-forklift"></div>
+
+<p>Forklift is the last part of the equation. It’s a Systemd service and a simple script, which runs automatically on startup
+pulling the relevant Docker image containing a Nvidia driver and matches the version of Flatcar, caches the drivers to a specific folder, and then
+installs the kernel module.</p>
+
+<h1 id="extending-forklift">Extending Forklift</h1>
+
+<p>There’s nothing unique about this pattern, it can be used to continuously build any other kernel module (eg. wireguard), and
+contributions are welcome!</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Home Server - Disk Management</title>
+	  <link>/disk-management</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-11-20T03:19:33-06:00</pubDate>
+	  <guid>/disk-management</guid>
+	  <description><![CDATA[
+	     <h1 id="adding-a-new-disk-to-your-homeserver">Adding a new disk to your homeserver</h1>
+
+<h2 id="identify-your-new-devices">Identify your new devices</h2>
+
+<ol>
+  <li>Take photos of your drives before inserting them. Specifically, you’ll want to track the serial number, manufacturer and model.
+This will make identifying the new drives in a large system much easier.</li>
+  <li>Install the drives and power on your server.</li>
+  <li>Get a list of your mounted drives using <code class="highlighter-rouge">cat /etc/mtab | grep /dev/</code>.
+If you use specific drive mounting folder structure, you can be fairly certain these devices do not correspond with your newly added drives.</li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/dev/sdg /mnt/drive4 ext4 rw,seclabel,relatime 0 0
+/dev/sdb /mnt/drive5 ext4 rw,seclabel,relatime 0 0
+/dev/sdf /mnt/drive1 ext4 rw,seclabel,relatime 0 0
+/dev/sdd /mnt/drive2 ext4 rw,seclabel,relatime 0 0
+</code></pre>
+</div>
+
+<ol>
+  <li>List all device detected by your system, and ignore references to devices that you already recognize.
+    <div class="highlighter-rouge"><pre class="highlight"><code>$ ls -alt /dev/sd*
+brw-rw----. 1 root disk 8, 32 Nov 21 16:40 /dev/sdc
+brw-rw----. 1 root disk 8, 64 Nov 21 16:23 /dev/sde
+brw-rw----. 1 root disk 8,  1 Nov 21 16:01 /dev/sda1
+brw-rw----. 1 root disk 8,  2 Nov 21 16:01 /dev/sda2
+brw-rw----. 1 root disk 8,  0 Nov 21 16:01 /dev/sda
+brw-rw----. 1 root disk 8, 16 Nov 21 16:01 /dev/sdb
+brw-rw----. 1 root disk 8, 80 Nov 21 16:01 /dev/sdf
+brw-rw----. 1 root disk 8, 96 Nov 21 16:01 /dev/sdg
+brw-rw----. 1 root disk 8, 48 Nov 21 16:01 /dev/sdd
+</code></pre>
+    </div>
+    <p>In this case, all we care about are <code class="highlighter-rouge">/dev/sdc</code> and /dev/sde`</p>
+  </li>
+  <li>Get information about these unknown devices, to match against the Manufacturer, Model &amp; Serial number of the inserted drives.</li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ fdisk -l
+
+...
+
+Disk /dev/sde: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+Disk /dev/sdc: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</code></pre>
+</div>
+
+<p>The models listed match our disk models, but lets get their serial numbers to be sure.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ udevadm info --query=all --name=/dev/sdc | grep SERIAL
+E: ID_SERIAL_SHORT=Y5HXXXXX
+
+$ udevadm info --query=all --name=/dev/sde | grep SERIAL
+E: ID_SERIAL_SHORT=9LGXXXXXX
+</code></pre>
+</div>
+<p>Once we’ve confirmed these serial numbers match the devices we added, it’s time to format the devices.</p>
+
+<h2 id="format">Format</h2>
+
+<p>We’ll be using <a href="https://github.com/trapexit/backup-and-recovery-howtos">trapexit’s excellent backup &amp; recovery guide</a> as a reference here.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ mkfs.ext4 -m 0 -T largefile4 -L &lt;label&gt; /dev/&lt;device&gt;
+
+mke2fs 1.42.9 (4-Feb-2014)
+Discarding device blocks: done
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+16 inodes, 4096 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=0
+1 block group
+32768 blocks per group, 32768 fragments per group
+16 inodes per group
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+</code></pre>
+</div>
+
+<ul>
+  <li>-m <reserved-blocks-percentage>: Reserved blocks for super-user. We set it to zero because these drives aren't used in a way where that really matters.a</reserved-blocks-percentage></li>
+  <li>-T <usage-type>: Specifies how the filesystem is going to be used so optimal paramters can be chosen. Types are defined in `/etc/mke2fs.conf`. We set it to `largefile4` because we expect fewer, large files relative to typical usage. If you expect a large number of files or are unsure simply remove the option all together.</usage-type></li>
+  <li>-L <label>: Sets the label for the filesystem. A suggested format is: SIZE-MANUFACTURE-N. For example: <code class="highlighter-rouge">2.0TB-Seagate-0</code> for the first 2.0TB Seagate drive installed.</label></li>
+</ul>
+
+<p>It’s generally a good idea to format the raw device rather than creating partitions.</p>
+
+<ol>
+  <li>The partition is mostly useless to us since we plan on using the entire drive for storage.</li>
+  <li>We won’t need to worry about MBR vs GPT.</li>
+  <li>We won’t need to worry about block alignment which can effect performance if misaligned.</li>
+  <li>When a 512e/4k drive is moved between a native SATA controller and a USB SATA adaptor there won’t be partition block misalignment. Often USB adapters will report 4k/4k to the OS while the drive will report 512/4k causing the OS to fail to find the paritions or filesystems. This can be fixed but no tools exist to do the procedure automatically.</li>
+</ol>
+
+<h2 id="mount">Mount</h2>
+<p>Next we’ll need to mount the devices.</p>
+
+<p>Lets make the mount directories, following our folder naming structure.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mkdir -p /mnt/drive3
+mkdir -p /mnt/drive6
+</code></pre>
+</div>
+<p>Next we can actually mount the devices the new directories</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mount /dev/sde /mnt/drive3
+mount /dev/sdc /mnt/drive6
+</code></pre>
+</div>
+
+<p>These mounts are just for testing, and are not persistent. Since we’re using Systemd, we can create mount config files
+and tell Systemd to automatically mount our drives and manage them.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>systemctl edit --force --full mnt-drive3.mount
+
+[Mount]
+What=/dev/disk/by-uuid/e1378723-7861-49b9-8e01-0bd063f0ecdd
+Where=/mnt/drive3
+Type=ext4
+
+[Install]
+WantedBy=local-fs.target
+</code></pre>
+</div>
+
+<p>Finally  we need to “enable” the systemd service:</p>
+
+<p><code class="highlighter-rouge">systemctl enable mnt-drive3.mount</code></p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Traefik v2 - Advanced Configuration</title>
+	  <link>/traefik-advanced-config</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-05-28T00:37:09-05:00</pubDate>
+	  <guid>/traefik-advanced-config</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
+dynamic, automatic, fast, full-featured, production proven, provides metrics, and integrates with every major cluster technology
+      https://containo.us/traefik/</p>
+</blockquote>
+
+<p>Still not sure what Traefik is? Basically it’s a load balancer &amp; reverse proxy that integrates with docker/kubernetes to automatically
+route requests to your containers, with very little configuration.</p>
+
+<p>The release of Traefik v2, while adding tons of features, also completely threw away backwards compatibility, meaning that
+ the documentation and guides you can find on the internet are basically useless.
+It doesn’t help that the auto-magic configuration only works for toy examples. To do anything complicated requires some actual configuration.</p>
+
+<p>This guide assumes you’re somewhat familiar with Traefik, and you’re interested in adding some of the advanced features mentioned in the Table of Contents.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<ul>
+  <li>Docker</li>
+  <li>A custom domain to assign to Traefik, or a <a href="https://blog.thesparktree.com/local-development-with-wildcard-dns">fake domain (.lan) configured for wildcard local development</a></li>
+</ul>
+
+<h2 id="base-traefik-docker-compose">Base Traefik Docker-Compose</h2>
+
+<p>Before we start working with the advanced features of Traefik, lets get a simple example working.
+We’ll use this example as the base for any changes necessary to enable an advanced Traefik feature.</p>
+
+<ul>
+  <li>
+    <p>First, we need to create a shared Docker network. Docker Compose (which we’ll be using in the following examples) will create your container(s)
+but it will also create a docker network specifically for containers defined in the compose file. This is fine until
+you notice that traefik is unable to route to containers defined in other <code class="highlighter-rouge">docker-compose.yml</code> files, or started manually via <code class="highlighter-rouge">docker run</code>
+To solve this, we’ll need to create a shared docker network using <code class="highlighter-rouge">docker network create traefik</code> first.</p>
+  </li>
+  <li>
+    <p>Next, lets create a new folder and a <code class="highlighter-rouge">docker-compose.yml</code> file. In the subsequent examples, all differences from this config will be bolded.</p>
+  </li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
+<span class="s">services</span><span class="pi">:</span>
+  <span class="s">traefik</span><span class="pi">:</span>
+    <span class="s">image</span><span class="pi">:</span> <span class="s">traefik:v2.2</span>
+    <span class="s">ports</span><span class="pi">:</span>
+      <span class="c1"># The HTTP port</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">80:80"</span>
+    <span class="s">volumes</span><span class="pi">:</span>
+      <span class="c1"># For Traefik's automated config to work, the docker socket needs to be</span>
+      <span class="c1"># mounted. There are some security implications to this.</span>
+      <span class="c1"># See https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface</span>
+      <span class="c1"># and https://docs.traefik.io/providers/docker/#docker-api-access</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">/var/run/docker.sock:/var/run/docker.sock:ro"</span>
+    <span class="s">command</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">--providers.docker</span>
+      <span class="pi">-</span> <span class="s">--entrypoints.web.address=:80</span>
+      <span class="pi">-</span> <span class="s">--providers.docker.network=traefik</span>
+    <span class="s">networks</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">traefik</span>
+
+<span class="c1"># Use our previously created `traefik` docker network, so that we can route to</span>
+<span class="c1"># containers that are created in external docker-compose files and manually via</span>
+<span class="c1"># `docker run`</span>
+<span class="s">networks</span><span class="pi">:</span>
+  <span class="s">traefik</span><span class="pi">:</span>
+    <span class="s">external</span><span class="pi">:</span> <span class="s">true</span>
+</code></pre>
+</div>
+
+<h2 id="webui-dashboard">WebUI Dashboard</h2>
+
+<p>First, lets start by enabling the built in Traefik dashboard. This dashboard is useful for debugging as we enable other
+advanced features, however you’ll want to ensure that it’s disabled in production.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      <b># The Web UI (enabled by --api.insecure=true)</b>
+      <b>- "8080:8080"</b>
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      <b>- --api.insecure=true</b>
+    labels:
+      <b>- 'traefik.http.routers.traefik.rule=Host(`traefik.example.com`)'</b>
+      <b>- 'traefik.http.routers.traefik.service=api@internal'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>In a browser, just open up <code class="highlighter-rouge">http://traefik.example.com</code> or the domain name you specified in the <code class="highlighter-rouge">traefik.http.routers.traefik.rule</code> label.
+You should see the following dashboard:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-dashboard.png" alt="traefik dashboard" style="max-height: 500px;" /></p>
+
+<h2 id="automatic-subdomain-routing">Automatic Subdomain Routing</h2>
+
+<p>One of the most useful things about Traefik is its ability to dynamically route traffic to containers.
+Rather than have to explicitly assign a domain or subdomain for each container, you can tell Traefik to use the container name
+(or service name in a docker-compose file) prepended to a domain name for dynamic routing. eg. <code class="highlighter-rouge">container_name.example.com</code></p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      <b>- '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Next, lets start up a Docker container running the actual server that we want to route to.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker run <span class="se">\</span>
+    --rm <span class="se">\</span>
+    --label <span class="s1">'traefik.http.services.foo.loadbalancer.server.port=80'</span> <span class="se">\</span>
+    --name <span class="s1">'foo'</span> <span class="se">\</span>
+    --network<span class="o">=</span>traefik <span class="se">\</span>
+    containous/whoami
+
+</code></pre>
+</div>
+
+<p>Whenever a container starts Traefik will interpolate the <code class="highlighter-rouge">defaultRule</code> and configure a router for this container.
+In this example, we’ve specified that the container name is <code class="highlighter-rouge">foo</code>, so the container will be accessible at
+<code class="highlighter-rouge">foo.example.com</code></p>
+
+<blockquote>
+  <p>Note: if your service is running in another docker-compose file, <code class="highlighter-rouge"><span class="p">{</span><span class="err">{</span><span class="w"> </span><span class="err">normalize</span><span class="w"> </span><span class="err">.Name</span><span class="w"> </span><span class="p">}</span><span class="err">}</span></code> will be interpolated as: <code class="highlighter-rouge">service_name-folder_name</code>,
+so your container will be accessible at <code class="highlighter-rouge">service_name-folder_name.example.com</code></p>
+</blockquote>
+
+<h3 id="override-subdomain-routing-using-container-labels">Override Subdomain Routing using Container Labels</h3>
+
+<p>You can override the default routing rule (<code class="highlighter-rouge">providers.docker.defaultRule</code>) for your container by adding a <code class="highlighter-rouge">traefik.http.routers.*.rule</code> label.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>docker run <span class="se">\</span>
+    --rm <span class="se">\</span>
+    --label <span class="s1">'traefik.http.services.foo.loadbalancer.server.port=80'</span> <span class="se">\</span>
+    --label <span class="s1">'traefik.http.routers.foo.rule=Host(`bar.example.com`)'</span>
+    --name <span class="s1">'foo'</span> <span class="se">\</span>
+    --network<span class="o">=</span>traefik <span class="se">\</span>
+    containous/whoami
+
+</code></pre>
+</div>
+
+<h2 id="restrict-scope">Restrict Scope</h2>
+<p>By default Traefik will watch for all containers running on the Docker daemon, and attempt to automatically configure routes and services for each.
+If you’d like a litte more control, you can pass the <code class="highlighter-rouge">--providers.docker.exposedByDefault=false</code> CMD argument to the Traefik container and selectively
+enable routing for your containers by adding a <code class="highlighter-rouge">traefik.enable=true</code> label.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      <b>- '--providers.docker.exposedByDefault=false'</b>
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      <b>- traefik.enable=true</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>As I mentioned earlier, <code class="highlighter-rouge">normalize .Name</code> will be interpolated as <code class="highlighter-rouge">service_name-folder_name</code> for containers started via docker-compose.
+So my Hello-World test container will be accessible as <code class="highlighter-rouge">hellosvc-tmp.example.com</code> on my local machine.</p>
+
+<h2 id="automated-ssl-certificates-using-letsencrypt-dns-integration">Automated SSL Certificates using LetsEncrypt DNS Integration</h2>
+<p>Next, lets look at how to securely access Traefik managed containers over SSL using LetsEncrypt certificates.</p>
+
+<p>The great thing about this setup is that Traefik will automatically request and renew the SSL certificate for you, even if your
+site is not accessible on the public internet.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      <b># The HTTPS port</b>
+      <b>- "443:443"</b>
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      <b># It's a good practice to persist the Letsencrypt certificates so that they don't change if the Traefik container needs to be restarted.</b>
+      <b>- "./letsencrypt:/letsencrypt"</b>
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      <b>- --entrypoints.websecure.address=:443</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      <b># We're going to use the DNS challenge since it allows us to generate</b>
+      <b># certificates for intranet/lan sites as well</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"</b>
+      <b># We're using cloudflare for this example, but many DNS providers are</b>
+      <b># supported: https://docs.traefik.io/https/acme/#providers </b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"</b>
+    environment:
+      <b># We need to provide credentials to our DNS provider.</b>
+      <b># See https://docs.traefik.io/https/acme/#providers </b>
+      <b>- "CF_DNS_API_TOKEN=XXXXXXXXX"</b>
+      <b>- "CF_ZONE_API_TOKEN=XXXXXXXXXX"</b>
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      <b>- traefik.http.routers.hellosvc.entrypoints=websecure</b>
+      <b>- 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Now we can visit our Hello World container by visiting <code class="highlighter-rouge">https://hellosvc-tmp.example.com</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-letsencrypt.jpg" alt="letsencrypt ssl certificate" style="max-height: 500px;" /></p>
+
+<p>Note: Traefik requires additional configuration to automatically redirect HTTP to HTTPS. See the instructions in the next section.</p>
+
+<h3 id="automatically-redirect-http---https">Automatically Redirect HTTP -&gt; HTTPS.</h3>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      <b>- --entrypoints.web.http.redirections.entryPoint.to=websecure</b>
+      <b>- --entrypoints.web.http.redirections.entryPoint.scheme=https</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Note, the <code class="highlighter-rouge">--entrypoints.web.http.redirections.entryPoint.*</code> <code class="highlighter-rouge">command line flags</code> are only available in Traefik v2.2+. If you need HTTP to HTTPS
+redirection for Traefik v2.0 or v2.1, you’ll need to add the following <code class="highlighter-rouge">labels</code> instead:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>traefik:
+  ....
+  labels:
+    - traefik.http.routers.https-redirect.entrypoints=web
+    - traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)
+    - traefik.http.routers.https-redirect.middlewares=https-only
+    - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+</code></pre>
+</div>
+
+<h2 id="2fa-sso-and-saml">2FA, SSO and SAML</h2>
+
+<p>Traefik supports using an external service to check for credentials. This external service can then be used to enable
+single sign on (SSO) for your apps, including 2FA and/or SAML.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-authforward.png" alt="Traefik external service" style="max-height: 500px;" /></p>
+
+<p>In this example, I’ll be using <a href="https://github.com/authelia/authelia">Authelia</a> to enable SSO, but please note that Authelia does
+not support SAML, only 2FA and Forward Auth.</p>
+
+<p>Authelia requires HTTPS, so we’ll base our Traefik configuration on the previous example (Traefik with Letsencrypt certificates &amp; Http to Https redirects)</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  authelia:
+    image: authelia/authelia
+    volumes:
+      - './authelia/configuration.yml:/etc/authelia/configuration.yml:ro'
+      - './authelia/users_database.yml:/etc/authelia/users_database.yml:ro'
+      - './authelia/data:/etc/authelia/data:rw'
+    environment:
+      - 'TZ=America/Los_Angeles'
+    labels:
+      - 'traefik.http.services.authelia.loadbalancer.server.port=9091'
+      - 'traefik.http.routers.authelia.rule=Host(`login.example.com`)'
+      - 'traefik.http.routers.authelia.entrypoints=websecure'
+      - 'traefik.http.routers.authelia.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+      <b>- 'traefik.http.routers.hellosvc.middlewares=authme'</b>
+
+      <b># this forwardauth.address is complex but incredibly important.</b>
+      <b># http://authelia:9091 is the internal routable container name.</b>
+      <b># https://login.example.com is the external url for authelia </b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.address=http://authelia:9091/api/verify?rd=https://login.example.com/'</b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.trustforwardheader=true'</b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.authresponseheaders=X-Forwarded-User'</b>
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>In the above <code class="highlighter-rouge">docker-compose.yml</code> file, under the <code class="highlighter-rouge">authelia</code> service, 2 config files are referenced <code class="highlighter-rouge">configuration.yml</code> and <code class="highlighter-rouge">users_database.yml</code>.</p>
+
+<p><code class="highlighter-rouge">configuration.yml</code> is the configuration file for Authelia. Here’s an example of what that file looks like. You will need ensure that
+all references to the <code class="highlighter-rouge">example.com</code> domain are replaced with your chosen (sub)domain.</p>
+
+<p>See <a href="https://github.com/authelia/authelia/blob/master/config.template.yml">config.template.yml on github</a> for a comprehensive list of options.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="c1">###############################################################</span>
+<span class="c1">#                   Authelia configuration                    #</span>
+<span class="c1">###############################################################</span>
+
+<span class="c1"># The host and port to listen on</span>
+<span class="s">host</span><span class="pi">:</span> <span class="s">0.0.0.0</span>
+<span class="s">port</span><span class="pi">:</span> <span class="s">9091</span>
+
+<span class="c1"># Level of verbosity for logs: info, debug, trace</span>
+<span class="s">log_level</span><span class="pi">:</span> <span class="s">info</span>
+
+<span class="c1"># The secret used to generate JWT tokens when validating user identity by</span>
+<span class="c1"># email confirmation.</span>
+<span class="s">jwt_secret</span><span class="pi">:</span> <span class="s">change_this_secret</span>
+
+<span class="c1"># Default redirection URL</span>
+<span class="c1">#</span>
+<span class="c1"># If user tries to authenticate without any referer, Authelia</span>
+<span class="c1"># does not know where to redirect the user to at the end of the</span>
+<span class="c1"># authentication process.</span>
+<span class="c1"># This parameter allows you to specify the default redirection</span>
+<span class="c1"># URL Authelia will use in such a case.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: this parameter is optional. If not provided, user won't</span>
+<span class="c1"># be redirected upon successful authentication.</span>
+<span class="s">default_redirection_url</span><span class="pi">:</span> <span class="s">http://example.com/</span>
+
+<span class="c1"># TOTP Issuer Name</span>
+<span class="c1">#</span>
+<span class="c1"># This will be the issuer name displayed in Google Authenticator</span>
+<span class="c1"># See: https://github.com/google/google-authenticator/wiki/Key-Uri-Format for more info on issuer names</span>
+<span class="s">totp</span><span class="pi">:</span>
+  <span class="s">issuer</span><span class="pi">:</span> <span class="s">authelia.com</span>
+
+<span class="c1"># Duo Push API</span>
+<span class="c1">#</span>
+<span class="c1"># Parameters used to contact the Duo API. Those are generated when you protect an application</span>
+<span class="c1"># of type "Partner Auth API" in the management panel.</span>
+<span class="c1"># duo_api:</span>
+<span class="c1">#   hostname: api-123456789.example.com</span>
+<span class="c1">#   integration_key: ABCDEF</span>
+<span class="c1">#   secret_key: 1234567890abcdefghifjkl</span>
+
+<span class="c1"># The authentication backend to use for verifying user passwords</span>
+<span class="c1"># and retrieve information such as email address and groups</span>
+<span class="c1"># users belong to.</span>
+<span class="c1">#</span>
+<span class="c1"># There are two supported backends: `ldap` and `file`.</span>
+<span class="s">authentication_backend</span><span class="pi">:</span>
+
+  <span class="c1"># File backend configuration.</span>
+  <span class="c1">#</span>
+  <span class="c1"># With this backend, the users database is stored in a file</span>
+  <span class="c1"># which is updated when users reset their passwords.</span>
+  <span class="c1"># Therefore, this backend is meant to be used in a dev environment</span>
+  <span class="c1"># and not in production since it prevents Authelia to be scaled to</span>
+  <span class="c1"># more than one instance.</span>
+  <span class="c1">#</span>
+  <span class="s">file</span><span class="pi">:</span>
+    <span class="s">path</span><span class="pi">:</span> <span class="s">/etc/authelia/users_database.yml</span>
+
+<span class="c1"># Access Control</span>
+<span class="c1">#</span>
+<span class="c1"># Access control is a list of rules defining the authorizations applied for one</span>
+<span class="c1"># resource to users or group of users.</span>
+<span class="c1">#</span>
+<span class="c1"># If 'access_control' is not defined, ACL rules are disabled and the `bypass`</span>
+<span class="c1"># rule is applied, i.e., access is allowed to anyone. Otherwise restrictions follow</span>
+<span class="c1"># the rules defined.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: One can use the wildcard * to match any subdomain.</span>
+<span class="c1"># It must stand at the beginning of the pattern. (example: *.mydomain.com)</span>
+<span class="c1">#</span>
+<span class="c1"># Note: You must put patterns containing wildcards between simple quotes for the YAML</span>
+<span class="c1"># to be syntactically correct.</span>
+<span class="c1">#</span>
+<span class="c1"># Definition: A `rule` is an object with the following keys: `domain`, `subject`,</span>
+<span class="c1"># `policy` and `resources`.</span>
+<span class="c1">#</span>
+<span class="c1"># - `domain` defines which domain or set of domains the rule applies to.</span>
+<span class="c1">#</span>
+<span class="c1"># - `subject` defines the subject to apply authorizations to. This parameter is</span>
+<span class="c1">#    optional and matching any user if not provided. If provided, the parameter</span>
+<span class="c1">#    represents either a user or a group. It should be of the form 'user:&lt;username&gt;'</span>
+<span class="c1">#    or 'group:&lt;groupname&gt;'.</span>
+<span class="c1">#</span>
+<span class="c1"># - `policy` is the policy to apply to resources. It must be either `bypass`,</span>
+<span class="c1">#   `one_factor`, `two_factor` or `deny`.</span>
+<span class="c1">#</span>
+<span class="c1"># - `resources` is a list of regular expressions that matches a set of resources to</span>
+<span class="c1">#    apply the policy to. This parameter is optional and matches any resource if not</span>
+<span class="c1">#    provided.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: the order of the rules is important. The first policy matching</span>
+<span class="c1"># (domain, resource, subject) applies.</span>
+<span class="s">access_control</span><span class="pi">:</span>
+  <span class="c1"># Default policy can either be `bypass`, `one_factor`, `two_factor` or `deny`.</span>
+  <span class="c1"># It is the policy applied to any resource if there is no policy to be applied</span>
+  <span class="c1"># to the user.</span>
+  <span class="s">default_policy</span><span class="pi">:</span> <span class="s">deny</span>
+
+  <span class="s">rules</span><span class="pi">:</span>
+    <span class="c1"># Rules applied to everyone</span>
+
+    <span class="pi">-</span> <span class="s">domain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">*.example.com"</span>
+      <span class="s">policy</span><span class="pi">:</span> <span class="s">one_factor</span>
+
+<span class="c1"># Configuration of session cookies</span>
+<span class="c1">#</span>
+<span class="c1"># The session cookies identify the user once logged in.</span>
+<span class="s">session</span><span class="pi">:</span>
+  <span class="c1"># The name of the session cookie. (default: authelia_session).</span>
+  <span class="s">name</span><span class="pi">:</span> <span class="s">authelia_session</span>
+
+  <span class="c1"># The secret to encrypt the session cookie.</span>
+  <span class="s">secret</span><span class="pi">:</span> <span class="s">change_this_secret</span>
+
+  <span class="c1"># The time in seconds before the cookie expires and session is reset.</span>
+  <span class="s">expiration</span><span class="pi">:</span> <span class="s">3600</span> <span class="c1"># 1 hour</span>
+
+  <span class="c1"># The inactivity time in seconds before the session is reset.</span>
+  <span class="s">inactivity</span><span class="pi">:</span> <span class="s">300</span> <span class="c1"># 5 minutes</span>
+
+  <span class="c1"># The domain to protect.</span>
+  <span class="c1"># Note: the authenticator must also be in that domain. If empty, the cookie</span>
+  <span class="c1"># is restricted to the subdomain of the issuer.</span>
+  <span class="s">domain</span><span class="pi">:</span> <span class="s">example.com</span>
+
+<span class="c1"># Configuration of the authentication regulation mechanism.</span>
+<span class="c1">#</span>
+<span class="c1"># This mechanism prevents attackers from brute forcing the first factor.</span>
+<span class="c1"># It bans the user if too many attempts are done in a short period of</span>
+<span class="c1"># time.</span>
+<span class="s">regulation</span><span class="pi">:</span>
+  <span class="c1"># The number of failed login attempts before user is banned.</span>
+  <span class="c1"># Set it to 0 to disable regulation.</span>
+  <span class="s">max_retries</span><span class="pi">:</span> <span class="s">3</span>
+
+  <span class="c1"># The time range during which the user can attempt login before being banned.</span>
+  <span class="c1"># The user is banned if the authentication failed `max_retries` times in a `find_time` seconds window.</span>
+  <span class="s">find_time</span><span class="pi">:</span> <span class="s">120</span>
+
+  <span class="c1"># The length of time before a banned user can login again.</span>
+  <span class="s">ban_time</span><span class="pi">:</span> <span class="s">300</span>
+
+<span class="c1"># Configuration of the storage backend used to store data and secrets.</span>
+<span class="c1">#</span>
+<span class="c1"># You must use only an available configuration: local, sql</span>
+<span class="s">storage</span><span class="pi">:</span>
+  <span class="c1"># The directory where the DB files will be saved</span>
+  <span class="s">local</span><span class="pi">:</span>
+    <span class="s">path</span><span class="pi">:</span> <span class="s">/etc/authelia/data/db.sqlite3</span>
+
+<span class="c1"># Configuration of the notification system.</span>
+<span class="c1">#</span>
+<span class="c1"># Notifications are sent to users when they require a password reset, a u2f</span>
+<span class="c1"># registration or a TOTP registration.</span>
+<span class="c1"># Use only an available configuration: filesystem, gmail</span>
+<span class="s">notifier</span><span class="pi">:</span>
+  <span class="c1"># For testing purpose, notifications can be sent in a file</span>
+  <span class="s">filesystem</span><span class="pi">:</span>
+    <span class="s">filename</span><span class="pi">:</span> <span class="s">/etc/authelia/data/notification.txt</span>
+
+  <span class="c1"># Sending an email using a Gmail account is as simple as the next section.</span>
+  <span class="c1"># You need to create an app password by following: https://support.google.com/accounts/answer/185833?hl=en</span>
+  <span class="c1">## smtp:</span>
+  <span class="c1">##   username: myaccount@gmail.com</span>
+  <span class="c1">##   password: yourapppassword</span>
+  <span class="c1">##   sender: admin@example.com</span>
+  <span class="c1">##   host: smtp.gmail.com</span>
+  <span class="c1">##   port: 587</span>
+</code></pre>
+</div>
+
+<p>In this example we use a hard coded user database, defined in <code class="highlighter-rouge">users_database.yml</code>. Authelia also supports LDAP integration.</p>
+
+<p>See the <a href="https://docs.authelia.com/configuration/authentication/file.html#password-hash-algorithm-tuning">password-hash-algorithm-tuning</a> documentation for more information.</p>
+
+<div class="language-yaml highlighter-rouge"><pre class="highlight"><code><span class="s">users</span><span class="pi">:</span>
+  <span class="s">testuser</span><span class="pi">:</span> <span class="c1">## I have set the password below to 'test' for you</span>
+    <span class="s">password</span><span class="pi">:</span> <span class="s1">'</span><span class="s">{CRYPT}$6$rounds=500000$Bui4ldW5hXOI9qwJ$IUHQPCusUKpTs/OrfE9UuGb1Giqaa5OZA.mqIpH.Hh8RGFsEBHViCwQDx6DfkGUiF60pqNubFBugfTvCJIDNw1'</span>
+    <span class="s">email</span><span class="pi">:</span> <span class="s">your@email.address</span>
+    <span class="s">groups</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">admins</span>
+      <span class="pi">-</span> <span class="s">dev</span>
+</code></pre>
+</div>
+
+<p>Once you start your docker-compose file and try to access the <code class="highlighter-rouge">hellosvc</code> url, you’ll be redirected automatically to the Authelia login page.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-authelia.png" alt="Authelia login page" style="max-height: 500px;" /></p>
+
+<h1 id="fin">Fin.</h1>
+
+<p>As you can see, Traefik v2 is pretty powerful, if a bit verbose with its configuration syntax. With its native docker
+integration, support for LetsEncrypt and SSO, it’s become a staple of my docker based server environments.</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>You Don't Know Jenkins - Part 4 - Kubernetes Slaves</title>
+	  <link>/you-dont-know-jenkins-part-4</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-04-29T00:37:09-05:00</pubDate>
+	  <guid>/you-dont-know-jenkins-part-4</guid>
+	  <description><![CDATA[
+	     <p>Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
+source code management systems and tools via plugins maintained by its active community.</p>
+
+<p>As your application and deployed infrastructure becomes more complex, you’ll need to re-assess your CI/CD tool chain to keep up.
+Natively, Jenkins supports the concept of slave machines to distribute your testing and automation, leaving the Jenkins master
+as the orchestrator for your jobs.</p>
+
+<p>This works great in theory, however now there’s an additional management overhead keeping the slave nodes up-to-date with
+the software required for your jobs. Under/over utilization also becomes a problem. Your peak job load may differ significantly
+from your baseline, meaning that lots of resources are wasted, or your slaves just can’t keep up with the number of jobs
+in the queue, delaying your builds &amp; tests.</p>
+
+<p>Adding Docker &amp; Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.</p>
+
+<p>This post is part of a series that is all about solving common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></strong></li>
+</ul>
+
+<hr />
+
+<h2 id="requirements">Requirements</h2>
+
+<p>I’m assuming that you already have a working (and accessible):</p>
+
+<ul>
+  <li>Kubernetes cluster
+    <ul>
+      <li>A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.</li>
+      <li><code class="highlighter-rouge">master</code> nodes/API needs to be accessible via Jenkins</li>
+      <li><code class="highlighter-rouge">kubectl</code> should be configured to communicate with your cluster</li>
+    </ul>
+  </li>
+  <li>Jenkins server (v2.199+)
+    <ul>
+      <li>You’ll also need to install the <a href="https://plugins.jenkins.io/kubernetes/">Kubernetes Plugin for Jenkins</a> (v1.24.0+)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>If you want to follow along at home, but you don’t have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
+environment by following the documentation on the following repo.</p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves"></div>
+
+<p>Once you’ve completed the steps in that README, just come back here and follow along.</p>
+
+<h2 id="configure-your-kubernetes-cluster">Configure your Kubernetes Cluster</h2>
+
+<p>Before we start configuring Jenkins, we’ll need to ensure that our Kubernetes cluster has some basic configuration.</p>
+
+<h3 id="jenkins-namespace">Jenkins Namespace</h3>
+
+<p>We should create a Jenkins specific namespace on our Kubernetes cluster, so we can isolate pods created from our Jenkins
+server from other workloads running on our cluster.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ kubectl create namespace jenkins-kube-slaves
+
+namespace/jenkins-kube-slaves created
+</code></pre>
+</div>
+
+<blockquote>
+  <p>Note: If you’re planning on sharing this Kubernetes cluster with different Jenkins servers, you should probably use a unique namespace for each.</p>
+</blockquote>
+
+<h3 id="optional---docker-registry-authentication">Optional - Docker Registry Authentication</h3>
+
+<blockquote>
+  <p>This section is optional, and only required if you use a private registry, or have private images on Docker hub</p>
+</blockquote>
+
+<p>If your team uses a private Docker registry to store your images, you’ll need to tell Kubernetes how to authenticate against it. This is done using a Kubernetes secret.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>  kubectl create secret docker-registry docker-registry-auth-jenkins <span class="se">\</span>
+  --namespace<span class="o">=</span><span class="s2">"jenkins-kube-slaves"</span> <span class="se">\</span>
+  --docker-server<span class="o">=</span>https://index.private-registry-hostname.com <span class="se">\</span>
+  --docker-username<span class="o">=</span>myusername <span class="se">\</span>
+  --docker-password<span class="o">=</span>mypassworrd <span class="se">\</span>
+  --docker-email<span class="o">=</span>myemail@corp.example.com
+</code></pre>
+</div>
+
+<blockquote>
+  <p>Note: you can use <a href="https://index.docker.io/v1/">https://index.docker.io/v1/</a> if you use Docker Hub with private images.</p>
+</blockquote>
+
+<p>You’ll want to deploy a pod to the <code class="highlighter-rouge">jenkins-kube-slaves</code> namespace manually to ensure that the credentials are valid.</p>
+
+<h3 id="convert-kubernetes-client-config-to-pfx">Convert Kubernetes Client Config to PFX</h3>
+
+<p>The Kubernetes Plugin for Jenkins requires a <code class="highlighter-rouge">*.pkf</code> formatted certificate authenticating against the Kubernetes API,
+rather than the standard <code class="highlighter-rouge">kubectl</code> config file format (<code class="highlighter-rouge">~/.kube/config</code>).</p>
+
+<p>You can generate a <code class="highlighter-rouge">*.pkf</code> file by running the following commands</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>mkdir -p /tmp/kube-certs
+<span class="gp">$ </span><span class="nb">cd</span> /tmp/kube-certs
+
+<span class="gp">$ </span>grep <span class="s1">'client-certificate-data'</span> ~/.kube/config | head -n 1 | awk <span class="s1">'{print $2}'</span> | base64 -d &gt;&gt; client.crt
+<span class="gp">$ </span>grep <span class="s1">'client-key-data'</span> ~/.kube/config | head -n 1 | awk <span class="s1">'{print $2}'</span> | base64 -d &gt;&gt; client.key
+
+<span class="c"># generate pfx file</span>
+<span class="gp">$ </span>openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.pfx -name <span class="s2">"kubernetes-client"</span> -passout pass:SECRET_PASSPHRASE
+
+<span class="c"># you should now have 3 files in your /tmp/kube-certs directory</span>
+<span class="gp">$ </span>ls
+client.crt    client.key    client.pfx
+</code></pre>
+</div>
+
+<p>You can validate that your generated <code class="highlighter-rouge">*.pfx</code> file worked by querying the kubernetes cluster API with it.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>
+<span class="c"># first we'll verify that the cert and key were extracted correctly</span>
+curl --insecure --cert client.crt --key client.key  https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+
+<span class="c"># next we'll validate that the generated .pfx file that Jenkins will use is correctly encoded.</span>
+curl --insecure --cert-type P12 --cert client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+</code></pre>
+</div>
+
+<blockquote>
+  <p>Note: the <code class="highlighter-rouge">SECRET_PASSPHRASE</code> value above should be replaced and treated as a password. The <code class="highlighter-rouge">*.pfx</code> passphrase is used
+to encrypt the <code class="highlighter-rouge">*.pfx</code> file contents before storing them on disk.</p>
+</blockquote>
+
+<p>Now that we’ve configured our Kubernetes cluster, its time to setup Jenkins</p>
+
+<h2 id="configure-kubernetes-jenkins-plugin">Configure Kubernetes Jenkins Plugin</h2>
+
+<p>The Kubernetes plugin is fairly complicated at first glance. There’s a handful of settings that must be set for everything
+to work correctly. If you’re following along, you’ll want to pay close attention to the screenshots below.</p>
+
+<h3 id="add-jenkins-certificate-credential">Add Jenkins Certificate Credential</h3>
+
+<p>The first thing we’re going to need to do is add store our generated <code class="highlighter-rouge">client.pfx</code> file as a Jenkins Certificate Credential,
+so we can reference it in the Kubernetes plugin configuration.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-certificate-credential.png" alt="certificate credential" style="max-height: 500px;" /></p>
+
+<blockquote>
+  <p>Note: You must specify the same <code class="highlighter-rouge">SECRET_PASSPHRASE</code> you used when generating your <code class="highlighter-rouge">*.pfx</code> file above.</p>
+</blockquote>
+
+<h3 id="add-kubernetes-cloud">Add Kubernetes Cloud</h3>
+
+<p>Now we can finally start configuring our Jenkins server to communicate with our Kubernetes cluster.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="kubernetes configure" style="max-height: 900px;" /></p>
+
+<blockquote>
+  <p>Note: in the screenshot above, I’ve disabled the “https certificate check” for testing. You’ll want to make sure that’s
+enabled in production. When you do so, you’ll need to specify your Kubernetes server CA Certificate key in the box above.</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: if you’re using my <a href="https://github.com/AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves">AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves</a> repo,
+you will need to set the Jenkins Url to “http://localhost:8080” (not https://)</p>
+</blockquote>
+
+<h3 id="testing">Testing</h3>
+
+<p>A this point we have finished configuring the Kubernetes plugin, and we can test it out by creating a simple Jenkins Pipeline job, with the following script.</p>
+
+<div class="language-groovy highlighter-rouge"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+<span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+        <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>This method allows you to define your pod and containers on demand, <strong>however it does not work with older Jenkins Freestyle jobs.</strong></p>
+
+<h2 id="global-template-configuration">Global Template Configuration</h2>
+
+<p>Before discuss how to get the Jenkins Kubernetes plugin working with Freestyle jobs, we should first recap how the Jenkins slave agents work.</p>
+
+<h3 id="jenkins-agent-recap">Jenkins Agent Recap</h3>
+
+<p>Jenkins communicates with its slaves using a Jenkins agent (using a protocol called <code class="highlighter-rouge">jnlp</code>). The logic for this agent is packaged into a jar and
+automatically installed on your Jenkins slave node when you register the slave with the Jenkins master.</p>
+
+<p>This agent software is also required for the dynamic Kubernetes slaves, however in this case it’s baked into the docker
+image that is automatically included in every pod you run.</p>
+
+<p>The default agent (based on the <a href="https://hub.docker.com/r/jenkins/inbound-agent">jenkins/inbound-agent</a> image) can be
+customized by adding it to the template:</p>
+
+<div class="language-groovy highlighter-rouge"><pre class="highlight"><code><span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'jnlp'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'jenkins/inbound-agent:3.35-5-alpine'</span><span class="o">,</span> <span class="nl">args:</span> <span class="s1">'${computer.jnlpmac} ${computer.name}'</span><span class="o">),</span>
+</code></pre>
+</div>
+
+<p>This default agent image is based on Debian, but Alpine and Windows Nanoserver flavors exist as well.</p>
+
+<h3 id="the-problem">The Problem</h3>
+
+<p>While Pipeline jobs are flexible and have a syntax to configure the Kubernetes pod used in the job, there’s no equivalent
+in for Freestyle jobs. The naiive solution would be to use the a global Pod Template, and reference it via a job “label”</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job-label.png" alt="freestyle job configuration label" style="max-height: 500px;" /></p>
+
+<p><strong>However this is not usable for most Freestyle jobs.</strong></p>
+
+<p>When used with a Freestyle job, the Kubernetes plugin will <strong>run the job steps in the default Pod container, the <code class="highlighter-rouge">jnlp</code>
+slave agent container.</strong> Which is where we run into the main issue: <strong>The jnlp slave agent container is based on a minimal
+image with no language runtimes.</strong></p>
+
+<h3 id="the-solution">The Solution</h3>
+
+<h4 id="custom-agent-images">Custom Agent Images</h4>
+
+<p>The solution is to customize the <code class="highlighter-rouge">jnlp</code> slave image container with the custom software your jobs require – language
+runtimes, tools, packages, fonts, etc.</p>
+
+<p>Since <code class="highlighter-rouge">jenkins/inbound-agent</code> is just a standard Docker image, you can customize it like you would any other Docker image.</p>
+
+<p>Here’s an example <code class="highlighter-rouge">Dockerfile</code> adding the Go language runtime to the <code class="highlighter-rouge">jenkins/inbound-agent</code> image, so you can use <code class="highlighter-rouge">go build</code>
+in your Jenkins jobs</p>
+
+<pre><code class="language-dockerfile">FROM jenkins/inbound-agent
+
+# the jenkins/inbound-agent is configured to run as the `jenkins` user. To install new software &amp; packages, we'll need to change back to `root`
+USER root
+
+
+# lets download &amp; install the latest Go language runtime and tools.# since this is a debian machine, we can also install standard packages using `apt-get`
+RUN curl -O --silent --location https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz &amp;&amp; \
+    mkdir -p /usr/local/go &amp;&amp; \
+    tar -xvf go1.13.10.linux-amd64.tar.gz -C /usr/local/go --strip 1 &amp;&amp; \
+    rm -f go1.13.10.linux-amd64.tar.gz
+    
+# lets setup some Go specific environmental variables
+ENV GOROOT="/usr/local/go" \
+    GOPATH="/home/jenkins/go"
+    
+# next, we'll customize the PATH env variable to add the `go` binary, and ensure that binaries on the GOROOT and GOPATH are also available.
+ENV PATH="$PATH:/usr/local/go/bin:$GOROOT/bin:$GOPATH/bin"
+
+# now that we've finished customizing our Jenkins image, we should drop back to the `jenkins` user.
+USER jenkins
+
+# finally, we'll setup the `go` cache directory (GOPATH), and test that the go binary is installed correctly.
+RUN mkdir /home/jenkins/go &amp;&amp; \
+    go version 
+</code></pre>
+
+<p>Once you push this up to your Docker registry, you we can reference it in a global Pod Template, with a label like <code class="highlighter-rouge">kube-slave-go</code> or maybe <code class="highlighter-rouge">kube-slave-go1.13</code> if you care about the specific version of the language runtime.</p>
+
+<p>While you could go off and build custom Docker images for all the languages you use, I’ve already created <code class="highlighter-rouge">jenkins/inbound-agent</code> based Docker images for most popular languages (go, ruby, node, python). Feel free to use them if you’d like.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-jenkins-inbound-agent-runtimes"></div>
+
+<h4 id="configure-global-pod-templates">Configure Global Pod Templates</h4>
+
+<p>To use our customized <code class="highlighter-rouge">jnlp</code> slave images with Freestyle jobs, we’ll configure a handful of global Pod Templates, to look like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-ruby.png" alt="pod template configuration" style="max-height: 500px;" /></p>
+
+<p>The fields to pay attention to are the following</p>
+
+<ul>
+  <li><strong>Namespace</strong>  - this determines the namespace that Jenkins uses when it creates slaves on demand.</li>
+  <li><strong>Label</strong> - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We’ll call ours <code class="highlighter-rouge">kube-slave-ruby</code>.</li>
+  <li><strong>Container Template - Name</strong> - this must be <code class="highlighter-rouge">jnlp</code> to tell Jenkins to override the default <em>minimal</em> slave agent image.</li>
+  <li><strong>Docker Image</strong> - as mentioned above, <code class="highlighter-rouge">analogj/jenkins-inbound-agent-runtimes:latest-ruby2.7</code> is customized version of the <code class="highlighter-rouge">jenkins/inbound-agent</code> image with Ruby installed. Replace with your customized image with the tools you need.</li>
+  <li>
+    <p>Optional - <strong>ImagePullSecrets</strong> - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the <strong>Docker Registry Authentication</strong> section above.</p>
+
+    <p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="pod template secret" style="max-height: 500px;" /></p>
+  </li>
+</ul>
+
+<h3 id="configure-jobs">Configure Jobs</h3>
+
+<p>Now that we have our Kubernetes plugin fully configured, its time to start running our Jenkins jobs on our cluster.</p>
+
+<p>Though Jenkins has a multitude of different job types, they’re all fundamentally based on one of the two core job types:</p>
+
+<ul>
+  <li>Freestyle jobs</li>
+  <li>Pipeline jobs</li>
+</ul>
+
+<h4 id="freestyle-jobs">Freestyle Jobs</h4>
+
+<p>Lets look at freestyle jobs first. They’ve been around the longest, and most other job types can be configured in the same way.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<p>As mentioned above, with Freestyle Jobs (and other legacy job types) you cannot configure your Kubernetes pod per job. You’re limited to the global pod templates you’ve pre-configured.</p>
+
+<h4 id="pipeline-jobs">Pipeline Jobs</h4>
+
+<p>Similar to Freestyle jobs, running your job on the Kubernetes cluster is as simple as specifying it in the <code class="highlighter-rouge">node{}</code> code block</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>node('kube-slave-java') {
+    # the following commands will execute in the specified docker container on your kubernetes cluster,
+    sh 'echo "hello world"'
+}
+</code></pre>
+</div>
+
+<p>However, Pipeline jobs provide additional flexibility, allowing you to define the Pod template in the job itself, allowing for much more flexibility
+(including running multiple containers in a pod)</p>
+
+<div class="language-groovy highlighter-rouge"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">),</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'golang'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'golang:1.8.0'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+  <span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Golang project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="nl">url:</span> <span class="s1">'https://github.com/hashicorp/terraform.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'golang'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Go project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s2">"""
+                    mkdir -p /go/src/github.com/hashicorp
+                    ln -s `pwd` /go/src/github.com/hashicorp/terraform
+                    cd /go/src/github.com/hashicorp/terraform &amp;&amp; make core-dev
+                    """</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>For a full list of options for the <code class="highlighter-rouge">podTemplate</code> and <code class="highlighter-rouge">containerTemplate</code> functions, see the Jenkins Kubernetes Plugin <a href="https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration">README.md</a></p>
+
+<hr />
+
+<h2 id="fin">Fin.</h2>
+
+<p>That’s it. You should now have a working Jenkins server that dynamically creates slaves on demand. Jenkins Kubernetes slaves
+can be configured with all the same software you would need on a regular slave, with the added benefit of following
+configuration-as-code best practices.</p>
+
+<p>In addition, it’s generally easier to automate scaling up your Kubernetes cluster, than it is to scale up Jenkins nodes.</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Docker Hub - Matrix Builds and Tagging using Build Args</title>
+	  <link>/docker-hub-matrix-builds</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-09-12T04:19:33-05:00</pubDate>
+	  <guid>/docker-hub-matrix-builds</guid>
+	  <description><![CDATA[
+	     <p>If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry.
+One of the best things about Docker Hub is it’s support for Automated Builds, which is where Docker Hub will watch a
+Git repository for changes, and automatically build your Docker images whenever you make a new commit.</p>
+
+<p>This works great for most simple use cases (and even some complex ones), but occasionally you’ll wish you had a bit more control
+over the Docker Hub image build process.</p>
+
+<p>That’s where Docker’s <a href="https://docs.docker.com/docker-hub/builds/advanced/">Advanced options for Autobuild and Autotest</a>
+guide comes in. While it’s not quite a turn key solution, Docker Hub allows you to override the <code class="highlighter-rouge">test</code>, <code class="highlighter-rouge">build</code> and <code class="highlighter-rouge">push</code>
+stages completely, as well as run arbitrary code <code class="highlighter-rouge">pre</code> and <code class="highlighter-rouge">post</code> each of those stages.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+<h2 id="goal">Goal</h2>
+
+<p>So what’s the point? If Docker Hub works fine for most people, what’s an actual use case for these Advanced Options?</p>
+
+<p>Lets say you have developed a tool, and you would like to distribute it as a Docker image. The first problem is that you’d
+like to provide Docker images based on a handful of different OS’s. <code class="highlighter-rouge">ubuntu</code>, <code class="highlighter-rouge">centos6</code>, <code class="highlighter-rouge">centos7</code> and <code class="highlighter-rouge">alpine</code>
+Simple enough, just write a handful of Dockerfiles, and use the <code class="highlighter-rouge">FROM</code> instruction.
+But lets say that you also need to provide multiple versions of your tool, and each of those must also be distributed as a
+Docker Image based on different OS’s.</p>
+
+<p>Now the number of Dockerfiles you need to maintain has increased significantly. If you’re familiar with Jenkins, this would
+be perfect for a “Matrix Project”.</p>
+
+<p>Here’s what our Docker naming scheme might look like:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>ubuntu</th>
+      <th>centos6</th>
+      <th>centos7</th>
+      <th>alpine</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>v1.x</td>
+      <td>v1-ubuntu</td>
+      <td>v1-centos6</td>
+      <td>v1-centos7</td>
+      <td>v1-alpine</td>
+    </tr>
+    <tr>
+      <td>v2.x</td>
+      <td>v2-ubuntu</td>
+      <td>v2-centos6</td>
+      <td>v2-centos7</td>
+      <td>v2-alpine</td>
+    </tr>
+    <tr>
+      <td>v3.x</td>
+      <td>v3-ubuntu</td>
+      <td>v3-centos6</td>
+      <td>v3-centos7</td>
+      <td>v3-alpine</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As our software grows, you could image other axises being added: architectures, software runtimes, etc.</p>
+
+<h2 id="build-arguments">Build Arguments</h2>
+
+<p>Alright, so the first part of the solution is just making use of Dockerfile templating, also known as <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg">build arguments</a></p>
+
+<p>To keep the number of Dockerfiles to the minimum, we need to pick an axes that minimizes the number of changes required.
+In this example we’ll choose to create a separate Dockerfile for each OS, reusing it for each branch of our software.</p>
+
+<pre><code class="language-Dockerfile">FROM ubuntu
+ARG software_version
+
+RUN apt-get update &amp;&amp; apt-get install -y &lt;dependencies&gt; \
+    ... \
+    curl -o /usr/bin/myapp https://www.company.com/${software_version}/myapp-${software_version}
+
+</code></pre>
+
+<p>Now we can reuse this single Dockerfile to build 3 Docker images, running 3 different versions of our software:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker build -f ubuntu/Dockerfile --build-arg software_version=v1.0 -t v1-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v2.1 -t v2-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v3.7 -t v3-ubuntu .
+</code></pre>
+</div>
+
+<h2 id="project-structure">Project Structure</h2>
+<p>Looks great so far, but Docker Hub doesn’t support configuring Build Arguments though their web ui. So we’ll need to use the
+“Advanced options for Autobuild” documentation to override it.</p>
+
+<p>At this point our project repository probably looks something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>project/
+├── ubuntu/
+│   └── Dockerfile
+├── centos6/
+│   └── Dockerfile
+├── centos7/
+│   └── Dockerfile
+...
+</code></pre>
+</div>
+
+<p>Docker Hub requires that the hook override directory is located as a sibling to the Dockerfile.
+To keep our repository DRY, we’ll instead create a <code class="highlighter-rouge">hook</code> directory at the top level, and symlink our <code class="highlighter-rouge">build</code> and <code class="highlighter-rouge">push</code>
+scripts into a hooks directory beside each Dockerfile. We’ll also create an empty <code class="highlighter-rouge">software-versions.txt</code> file in the project root,
+which we’ll use to store the versions of our software that needs to be automatically build. We’ll discuss this further in the next section.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>project/
+├── software-versions.txt
+├── hooks/
+│   ├── build
+│   └── push
+├── ubuntu/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos6/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos7/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+...
+</code></pre>
+</div>
+
+<p>Now that we have our project organized in a way that Docker Hub expects, lets populate our override scripts</p>
+
+<h2 id="docker-hub-hook-override-scripts">Docker Hub Hook Override Scripts</h2>
+
+<p>Docker Hub provides the following environmental variables which are available to us in the logic of our scripts.</p>
+
+<ul>
+  <li><code class="highlighter-rouge">SOURCE_BRANCH</code>: the name of the branch or the tag that is currently being tested.</li>
+  <li><code class="highlighter-rouge">SOURCE_COMMIT</code>: the SHA1 hash of the commit being tested.</li>
+  <li><code class="highlighter-rouge">COMMIT_MSG</code>: the message from the commit being tested and built.</li>
+  <li><code class="highlighter-rouge">DOCKER_REPO</code>: the name of the Docker repository being built.</li>
+  <li><code class="highlighter-rouge">DOCKERFILE_PATH</code>: the dockerfile currently being built.</li>
+  <li><code class="highlighter-rouge">DOCKER_TAG</code>: the Docker repository tag being built.</li>
+  <li><code class="highlighter-rouge">IMAGE_NAME</code>: the name and tag of the Docker repository being built. (This variable is a combination of <code class="highlighter-rouge">DOCKER_REPO</code>:<code class="highlighter-rouge">DOCKER_TAG</code>.)</li>
+</ul>
+
+<p>The following is a simplified version of a <code class="highlighter-rouge">build</code> hook script that we can use to override the <code class="highlighter-rouge">build</code> step on Docker Hub.
+Keep in mind that this script is missing some error handling for readability reasons.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/build in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker build command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker build -f </span><span class="nv">$DOCKERFILE_PATH</span><span class="s2"> -t </span><span class="nv">$IMAGE_NAME</span><span class="s2"> ."</span>
+
+cat <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+        <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+        <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+        <span class="nb">echo</span> <span class="s2">"docker build -f Dockerfile --build-arg software_version=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2"> -t </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2"> ../"</span>
+        docker build -f Dockerfile --build-arg <span class="nv">software_version</span><span class="o">=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span> -t <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span> ../
+<span class="k">done</span>
+
+</code></pre>
+</div>
+
+<p>The <code class="highlighter-rouge">push</code> script is similar:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/push in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker push command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker push </span><span class="nv">$IMAGE_NAME</span><span class="s2">"</span>
+
+cat <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+    <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+    <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+    <span class="nb">echo</span> <span class="s2">"docker push </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2">"</span>
+    docker push <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span>
+<span class="k">done</span>
+
+</code></pre>
+</div>
+
+<p>You should have noticed the <code class="highlighter-rouge">software-versions.txt</code> above. It’s basically a text file that just contains version numbers for
+our <code class="highlighter-rouge">myapp</code> software/binary.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>master
+v1.0
+v2.1
+v3.7
+</code></pre>
+</div>
+<p>This file is then read line-by-line, and each line is passed into a docker build command via <code class="highlighter-rouge">--build-arg</code>. It’s also used as the
+version component in the Docker image build tag.</p>
+
+<h2 id="docker-hub-configuration">Docker Hub Configuration</h2>
+
+<p>The final component necessary to successfully build these images is to configure the Docker Hub project correctly.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-hub/docker-hub-configuration.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<h2 id="fin">Fin</h2>
+
+<p>Again, here’s the Github repo with working code (using <code class="highlighter-rouge">jq</code> as our example software tool to be installed):</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</title>
+	  <link>/ultimate-media-server-build-mediadepot</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-01-25T03:19:33-06:00</pubDate>
+	  <guid>/ultimate-media-server-build-mediadepot</guid>
+	  <description><![CDATA[
+	     <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></li>
+  <li><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></li>
+  <li><strong><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></strong></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 3</strong>, where I’ll be discussing the software I use to run my ultimate media server, specifically focusing on installing and
+configuring CoreOS for MediaDepot.</p>
+
+<hr />
+
+<p>The hardware and build process for <strong>“The Ultimate Media Server”</strong> was outlined in previous posts, but hardware is only
+one part of the solution. Software (OS &amp; Applications) determine the functionality and ultimately the value of our home server.</p>
+
+<p>Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.</p>
+
+<div class="img-gallery">
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba screenshot" />
+  </a>
+</div>
+
+<p>Still interested? Good. Now that we have an idea what the finished product will look like, lets discuss the actual software stack and my requirements.</p>
+
+<div class="github-widget" data-repo="mediadepot/docs"></div>
+
+<p>While this blog post will describe the step by step instructions for setting up CoreOS &amp; Mediadepot, then <a href="https://www.github.com/mediadepot/docs">mediadepot/docs</a>
+repo contains additional documentation that you might find interesting.</p>
+
+<p>Given that our goal of building the <strong>“The Ultimate Media Server”</strong> is pretty hard to quantify, lets give ourselves some constraints and requirements that we can actually track.</p>
+
+<ol>
+  <li>The server will be self hosted, with only <strong>one physical node</strong> (if you need a multi-node media server, this wont work for you)</li>
+  <li>The server will be running <strong>headless (no monitor is required)</strong></li>
+  <li>The server will be running a <strong>minimal OS/hypervisor</strong>. This is to limit the amount of OS maintenance required, and ensure that all software is run in a maintainable &amp; isolated way.</li>
+  <li>The server will be using <strong>JBOD disk storage</strong> (allowing you to aggregate and transparently interact with multiple physical disks as a single volume)
+    <ul>
+      <li><strong>Redundancy is should be supported but is not a requirement.</strong></li>
+    </ul>
+  </li>
+  <li>The server will provide a <strong>automation friendly folder structure</strong> for use by media managers (sickrage, couchpotato, sonar, plex, etc)</li>
+  <li>The server will provide a <strong>monitoring</strong> solution with a web GUI.</li>
+  <li>The server will provide a routing method to running web applications via a custom domain <strong>*.depot.lan</strong></li>
+  <li>The server will provide a method that user <strong>applications can use to notify the user</strong> when events have occurred (download started, completed, media added)</li>
+  <li>The server will provide a way to <strong>backup application configuration</strong> to a secondary location.</li>
+</ol>
+
+<p>The first two items on the list are already done. The hardware chosen in <a href="https://blog.thesparktree.com/ultimate-media-server-build-hardware">Part 1</a> was only for a single server.
+The headless requirement (<strong>#2</strong>) is solved by the IPMI functionality built into our SuperMicro X11SSL-CF motherboard.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_kvm.png" alt="IPMI" style="max-height: 500px;" /></p>
+
+<p>IPMI provides us with the ability to remotely manage the server, including the ability to see what’s “running” on the server using a virtual display + KVM.</p>
+
+<h4 id="coreos">CoreOS</h4>
+
+<p>Requirement <strong>#3</strong> is where this blog post really starts.
+Rather than going with a traditional virtualization/hypervisor solution like VMWare ESXI or Proxmox, I’m going to evangelize
+the use of CoreOS Container Linux as the base Operating System for your Home Server</p>
+
+<p>So what is CoreOS?</p>
+
+<blockquote>
+  <p>As an operating system, Container Linux provides only the minimal functionality required for deploying applications inside software containers,
+together with built-in mechanisms for service discovery and configuration sharing.
+Container Linux provides no package manager as a way for distributing payload applications, requiring instead all applications to run inside their containers.</p>
+
+  <p>https://en.wikipedia.org/wiki/Container_Linux</p>
+</blockquote>
+
+<p>Basically CoreOS is an incredibly slim Linux OS that is designed to do one thing, and one thing only: run Docker containers.
+As mentioned in the wikipedia article, CoreOS does not have a package manager and requires that all user applications run in docker containers,
+drastically reducing the amount of OS maintenance required (<strong>#3</strong>)</p>
+
+<h4 id="jbod-storage">JBOD Storage</h4>
+
+<p>This latest iteration of my Home Server follows atleast a half dozen other Home Server’s I’ve built over the years. While I’ve used various
+software and hardware RAID solutions in the past, it’s been my experience that JBOD (Just-A-Bunch-Of-Drives) solutions work best for
+home servers.</p>
+
+<ul>
+  <li>JBOD allows you to easily mix-and-match drives, letting your server grow with you.</li>
+  <li>Performance &amp; Redundancy may not be as important as Raw Storage &amp; Simplicity for home servers</li>
+  <li>While disk failures can result in data loss, you only lose the content of that drive, rather the whole drive array (depending on RAID mode)</li>
+</ul>
+
+<p>While I have played with various JBOD file systems (mhddfs, greyhole, zfs), I’ve found that <a href="https://github.com/trapexit/mergerfs">MergerFS</a>
+is simple and bulletproof, without any weird file system hacks to get JBOD working.</p>
+
+<h4 id="folder-structure">Folder Structure</h4>
+
+<p>Next up is finding a folder structure that works for all the data we need to store on our server. While this seems like a fairly
+trivial problem, once we start using automatic media downloaders like SickChill, CouchPotato, Sonarr &amp; Radarr, things become much more complicated.</p>
+
+<p>Here’s the structure that I’ve been using for years:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">/media/temp/blackhole/*</code> - temporarily contains <code class="highlighter-rouge">.torrent</code> files. These files can be added manually via SMB, or automatically by apps like sickrage, couchpotato, sonarr, etc.</li>
+  <li><code class="highlighter-rouge">/media/temp/processing</code> - a cache directory used by your torent client. Temporarily holds current download files. Once complete they are moved into the correct subfolder of <code class="highlighter-rouge">/media/storage/downloads</code></li>
+  <li><code class="highlighter-rouge">/media/storage/downloads/*</code> - contains completed torrent downloads. Files added here are automatically detected by media managers (sickrage, couchpotato, etc) then renamed/reorganized and moved to their
+final storage directory <code class="highlighter-rouge">/media/storage/*</code></li>
+  <li><code class="highlighter-rouge">/media/storage/*</code> - contains the final renamed/organized media, to be used by your media streamer of choice (Plex/Emby/etc).
+All subfolders are automatically created as SMB shares</li>
+</ul>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/media
+├── storage/
+│   ├── downloads/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   ├── movies/
+│   ├── music/
+│   ├── tvshows/
+├── temp/
+│   ├── blackhole/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   └── processing/
+
+</code></pre>
+</div>
+
+<p>This structure is automation friendly, easy to manage via the commandline, and customizable.</p>
+
+<h4 id="monitoring">Monitoring</h4>
+
+<p>While Corporate and Enterprise monitoring solutions have a lot of features, for a home server I’ve found that theres
+really only 3 things that I need:</p>
+<ul>
+  <li>a nice light-weight dashboard that tracks CPU, Disk &amp; Memory usage</li>
+  <li>a way to track the S.M.A.R.T health status of my storage disks (and get notified if something has changed)</li>
+  <li>a way to manage the Dockerized applications running on my server, and restart/update them if necessary</li>
+</ul>
+
+<p>While <a href="https://prometheus.io/docs/visualization/grafana/">Graphana + Prometheus</a> solutions are common for generating nice server dashboards, it’s not quite as light-weight as
+I like. Netdata is extremely light-weight, extensible, gorgeous, and works out of the box.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png" alt="netdata" style="max-height: 500px;" /></p>
+
+<p>On Linux, the defacto standard for S.M.A.R.T disk monitoring is <a href="https://www.smartmontools.org/">smartmontools</a>, so that’s an easy choice.
+With a bit of customization, we can also get notifications via PushBullet or PushOver.</p>
+
+<p>Finally, we’ll need a Docker manager with a web interface that we can use to remotely manage our Dockerized applications.
+Once again, there’s alot of alternatives, but there’s only one that has the functionality that want with the lightweight footprint that
+I desire: <a href="https://www.portainer.io/">Portainer</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png" alt="portainer" style="max-height: 500px;" /></p>
+
+<h4 id="routing--subdomains">Routing &amp; Subdomains</h4>
+
+<p>Subdomains is a quality of life improvement that becomes almost a necessity when you’re running more than 3 or 4 services on your server.
+Remembering <code class="highlighter-rouge">sickrage.depot.lan</code> and <code class="highlighter-rouge">couchpotato.depot.lan</code> is much more reasonable than <code class="highlighter-rouge">10.0.1.100:54338</code> and <code class="highlighter-rouge">10.0.1.100:54221</code>.
+Having those subdomains map automatically to the relevant Docker container is the responsibility of a reverse proxy called <a href="https://traefik.io/">Traefik</a>
+Once configured it’ll automatically watch for new (or updated) Docker containers and automatically assign them a subdomain.
+No more ports.</p>
+
+<p>Routing is a bit more complicated. Now that you have these nice subdomains for applications on your server, how do you tell all your
+devices (including phones, laptops, tablets, etc) that these new websites exist on your home network rather than the internet?</p>
+
+<p>Traditionally you’d need to update your OS host file (located at <code class="highlighter-rouge">/etc/hosts</code> or <code class="highlighter-rouge">c:\Windows\System32\Drivers\etc\hosts</code>) with
+a new entry per domain, but that gets old fast, and doesn’t really work for locked down mobile devices like Tablets &amp; Phones.</p>
+
+<p>The solution here is to run a tiny (notice a pattern here?) DNS service on the server. This DNS service is configured to
+capture all requests for <code class="highlighter-rouge">*.depot.lan</code> and respond with the server’s IP address, while redirecting all other DNS requests to
+the public internet.</p>
+
+<p>Unlike the hosts file, DNS configuration is user customizable even on mobile &amp; tablet devices. Now all we need to do is
+update our devices to use this new DNS service. It introduces a bit of latency, but thankfully most mobile devices (laptops/tables/phones)
+configure DNS on a network by network basis, meaning your custom DNS service will only be activated when your on your home network.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>If you’ve been following along so far (or skipped ahead), you may have noticed a significant lack of code snippets or
+instructions for how to get this all setup.</p>
+
+<p>You’re in luck. All the steps required to customize a CoreOS based Home Media Server as I’ve described are codified in an Ignition project.</p>
+
+<div class="github-widget" data-repo="mediadepot/ignition"></div>
+
+<p>It’s all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I’m open to PR’s.</p>
+
+<p>If you’re not familiar with Ignition, its the official configuration management solution for CoreOS.
+You can take the <a href="https://github.com/mediadepot/ignition/blob/master/ignition.yaml">configuration I wrote</a> and customize it for your needs. In addition the Ignition configuration references each feature
+separately, so you can disable any features that are irrelevant to your installation.</p>
+
+<p>Once you’ve modified the ignition.yaml file, you’ll need to “transpile” it to a JSON format that ignition actually understands.
+To do that, you’ll need to install the <a href="https://github.com/coreos/container-linux-config-transpiler/">Container Linux Config Transpiler</a>,
+but we’ll just use a simple Docker image with the Config Transpiler pre-installed.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>docker run --rm -v $(pwd):/data keinos/coreos-transpiler ct -strict -pretty -in-file /data/ignition.yaml -out-file /data/ignition.json -files-dir=/data/files/  -platform=custom
+</code></pre>
+</div>
+
+<p>With that all out of the way, lets get into the installation steps.</p>
+
+<ol>
+  <li>Download bootable CoreOS image from https://coreos.com/os/docs/latest/booting-with-iso.html</li>
+  <li>Create bootable USB/CD with contents of CoreOS image</li>
+  <li>Start server and boot from CoreOS USB/CD.</li>
+  <li>Determine the OS installation disk
+    <div class="language-bash highlighter-rouge"><pre class="highlight"><code> sudo fdisk -l
+
+ <span class="c"># note, the boot disk will probably be /dev/loop0</span>
+</code></pre>
+    </div>
+  </li>
+  <li>Copy the ignition.json config bootstrap file that you created earlier to the file system (using CURL, or another USB)</li>
+  <li>Begin CoreOS installation on specified disk, <strong>NOTE: specified disk will be reformatted</strong>
+    <div class="language-bash highlighter-rouge"><pre class="highlight"><code> sudo coreos-install -d /dev/sda -C stable -i ignition.json
+</code></pre>
+    </div>
+  </li>
+  <li>On installation completion, remove bootable USB/CD</li>
+  <li>Restart server</li>
+  <li>Wait for CoreOS to start and <code class="highlighter-rouge">cloud-init</code> process to complete.</li>
+  <li>Go to <code class="highlighter-rouge">http://admin.depot.lan</code> to see Portainer dashboard and begin setup.</li>
+</ol>
+
+<p>I’ve been drinking the Docker kool-aid for years, and as a configuration management &amp; deployment tool it’s only gotten better and more popular.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

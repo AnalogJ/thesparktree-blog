@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Installing a custom version of NodeJS on Ubuntu 13.10</title>
+	  <link>/installing-a-custom-version-of-nodejs-on-ubuntu</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-01-23T15:27:00-06:00</pubDate>
+	  <guid>/installing-a-custom-version-of-nodejs-on-ubuntu</guid>
+	  <description><![CDATA[
+	     <p>The following is the quickest way to install nodejs latest and specific versions node.js on Ubuntu. According to the nodejs <a href="https://gist.github.com/isaacs/579814">official gists</a>, there are a few other ways to install node.js, and you can check out the other possibilities if you prefer.</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code><span class="c"># Adding yourself to the group to access /usr/local/bin</span>
+<span class="nv">ME</span><span class="o">=</span><span class="k">$(</span>whoami<span class="k">)</span> ; sudo chown -R <span class="nv">$ME</span> /usr/local <span class="o">&amp;&amp;</span> <span class="nb">cd</span> /usr/local/bin
+
+mkdir _node <span class="o">&amp;&amp;</span> <span class="nb">cd</span> <span class="nv">$_</span> <span class="o">&amp;&amp;</span> wget http://nodejs.org/dist/v0.10.24/node-v0.10.24-linux-x64.tar.gz -O - | tar zxf - --strip-components<span class="o">=</span>1
+
+<span class="c"># Making the symbolic link to node</span>
+ln -s <span class="s2">"/usr/local/bin/_node/bin/node"</span> ..
+<span class="c"># Making the symbolic link to npm</span>
+ln -s <span class="s2">"/usr/local/bin/_node/lib/node_modules/npm/bin/npm-cli.js"</span> ../npm
+</code></pre>
+</div>
+
+<p>You can replace the <code class="highlighter-rouge">v.0.11.10</code> in the script above with any version from the list of <a href="http://nodejs.org/dist/">all nodejs versions</a></p>
+
+<p>If you just wanted the official latest release you can also do:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>sudo apt-get install python-software-properties python g++ make
+sudo add-apt-repository ppa:chris-lea/node.js
+sudo apt-get update
+sudo apt-get install nodejs
+</code></pre>
+</div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>
