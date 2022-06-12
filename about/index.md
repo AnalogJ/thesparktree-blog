@@ -7,7 +7,7 @@ logo: '/assets/images/ghost.png'
 current: about
 ---
 
-Jason Kulatunga is a Build Automation & Infrastructure guy @Adobe.
+Jason Kulatunga is a Devops & Infrastructure guy @Gusto (ex-Adobe).
 
 I design/architect Continuous Integration & Continuous Deployment workflows, Configuration Management & Infrastructure-as-Code toolchains and Deployment Orchestration pipelines.
 
