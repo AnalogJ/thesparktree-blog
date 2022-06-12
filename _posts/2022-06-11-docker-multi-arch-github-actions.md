@@ -52,8 +52,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}
+          password: {% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -92,8 +92,8 @@ Unfortunately Buildx is not enabled by default, so even though `docker` is avail
        - name: Login to DockerHub
          uses: docker/login-action@v2
          with:
-           username: ${{ secrets.DOCKERHUB_USERNAME }}
-           password: ${{ secrets.DOCKERHUB_TOKEN }}
+           username: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}
+           password: {% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}
        - name: Build and push
          uses: docker/build-push-action@v3
          with:
@@ -136,8 +136,8 @@ If you need to compile binaries/Docker images for other OS's or architectures, y
        - name: Login to DockerHub
          uses: docker/login-action@v2
          with:
-           username: ${{ secrets.DOCKERHUB_USERNAME }}
-           password: ${{ secrets.DOCKERHUB_TOKEN }}
+           username: {% raw %}${{ secrets.DOCKERHUB_USERNAME }}{% endraw %}
+           password: {% raw %}${{ secrets.DOCKERHUB_TOKEN }}{% endraw %}
        - name: Build and push
          uses: docker/build-push-action@v3
          with:
