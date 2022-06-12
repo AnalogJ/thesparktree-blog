@@ -11,7 +11,7 @@ tags:
 
 navigation: True
 toc: true
-logo: '/assets/logo.png'
+logo: '/assets/logo-dark.png'
 categories: 'analogj'
 ---
 
@@ -172,7 +172,7 @@ This will [automatically set](https://docs.docker.com/engine/reference/builder/#
 
 To use these variables to conditionally download arch specific dependencies, you can modify your Dockerfile like so:
 
-```Dockerfile
+```dockerfile
 FROM debian:bullseye-slim
 ARG TARGETARCH
 
