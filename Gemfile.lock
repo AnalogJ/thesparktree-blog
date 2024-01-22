@@ -1,3 +1,12 @@
+GIT
+  remote: https://github.com/benubois/jekyll-minimagick.git
+  revision: 894e4ad9cb2d46aa02e9795708d451746eafaf9f
+  branch: patch-1
+  specs:
+    jekyll-minimagick (0.0.4)
+      jekyll (>= 0.10.0)
+      mini_magick (>= 3.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -56,9 +65,6 @@ GEM
       safe_yaml (~> 1.0)
       terminal-table (>= 1.8, < 4.0)
       webrick (~> 1.7)
-    jekyll-minimagick (0.0.4)
-      jekyll (>= 0.10.0)
-      mini_magick (>= 3.3)
     jekyll-paginate (1.1.0)
     jekyll-redirect-from (0.16.0)
       jekyll (>= 3.3, < 5.0)
@@ -118,7 +124,7 @@ PLATFORMS
 
 DEPENDENCIES
   html-proofer
-  jekyll-minimagick
+  jekyll-minimagick!
   jekyll-paginate
   jekyll-redirect-from
   rake
