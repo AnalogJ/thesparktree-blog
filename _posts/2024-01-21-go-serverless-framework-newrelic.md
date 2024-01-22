@@ -186,6 +186,9 @@ func main() {
 }
 ```
 
+![metrics]({{ site.url }}/assets/images/newrelic/metrics.png)
+
+
 ## 6. Application Code - Logs
 
 If you had deployed the Serverless function defined in Step 5 as-is, you would see your metrics, however you would not see any logs in Newrelic.
@@ -205,6 +208,8 @@ This is because you're missing the last bit of configuration to enable the Newre
 	)
 
 ```
+
+![metrics]({{ site.url }}/assets/images/newrelic/logs.png)
 
 
 # Fin
