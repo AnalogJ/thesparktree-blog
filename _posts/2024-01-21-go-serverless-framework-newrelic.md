@@ -11,12 +11,12 @@ tags:
 
 navigation: True
 toc: true
-logo: '/assets/logo.png'
+logo: '/assets/logo-dark.png'
 categories: 'analogj'
 ---
 
 
-Because I seem to be a glutton for punishment, I decided to build my newest API using Go + Serverless Framework + 
+Because I seem to be a glutton for punishment, I decided to build an API for [my startup Fasten Health](https://www.fastenhealth.com/) using Go + Serverless Framework + 
 Newrelic. As expected this was difficult for a number of reasons:
 
 - Go is not a first class citizen in the Serverless Framework ecosystem. While it is supported, it is not as well documented as NodeJS.
@@ -88,9 +88,9 @@ custom:
 
 Next, we need to add the [Serverless Framework Newrelic Lambda Layer Plugin](https://github.com/newrelic/serverless-newrelic-lambda-layers)
 
-This plugin allows us to add the Newrelic Lambda Layer to our function, which contains a Newrelic agent that will send data to Newrelic.
+This plugin allows us to add the Newrelic Lambda Layer to our function, which contains a Newrelic agent that our Newrelic `go-agent` sdk will use send data to Newrelic.
 
-We need to install the Serverless plugin, specify the provider runtime and then specify the configuration.
+We need to install the Serverless plugin, specify the `provider` runtime and then specify the configuration.
 
 - `accountId` - this is the `YOUR_NR_ACCOUNT_ID` value from Step 1
 - `apiKey` - this is the `YOUR_NEW_RELIC_USER_KEY` value from Step 1
@@ -115,10 +115,10 @@ custom:
 
 ## 4. Serverless Framework - IAM Role & IAM Roles Per Function
 
-While the steps above are documented in various locations on the internet, it wasn't clear to me that the Newrelic Lambda Layer requires a specific IAM Role.
-I initially tried using `newrelic.ConfigLicense(os.Getenv("NEW_RELIC_LICENSE_KEY"))` to configure the Newrelic `go-agent` sdk, but that didn't work.
-What ended up working was the correct IAM Role permissions so that the Newrelic Lambda Layer has the correct permissions to retrieve the Newrelic 
-License key from AWS Secret Manager.
+While the steps above are documented in various locations on the internet, it wasn't clear to me that the Newrelic Lambda Layer seems to require a AWS Secret Manager integration
+to retrieve the Newrelic License Key. Initially, I tried manually specifying the key using `newrelic.ConfigLicense(os.Getenv("NEW_RELIC_LICENSE_KEY"))` to configure the Newrelic `go-agent` sdk, but that didn't work.
+The solution was to specify the an IAM Role for the Serverless function, giving it permissions to AWS Secret Manager to pull the `NEW_RELIC_LICENSE_KEY` secret.
+
 
 ```yaml
 plugins:
@@ -195,7 +195,18 @@ If you had deployed the Serverless function defined in Step 5 as-is, you would s
 This is because you're missing the last bit of configuration to enable the Newrelic Lambda Extension to send logs to Newrelic.
 
 ```go
+package main
+import (
+  "context"
+  "fmt"
 
+  "github.com/newrelic/go-agent/v3/integrations/nrlambda"
+  newrelic "github.com/newrelic/go-agent/v3/newrelic"
+)
+func main() {
+	...
+	
+	
 	app, err := newrelic.NewApplication(
         nrlambda.ConfigOption(),
         
@@ -206,7 +217,7 @@ This is because you're missing the last bit of configuration to enable the Newre
 			config.Logger = nrlogrus.StandardLogger()
 		},
 	)
-
+}
 ```
 
 ![metrics]({{ site.url }}/assets/images/newrelic/logs.png)
@@ -216,8 +227,9 @@ This is because you're missing the last bit of configuration to enable the Newre
 
 That's it! Trigger a deployment, visit your Serverless function & you should now be able to see your Serverless function metrics and logs in Newrelic.
 
-<div class="github-widget" data-repo="AnalogJ/newrelic-serverless-go-playground"></div>
+If you encounter any issues, refer to my [GitHub repository](https://github.com/AnalogJ/newrelic-serverless-go-playground) for a working example. Happy coding!
 
+<div class="github-widget" data-repo="AnalogJ/newrelic-serverless-go-playground"></div>
 
 # References
 - [Newrelic Lambda Extension Example](https://github.com/newrelic/newrelic-lambda-extension/blob/main/examples/sam/go/main.go)
