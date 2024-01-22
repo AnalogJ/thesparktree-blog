@@ -16,7 +16,7 @@ categories: 'analogj'
 ---
 
 
-Because I seem to be a glutton for punishment, I decided to build [my newest API for my startup Fasten Health](https://www.fastenhealth.com/) using Go + Serverless Framework + 
+Because I seem to be a glutton for punishment, I decided to build an API for [my startup Fasten Health](https://www.fastenhealth.com/) using Go + Serverless Framework + 
 Newrelic. As expected this was difficult for a number of reasons:
 
 - Go is not a first class citizen in the Serverless Framework ecosystem. While it is supported, it is not as well documented as NodeJS.
