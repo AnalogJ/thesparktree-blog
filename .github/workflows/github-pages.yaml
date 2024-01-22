@@ -21,6 +21,7 @@ jobs:
         run: |
           apk add --no-cache imagemagick-dev
           mkdir .jekyll-cache _site dist
+          chown -R jekyll:jekyll .
           jekyll build --destination dist
 
       - name: Test
