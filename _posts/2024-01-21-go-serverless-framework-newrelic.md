@@ -217,7 +217,10 @@ That's it! Trigger a deployment, visit your Serverless function & you should now
 # References
 - [Newrelic Lambda Extension Example](https://github.com/newrelic/newrelic-lambda-extension/blob/main/examples/sam/go/main.go)
 - [Newrelic Go-Agent SDK Lamdba Example](https://github.com/newrelic/go-agent/blob/master/v3/integrations/nrlambda/example/main.go)
+- [Newrelic Go-Agent SDK Full Options](https://github.com/newrelic/go-agent/blob/master/GUIDE.md#full-list-of-config-options-and-application-settings)
 - [Newrelic Lambda Layer Supported Runtimes](https://github.com/newrelic/docs-website/blob/develop/src/content/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/compatibility-requirements-aws-lambda-monitoring.mdx)
 - [Newrelic Troubleshooting Guide for Lambdas](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/account-linking/#troubleshooting)
+- [Newrelic Troubleshooting Guide for Lambdas - Forum Post - Part 1](https://forum.newrelic.com/s/hubtopic/aAX8W0000008eWv/lambda-troubleshooting-framework-troubleshooting-lambda-part-1)
+- [Newrelic Legacy manual instrumentation for Lambda monitoring](https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy/)
 - [Newrelic Lambda Layer Plugin for Serverless Framework](https://github.com/newrelic/serverless-newrelic-lambda-layers)
 - [Serverless Framework Go Plugin](https://github.com/mthenw/serverless-go-plugin)
