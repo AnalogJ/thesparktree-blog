@@ -8,7 +8,7 @@ tags: []
 redirect_from:
 - /post/41988205995/amazon-ec2-dotnetopenauth-elastic-beanstalk
 - /post/41988205995
-disqus_id: 'http://blog.thesparktree.com/post/41988205995'
+disqus_id: 'https://blog.thesparktree.com/post/41988205995'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'

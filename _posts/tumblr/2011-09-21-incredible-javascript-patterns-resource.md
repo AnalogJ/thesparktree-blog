@@ -10,38 +10,38 @@ tags:
 redirect_from:
 - /post/41986143106/incredible-javascript-patterns-resource
 - /post/41986143106
-disqus_id: 'http://blog.thesparktree.com/post/41986143106'
+disqus_id: 'https://blog.thesparktree.com/post/41986143106'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
 
 ---
-http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
+https://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
 
 
-[http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript)
+[https://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript)
 
-*   [What is a Pattern?](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#whatisapattern)
-*   ['Pattern'-ity Testing, Proto-Patterns & The Rule Of Three](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#patternity)
-*   [The Structure Of A Design Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternstructure)
-*   [Writing Design Patterns](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#writingdesignpatterns)
-*   [Anti-Patterns](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#antipatterns)
-*   [Categories Of Design Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#categoriesofdesignpatterns)
-*   [Design Patterns in JavaScript](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjavascript)
-    *   [Creational Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#creationalpatternjavascript)
-    *   [Constructor Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#constructorpatternjavascript)
-    *   [Singleton Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#singletonpatternjavascript)
-    *   [Module Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#modulepatternjavascript)
-    *   [Revealing Module Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript)
-    *   [Observer Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#observerpatternjavascript)
-    *   [Prototype Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#prototypepatternjavascript)
-    *   [Command Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#commandpatternjavascript)
-    *   [DRY Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#drypatternjavascript)
-    *   [Facade Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#facadepatternjavascript)
-    *   [Factory Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#factorypatternjavascript)
-    *   [Mixin Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#mixinpatternjavascript)
-    *   [Decorator Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#decoratorpatternjavascript)
-*   [A High-level View Of Design Patterns in jQuery](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjquery)
+*   [What is a Pattern?](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#whatisapattern)
+*   ['Pattern'-ity Testing, Proto-Patterns & The Rule Of Three](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#patternity)
+*   [The Structure Of A Design Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternstructure)
+*   [Writing Design Patterns](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#writingdesignpatterns)
+*   [Anti-Patterns](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#antipatterns)
+*   [Categories Of Design Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#categoriesofdesignpatterns)
+*   [Design Patterns in JavaScript](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjavascript)
+    *   [Creational Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#creationalpatternjavascript)
+    *   [Constructor Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#constructorpatternjavascript)
+    *   [Singleton Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#singletonpatternjavascript)
+    *   [Module Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#modulepatternjavascript)
+    *   [Revealing Module Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript)
+    *   [Observer Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#observerpatternjavascript)
+    *   [Prototype Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#prototypepatternjavascript)
+    *   [Command Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#commandpatternjavascript)
+    *   [DRY Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#drypatternjavascript)
+    *   [Facade Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#facadepatternjavascript)
+    *   [Factory Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#factorypatternjavascript)
+    *   [Mixin Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#mixinpatternjavascript)
+    *   [Decorator Pattern](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#decoratorpatternjavascript)
+*   [A High-level View Of Design Patterns in jQuery](https://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjquery)
     *   [Module Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#modulepatternjquery)
     *   [Lazy Initialisation](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#lazyinitialisationjquery)
     *   [Composite Pattern](http://addyosmani.com/resources/essentialjsdesignpatterns/book/#compositepatternjquery)

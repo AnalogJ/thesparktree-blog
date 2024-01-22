@@ -26,7 +26,7 @@ Having said all that, over time it can feel like the burdens out-weigh the benef
 
 - As your software grows you'll find yourself cloning jobs to setup a new environments (test/stage/prod/etc), which quickly get out of sync with each other.
 - Refactoring a large number of jobs can be daunting using the config UI.
-- It's easy for Jenkins (or any CI server) to become an untouchable [snowflake](http://martinfowler.com/bliki/SnowflakeServer.html).
+- It's easy for Jenkins (or any CI server) to become an untouchable [snowflake](https://martinfowler.com/bliki/SnowflakeServer.html).
 Its frightening to even contemplate upgrading your Jenkins version & plugins, let alone building a new Jenkins installation.
 - Jenkins freestyle jobs work great for simple CI builds, but as you start using them for deployment & orchestration, you'll start to see their limits
 
@@ -37,7 +37,7 @@ This series is all about solving these common problems using new Jenkins feature
 - [Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration](https://blog.thesparktree.com/you-dont-know-jenkins-part-3)
 - [Part 4 - Kubernetes Slave Cluster](https://blog.thesparktree.com/you-dont-know-jenkins-part-4)
 
-This is **Part 2 - Maintainable Jenkins Jobs using Job DSL**. If you haven't read [Part 1](http://blog.thesparktree.com/you-dont-know-jenkins-part-1), you'll want to do that first, as we'll be referring to some concepts defined there.
+This is **Part 2 - Maintainable Jenkins Jobs using Job DSL**. If you haven't read [Part 1](https://blog.thesparktree.com/you-dont-know-jenkins-part-1), you'll want to do that first, as we'll be referring to some concepts defined there.
 
 ---
 
@@ -48,13 +48,13 @@ This is **Part 2 - Maintainable Jenkins Jobs using Job DSL**. If you haven't rea
 We're trying to follow the common practice of `infrastructure as code`, which boils down to managing, provisioning &
 configuring servers using machine-processable definition files rather than physically configuring hardware or using interactive configuration tools.
 
-The naive approach would be to just take all the [Jenkins configuration XML files, commit them in git](http://stackoverflow.com/questions/2087142/is-there-a-way-to-keep-hudson-jenkins-configuration-files-in-source-control), and call it a day.
+The naive approach would be to just take all the [Jenkins configuration XML files, commit them in git](https://stackoverflow.com/questions/2087142/is-there-a-way-to-keep-hudson-jenkins-configuration-files-in-source-control), and call it a day.
 
 You really don't want to do that: Jenkins Job XML is verbose, plugin version specific and not designed to be edited manually.
 Thankfully there's an incredibly powerful alternative: [Jenkins Job DSL plugin](https://github.com/jenkinsci/job-dsl-plugin).
 The Job DSL plugin was originally developed at Netflix but it has since been open sourced and is now maintained by the core Jenkins team.
 
-In [Part 1](http://blog.thesparktree.com/post/149039600544/you-dont-know-jenkins-part-1) we created a Jenkins DSL Bootstrap/Seed job
+In [Part 1](https://blog.thesparktree.com/post/149039600544/you-dont-know-jenkins-part-1) we created a Jenkins DSL Bootstrap/Seed job
 which, when given a Job DSL git repo, would populate the Jenkins server with our simple Jenkins DSL Job:
 
 

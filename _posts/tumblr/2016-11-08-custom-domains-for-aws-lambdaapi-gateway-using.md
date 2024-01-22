@@ -26,12 +26,12 @@ In general Lambda is well designed and the platform is pretty developer friendly
 
 **Configuring a custom domain for use with Lambda is stupidly complex for such a common feature.**
 
-Here's the AWS documentation to [use a custom domain with API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html). Take a look, I'll wait.
+Here's the AWS documentation to [use a custom domain with API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html). Take a look, I'll wait.
 
 At first glance the instructions seem somewhat reasonable. For security reasons API Gateway requires SSL for all requests, which means that to use a custom domain, you first need an SSL certificate.
 
 Unfortunately this becomes a problem when you realize that
-Letsencrypt HTTP-01 doesn't work because of the catch-22 requiring you to prove that you own the custom domain before generating certificates. Even worse, AWS's built-in free certificate service (Certificate Manger) [doesn't yet support API Gateway](http://stackoverflow.com/questions/36497896/can-i-use-aws-certificate-manager-certificates-for-api-gateway-with-custom-domai).
+Letsencrypt HTTP-01 doesn't work because of the catch-22 requiring you to prove that you own the custom domain before generating certificates. Even worse, AWS's built-in free certificate service (Certificate Manger) [doesn't yet support API Gateway](https://stackoverflow.com/questions/36497896/can-i-use-aws-certificate-manager-certificates-for-api-gateway-with-custom-domai).
 
 So what's the solution?
 

@@ -13,13 +13,13 @@ tags:
 redirect_from:
 - /post/138999997429/generating-intranet-and-private-network-ssl
 - /post/138999997429
-disqus_id: 'http://blog.thesparktree.com/post/138999997429'
+disqus_id: 'https://blog.thesparktree.com/post/138999997429'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
 
 ---
-This post is a follow up to my previous one [Automating SSL Certificates using Nginx & LetsEncrypt](http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx). This time we’ll be generating SSL certificates for intranet and non-public networks.
+This post is a follow up to my previous one [Automating SSL Certificates using Nginx & LetsEncrypt](https://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx). This time we’ll be generating SSL certificates for intranet and non-public networks.
 
 ## Requirements
 Before we get started, you’ll want to make sure that the following items are true.
@@ -112,4 +112,4 @@ At this point we have working Letsencrypt SSL certificates for an internal/intra
 
 I’ve written an example [Dockerfile](https://github.com/AnalogJ/lexicon/blob/master/Dockerfile) that you can reference if you’re curious. Just make sure to use `docker run -e "PROVIDER=cloudflare" -e ..` to set the environmental variables that you need.
 
-If you’re wondering how to automate this whole process, check out my previous post: [Automating SSL Certificates using Nginx & LetsEncrypt](http://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx)
+If you’re wondering how to automate this whole process, check out my previous post: [Automating SSL Certificates using Nginx & LetsEncrypt](https://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx)

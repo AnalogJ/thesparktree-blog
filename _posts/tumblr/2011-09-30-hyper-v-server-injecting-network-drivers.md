@@ -9,7 +9,7 @@ tags:
 redirect_from:
 - /post/41985876443/hyper-v-server-injecting-network-drivers
 - /post/41985876443
-disqus_id: 'http://blog.thesparktree.com/post/41985876443'
+disqus_id: 'https://blog.thesparktree.com/post/41985876443'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'

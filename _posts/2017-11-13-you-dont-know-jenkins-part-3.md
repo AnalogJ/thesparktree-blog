@@ -252,7 +252,7 @@ Occasionally you'll wish that you could include more contextual data in your bui
 
 Pipeline's have you covered:
 
-![failed jenkins image](http://static1.tothenew.com/blog/wp-content/uploads/2016/05/Jenkins_failed.png)
+![failed jenkins image](https://static1.tothenew.com/blog/wp-content/uploads/2016/05/Jenkins_failed.png)
 
 At any point in your pipeline script you can add/update the job name (build ID) & description using the global variable `currentBuild`.
 

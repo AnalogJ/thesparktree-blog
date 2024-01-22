@@ -9,7 +9,7 @@ tags:
 redirect_from:
 - /post/41987099542/server-2008-run-application-as-a-task
 - /post/41987099542
-disqus_id: 'http://blog.thesparktree.com/post/41987099542'
+disqus_id: 'https://blog.thesparktree.com/post/41987099542'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -38,4 +38,4 @@ Click Task Scheduler Library (underneath Task Scheduler in Server Manager from s
 
 Run it ! (should work when you reboot too) I see my program running in task manager, so far so good!)
 
-from: http://jack.ukleja.com/utorrent-service-windows-home-server-2011/
+from: https://jack.ukleja.com/utorrent-service-windows-home-server-2011/

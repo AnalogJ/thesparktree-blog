@@ -12,7 +12,7 @@ tags:
 redirect_from:
 - /post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via
 - /post/92465942639
-disqus_id: 'http://blog.thesparktree.com/post/92465942639'
+disqus_id: 'https://blog.thesparktree.com/post/92465942639'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
@@ -21,7 +21,7 @@ logo: '/assets/logo.png'
 # Update
 After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure the SailsJS engine. I've written a new post about how to create background tasks in Sails which you can find here:
 
-[Reusing SailsJS + Waterline Models in Background Tasks](http://blog.thesparktree.com/post/104779353989/reusing-sailsjs-waterline-models-in-background)
+[Reusing SailsJS + Waterline Models in Background Tasks](https://blog.thesparktree.com/post/104779353989/reusing-sailsjs-waterline-models-in-background)
 
 
 I recently found myself with a common problem: my application needed to do some long running tasks, and I didn't to block the current request/response and wait for them to finish. My application is built ontop of the SailsJS library which meant that I could use one of the many express.js libraries that add support for background tasks.

@@ -10,7 +10,7 @@ tags:
 redirect_from:
 - /post/114053773684/the-unfortunately-long-story-dealing-with
 - /post/114053773684
-disqus_id: 'http://blog.thesparktree.com/post/114053773684'
+disqus_id: 'https://blog.thesparktree.com/post/114053773684'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -29,7 +29,7 @@ I found many results, all of which looked promising at first glance.
 - [Send file using POST from a Python script](https://stackoverflow.com/questions/68477/send-file-using-post-from-a-python-script)
 - [How to send a “multipart/form-data” with requests in python?](https://stackoverflow.com/questions/12385179/how-to-send-a-multipart-form-data-with-requests-in-python)
 
-I quickly realized that almost all questions referenced the incredible ["requests"](http://docs.python-requests.org/en/latest/) , ["poster"](http://atlee.ca/software/poster/) or other third party modules. While any sane developer would just bask in their single handed victory and then start on the next item of their to-do list, I'm a glutton for punishment. I needed to do my multipart upload like a real <strike>man</strike> developer: python standard libraries only.
+I quickly realized that almost all questions referenced the incredible ["requests"](https://docs.python-requests.org/en/latest/) , ["poster"](http://atlee.ca/software/poster/) or other third party modules. While any sane developer would just bask in their single handed victory and then start on the next item of their to-do list, I'm a glutton for punishment. I needed to do my multipart upload like a real <strike>man</strike> developer: python standard libraries only.
 
 Luckily I was able to find a simple looking snippet that only used [urllib2](http://code.activestate.com/recipes/146306-http-client-to-post-using-multipartform-data/) something I was familiar with. Huzzah! With a few test files in hand, I began testing my shiny new script. Alas it was all for naught, the multipart upload script would only work for some files, and would fail horribly for others.
 

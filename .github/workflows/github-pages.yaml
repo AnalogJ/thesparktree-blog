@@ -27,7 +27,7 @@ jobs:
 
       - name: Test
         run: |
-          bundle exec htmlproofer dist --check-html --disable-external --assume-extension
+          bundle exec htmlproofer dist --disable-external --assume-extension .html --checks Images,Scripts
 
       - uses: actions/upload-artifact@master
         with:

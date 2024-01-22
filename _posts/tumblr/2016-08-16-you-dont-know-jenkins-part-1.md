@@ -13,7 +13,7 @@ tags:
 redirect_from:
 - /post/149039600544/you-dont-know-jenkins-part-1
 - /post/149039600544
-disqus_id: 'http://blog.thesparktree.com/post/149039600544'
+disqus_id: 'https://blog.thesparktree.com/post/149039600544'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -26,7 +26,7 @@ Having said all that, over time it can feel like the burdens out-weigh the benef
 
 - As your software grows you'll find yourself cloning jobs to setup a new environments (test/stage/prod/etc), which quickly get out of sync with each other.
 - Refactoring a large number of jobs can be daunting using the config UI.
-- It's easy for Jenkins (or any CI server) to become an untouchable [snowflake](http://martinfowler.com/bliki/SnowflakeServer.html).
+- It's easy for Jenkins (or any CI server) to become an untouchable [snowflake](https://martinfowler.com/bliki/SnowflakeServer.html).
 Its frightening to even contemplate upgrading your Jenkins version & plugins, let alone building a new Jenkins installation.
 - Jenkins freestyle jobs work great for simple CI builds, but as you start using them for deployment & orchestration, you'll start to see their limits
 
@@ -47,7 +47,7 @@ It doesn't matter if you use Chef, Ansible, Puppet or Salt. Whichever CM system 
 - Install Jenkins dependencies (like Java)
 - Configure server backups
 - Configure your Server firewall (eg. iptables)
-- Restrict SSH access & other ["first 10 minute" tasks](http://www.codelitt.com/blog/my-first-10-minutes-on-a-server-primer-for-securing-ubuntu/)
+- Restrict SSH access & other ["first 10 minute" tasks](https://www.codelitt.com/blog/my-first-10-minutes-on-a-server-primer-for-securing-ubuntu/)
 - Install Jenkins software
 - All company/third party tools required on the build server should be codified
 - Create a **single** automation administrator user on Jenkins
