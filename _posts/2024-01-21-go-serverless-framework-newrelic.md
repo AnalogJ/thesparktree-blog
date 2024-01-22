@@ -11,12 +11,12 @@ tags:
 
 navigation: True
 toc: true
-logo: '/assets/logo_dark.png'
+logo: '/assets/logo-dark.png'
 categories: 'analogj'
 ---
 
 
-Because I seem to be a glutton for punishment, I decided to build my newest API using Go + Serverless Framework + 
+Because I seem to be a glutton for punishment, I decided to build [my newest API for my startup Fasten Health](https://www.fastenhealth.com/) using Go + Serverless Framework + 
 Newrelic. As expected this was difficult for a number of reasons:
 
 - Go is not a first class citizen in the Serverless Framework ecosystem. While it is supported, it is not as well documented as NodeJS.
@@ -230,7 +230,6 @@ That's it! Trigger a deployment, visit your Serverless function & you should now
 If you encounter any issues, refer to my [GitHub repository](https://github.com/AnalogJ/newrelic-serverless-go-playground) for a working example. Happy coding!
 
 <div class="github-widget" data-repo="AnalogJ/newrelic-serverless-go-playground"></div>
-
 
 # References
 - [Newrelic Lambda Extension Example](https://github.com/newrelic/newrelic-lambda-extension/blob/main/examples/sam/go/main.go)
