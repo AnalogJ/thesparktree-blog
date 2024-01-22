@@ -20,6 +20,7 @@ jobs:
       - name: Build
         run: |
           apk add --no-cache imagemagick-dev
+          mkdir .jekyll-cache _site
           jekyll build --destination dist
 
       - name: Test
