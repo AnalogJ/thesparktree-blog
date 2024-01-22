@@ -12,7 +12,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: jekyll/builder
+    container: jekyll/builder:stable
 
     steps:
       - name: Checkout
