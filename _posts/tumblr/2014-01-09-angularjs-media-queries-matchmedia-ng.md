@@ -11,7 +11,7 @@ tags:
 redirect_from:
 - /post/72780878796/angularjs-media-queries-matchmedia-ng
 - /post/72780878796
-disqus_id: 'http://blog.thesparktree.com/post/72780878796'
+disqus_id: 'https://blog.thesparktree.com/post/72780878796'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'

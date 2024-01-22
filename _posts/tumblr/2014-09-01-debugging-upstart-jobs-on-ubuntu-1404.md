@@ -12,13 +12,13 @@ tags:
 redirect_from:
 - /post/96381672984/debugging-upstart-jobs-on-ubuntu-1404
 - /post/96381672984
-disqus_id: 'http://blog.thesparktree.com/post/96381672984'
+disqus_id: 'https://blog.thesparktree.com/post/96381672984'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
 ---
 
-Before you begin, you should be (intimately) familiar with the [Upstart Cookbook](http://upstart.ubuntu.com/cookbook/). It's an incredible resource for understanding the in's and out's of Upstart and its configuration.
+Before you begin, you should be (intimately) familiar with the [Upstart Cookbook](https://upstart.ubuntu.com/cookbook/). It's an incredible resource for understanding the in's and out's of Upstart and its configuration.
 
 That said, unfortunately its still pretty difficult to debug Upstart jobs. You'll get messages like "Job failed to start" or "Unknown job"  without any obvious reasons why. The following is just a collection of the different methods I've found useful to debug Upstart jobs that are acting up.
 

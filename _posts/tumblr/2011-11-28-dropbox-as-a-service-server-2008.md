@@ -10,7 +10,7 @@ tags:
 redirect_from:
 - /post/41987942679/dropbox-as-a-service-server-2008
 - /post/41987942679
-disqus_id: 'http://blog.thesparktree.com/post/41987942679'
+disqus_id: 'https://blog.thesparktree.com/post/41987942679'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'

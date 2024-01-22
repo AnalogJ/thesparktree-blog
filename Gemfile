@@ -7,5 +7,5 @@ gem 'html-proofer'
 group :jekyll_plugins do
   gem "jekyll-paginate"
   gem "jekyll-redirect-from"
-  gem "jekyll-minimagick"
+  gem "mini_magick"
 end

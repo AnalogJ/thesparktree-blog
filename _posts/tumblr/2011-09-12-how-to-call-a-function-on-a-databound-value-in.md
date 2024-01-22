@@ -10,7 +10,7 @@ tags:
 redirect_from:
   - /post/41986292128/how-to-call-a-function-on-a-databound-value-in
   - /post/41986292128
-disqus_id: 'http://blog.thesparktree.com/post/41986292128'
+disqus_id: 'https://blog.thesparktree.com/post/41986292128'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
@@ -41,4 +41,4 @@ return result;
 }
 ```
 
-reference: http://stackoverflow.com/questions/1530704/how-to-use-evalx-value-in-listview
+reference: https://stackoverflow.com/questions/1530704/how-to-use-evalx-value-in-listview

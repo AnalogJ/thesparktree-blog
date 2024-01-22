@@ -9,7 +9,7 @@ tags:
 redirect_from:
 - /post/41985761658/hyperv-server-remote-management-link
 - /post/41985761658
-disqus_id: 'http://blog.thesparktree.com/post/41985761658'
+disqus_id: 'https://blog.thesparktree.com/post/41985761658'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -17,4 +17,4 @@ logo: '/assets/logo-dark.png'
 ---
 Best instructions for setting up Hyper V Server
 
-http://technet.microsoft.com/en-us/library/ee256062%28WS.10%29.aspx
+https://technet.microsoft.com/en-us/library/ee256062%28WS.10%29.aspx

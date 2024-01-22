@@ -8,7 +8,7 @@ tags: []
 redirect_from:
 - /post/40987943309/dev-blog-day-1
 - /post/40987943309
-disqus_id: 'http://blog.thesparktree.com/post/40987943309'
+disqus_id: 'https://blog.thesparktree.com/post/40987943309'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'

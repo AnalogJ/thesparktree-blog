@@ -10,7 +10,7 @@ tags:
 redirect_from:
 - /post/86424236989/npm-errors-with-infinite-loop
 - /post/86424236989
-disqus_id: 'http://blog.thesparktree.com/post/86424236989'
+disqus_id: 'https://blog.thesparktree.com/post/86424236989'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'

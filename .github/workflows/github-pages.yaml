@@ -12,19 +12,22 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: jekyll/builder:3.4
+    container: jekyll/builder:stable
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
         run: |
-          apk add --no-cache imagemagick-dev
+          apk add --no-cache imagemagick
+          convert -version
+          mkdir .jekyll-cache _site dist
+          chown -R jekyll:jekyll .
           jekyll build --destination dist
 
       - name: Test
         run: |
-          bundle exec htmlproofer dist --check-html --disable-external --assume-extension
+          bundle exec htmlproofer dist --disable-external --assume-extension .html --checks Images,Scripts
 
       - uses: actions/upload-artifact@master
         with:

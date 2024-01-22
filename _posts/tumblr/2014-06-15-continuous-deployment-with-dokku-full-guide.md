@@ -13,7 +13,7 @@ tags:
 redirect_from:
 - /post/88872191934/continuous-deployment-with-dokku-full-guide
 - /post/88872191934
-disqus_id: 'http://blog.thesparktree.com/post/88872191934'
+disqus_id: 'https://blog.thesparktree.com/post/88872191934'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
@@ -186,7 +186,7 @@ $ ls -al
 -rw-r--r-- 1 dokku  dokku  1676 Jun 15 12:58 server.key
 ```
 
-Redeployment of the application will be needed to apply TLS configuration. Once it is redeployed, the application will be accessible by `https://` (redirection from`http://` is applied as well).
+Redeployment of the application will be needed to apply TLS configuration. Once it is redeployed, the application will be accessible by `https://` (redirection from`https://` is applied as well).
 
 # Continuous Deployment.
 

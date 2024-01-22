@@ -12,7 +12,7 @@ tags:
 redirect_from:
 - /post/69449035595/how-to-setup-a-free-continuous-integration-server
 - /post/69449035595
-disqus_id: 'http://blog.thesparktree.com/post/69449035595'
+disqus_id: 'https://blog.thesparktree.com/post/69449035595'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -20,7 +20,7 @@ logo: '/assets/logo-dark.png'
 
 ### Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin)
 
-The following steps will help setup your Cloudbees Jenkins Service for continuous integration via Github. Most of the documentation for this section came from here [http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html](http://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html)
+The following steps will help setup your Cloudbees Jenkins Service for continuous integration via Github. Most of the documentation for this section came from here [https://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html](https://blog.cloudbees.com/2012/01/better-integration-between-jenkins-and.html)
 
 
 ## Setup Cloudbees + Jenkins + Private Github
@@ -38,7 +38,7 @@ The following steps will help setup your Cloudbees Jenkins Service for continuou
 2. Select the `Configure` link on the left hand side of the screen.
 3. In the `GitHub project` field, enter the URL of the GitHub project. If your GitHub project's git URL looks like: `git@github.com:username/project.git`,
 
-	then the GitHub project should be: http://github.com/username/project/or if the project is private, you can get faster navigation with: https://github.com/username/project/
+	then the GitHub project should be: https://github.com/username/project/or if the project is private, you can get faster navigation with: https://github.com/username/project/
 
 
 4. Go to your Jenkins instances root page.
@@ -55,7 +55,7 @@ Once you have configured your Jenkins instance for receiving the push notificati
 
 # Jenkins Build Scripts
 
-Depending on your application environment you will need to run a command to start your test runners. Here are a few build scripts we use in our environments. Note: be careful when using `#!/bin/bash` at the beginning of the script, [it may produce unintended problems](http://stackoverflow.com/questions/11464883/jenkins-succeed-when-unit-test-fails-rails).
+Depending on your application environment you will need to run a command to start your test runners. Here are a few build scripts we use in our environments. Note: be careful when using `#!/bin/bash` at the beginning of the script, [it may produce unintended problems](https://stackoverflow.com/questions/11464883/jenkins-succeed-when-unit-test-fails-rails).
 
 ## Ruby RSpec
 To use Ruby on DEV@Cloud, add the following to the beginning of your shell script build step:

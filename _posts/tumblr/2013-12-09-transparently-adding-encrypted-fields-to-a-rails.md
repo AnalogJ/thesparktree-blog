@@ -14,7 +14,7 @@ tags:
 redirect_from:
 - /post/69538763994/transparently-adding-encrypted-fields-to-a-rails
 - /post/69538763994
-disqus_id: 'http://blog.thesparktree.com/post/69538763994'
+disqus_id: 'https://blog.thesparktree.com/post/69538763994'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'

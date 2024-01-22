@@ -9,7 +9,7 @@ tags:
 redirect_from:
 - /post/41985959910/javascript-documentwrite
 - /post/41985959910
-disqus_id: 'http://blog.thesparktree.com/post/41985959910'
+disqus_id: 'https://blog.thesparktree.com/post/41985959910'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'

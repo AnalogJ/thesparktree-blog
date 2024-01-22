@@ -13,7 +13,7 @@ tags:
 redirect_from:
 - /post/103257786994/how-to-setup-a-deis-heroku-like-paas-on
 - /post/103257786994
-disqus_id: 'http://blog.thesparktree.com/post/103257786994'
+disqus_id: 'https://blog.thesparktree.com/post/103257786994'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo-dark.png'
@@ -153,7 +153,7 @@ To install the latest version of deisctl, change to the directory where you woul
 ```
 mkdir /tmp/deisctl
 cd /tmp/deisctl
-curl -sSL http://deis.io/deisctl/install.sh | sh -s 1.0.1
+curl -sSL https://deis.io/deisctl/install.sh | sh -s 1.0.1
 ```
 
 This installs deisctl to the current directory, and refreshes the Deis systemd unit files used to schedule the components. Link it to /usr/local/bin, so it will be in your PATH:
@@ -218,9 +218,9 @@ Now that you’ve finished provisioning a cluster, we can get started using the 
 
 ## References
 
-- http://azure.microsoft.com/en-us/documentation/articles/xplat-cli/
+- https://azure.microsoft.com/en-us/documentation/articles/xplat-cli/
 - https://coreos.com/docs/launching-containers/launching/fleet-using-the-client/
 - https://coreos.com/docs/running-coreos/cloud-providers/azure/
 - https://github.com/timfpark/coreos-azure
-- http://docs.deis.io/en/latest/installing_deis/install-deisctl/
-- http://docs.deis.io/en/latest/installing_deis/install-platform/
+- https://docs.deis.io/en/latest/installing_deis/install-deisctl/
+- https://docs.deis.io/en/latest/installing_deis/install-platform/

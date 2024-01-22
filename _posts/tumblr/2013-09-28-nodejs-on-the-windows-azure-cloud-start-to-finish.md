@@ -11,7 +11,7 @@ tags:
 redirect_from:
 - /post/62530881389/nodejs-on-the-windows-azure-cloud-start-to-finish
 - /post/62530881389
-disqus_id: 'http://blog.thesparktree.com/post/62530881389'
+disqus_id: 'https://blog.thesparktree.com/post/62530881389'
 categories: 'analogj'
 navigation: True
 logo: '/assets/logo.png'
@@ -25,18 +25,18 @@ Well.. kinda..
 
 ## Remote In
 
-The first step to setting up your nodejs application is to remote into your linux image. I've taken the following steps from the great guide on [windowsazure.com](http://www.windowsazure.com/en-us/manage/linux/how-to-guides/log-on-a-linux-vm/)
+The first step to setting up your nodejs application is to remote into your linux image. I've taken the following steps from the great guide on [windowsazure.com](https://www.windowsazure.com/en-us/manage/linux/how-to-guides/log-on-a-linux-vm/)
 
 For a virtual machine that is running the Linux operating system, you use a Secure Shell (SSH) client to logon.
 
 You must install an SSH client on your computer that you want to use to log on to the virtual machine. There are many SSH client programs that you can choose from. The following are possible choices:
 
-- If you are using a computer that is running a Windows operating system, you might want to use an SSH client such as PuTTY. For more information, see the [PuTTY Download Page](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).
-- If you are using a computer that is running a Linux operating system, you might want to use an SSH client such as OpenSSH. For more information, see [OpenSSH](http://www.openssh.org/).
+- If you are using a computer that is running a Windows operating system, you might want to use an SSH client such as PuTTY. For more information, see the [PuTTY Download Page](https://www.chiark.greenend.org.uk/~sgtatham/putty/download.html).
+- If you are using a computer that is running a Linux operating system, you might want to use an SSH client such as OpenSSH. For more information, see [OpenSSH](https://www.openssh.org/).
 
 This procedure shows you how to use the PuTTY program to access the virtual machine.
 
-1. Find the __Host Name__ and __Port information__ from the [Management Portal](http://manage.windowsazure.com/). You can find the information that you need from the dashboard of the virtual machine. Click the virtual machine name and look for the __SSH Details__ in the __Quick Glance__ section of the dashboard.
+1. Find the __Host Name__ and __Port information__ from the [Management Portal](https://manage.windowsazure.com/). You can find the information that you need from the dashboard of the virtual machine. Click the virtual machine name and look for the __SSH Details__ in the __Quick Glance__ section of the dashboard.
 2. Open the PuTTY program.
 3. Enter the Host Name and the Port information that you collected from the dashboard, and then click __Open__.
 4. Log on to the virtual machine using the account that you specified when the machine was created.
@@ -87,7 +87,7 @@ If your coming from a non-unix background some of the following commands might b
 
     ```bash
 	cd /usr/src
-	wget http://nodejs.org/dist/node-latest.tar.gz
+	wget https://nodejs.org/dist/node-latest.tar.gz
 	tar zxvf node-latest.tar.gz
 	```
 
@@ -118,11 +118,11 @@ If your coming from a non-unix background some of the following commands might b
 
     <strike>yum install git</strike>
 
-	Its ok though, we can just build it from source. I've tried few methods, most of them from this [SO question](http://stackoverflow.com/questions/3779274/how-can-git-be-installed-on-centos-5-5) but most of them failed on my CentOs, either because of the wrong repos or missing files.
+	Its ok though, we can just build it from source. I've tried few methods, most of them from this [SO question](https://stackoverflow.com/questions/3779274/how-can-git-be-installed-on-centos-5-5) but most of them failed on my CentOs, either because of the wrong repos or missing files.
 
 	```bash
 	yum -y install zlib-devel openssl-devel cpio expat-devel gettext-devel
-	wget http://git-core.googlecode.com/files/git-1.8.4.tar.gz
+	wget https://git-core.googlecode.com/files/git-1.8.4.tar.gz
 	tar -xzvf ./git-1.8.4.tar.gz
 	cd ./git-1.8.4
 	./configure
@@ -130,7 +130,7 @@ If your coming from a non-unix background some of the following commands might b
 	make install
 	```
 
-    You may want to download a different version from here: [http://code.google.com/p/git-core/downloads/list](http://code.google.com/p/git-core/downloads/list)
+    You may want to download a different version from here: [https://code.google.com/p/git-core/downloads/list](http://code.google.com/p/git-core/downloads/list)
 
 ## Setup Github SSH Key
 The following instructions were taken from the [Generating SSH Keys](https://help.github.com/articles/generating-ssh-keys) page on Github
