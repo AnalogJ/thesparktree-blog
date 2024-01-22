@@ -195,7 +195,18 @@ If you had deployed the Serverless function defined in Step 5 as-is, you would s
 This is because you're missing the last bit of configuration to enable the Newrelic Lambda Extension to send logs to Newrelic.
 
 ```go
+package main
+import (
+  "context"
+  "fmt"
 
+  "github.com/newrelic/go-agent/v3/integrations/nrlambda"
+  newrelic "github.com/newrelic/go-agent/v3/newrelic"
+)
+func main() {
+	...
+	
+	
 	app, err := newrelic.NewApplication(
         nrlambda.ConfigOption(),
         
@@ -206,7 +217,7 @@ This is because you're missing the last bit of configuration to enable the Newre
 			config.Logger = nrlogrus.StandardLogger()
 		},
 	)
-
+}
 ```
 
 ![metrics]({{ site.url }}/assets/images/newrelic/logs.png)
