@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration" />
+    <meta name="twitter:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/ultimate-media-server-build-mediadepot" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration" />
+    <meta property="og:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/ultimate-media-server-build-mediadepot" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/ultimate-media-server-build-mediadepot",
+        "image": "https://blog.thesparktree.com/assets/images/cover_plex.jpg",
+        "description": "I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_plex.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2019-01-25">25 Jan 2019</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/plex'>Plex</a>,
+                    
+                
+                    
+                       <a href='/tag/hardware'>Hardware</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/coreos'>Coreos</a>,
+                    
+                
+                    
+                       <a href='/tag/nas'>Nas</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></li>
+  <li><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></li>
+  <li><strong><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></strong></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 3</strong>, where I’ll be discussing the software I use to run my ultimate media server, specifically focusing on installing and
+configuring CoreOS for MediaDepot.</p>
+
+<hr />
+
+<p>The hardware and build process for <strong>“The Ultimate Media Server”</strong> was outlined in previous posts, but hardware is only
+one part of the solution. Software (OS &amp; Applications) determine the functionality and ultimately the value of our home server.</p>
+
+<p>Before we dive into the details, let’s start with a bit of a teaser showing off some of the applications and services that I run on my server.</p>
+
+<div class="img-gallery">
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/1_heimdall_thumb.png" alt="heimdall screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer_thumb.png" alt="portainer screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/3_filerun_thumb.png" alt="filerun screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/4_duplicati_thumb.png" alt="duplicata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli.png">
+      <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/5_tautulli_thumb.png" alt="tautulli screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/6_sickchill_thumb.png" alt="sickchill screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/7_couchpotato_thumb.png" alt="couchpotato screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/8_jackett_thumb.png" alt="jackett screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/9_plexrequests_thumb.png" alt="plex requests screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/10_plex_thumb.png" alt="plex screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata_thumb.png" alt="netdata screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/12_rutorrent_thumb.png" alt="rutorrent screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_thumb.png" alt="ipmi screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/14_sismicsdocs_thumb.png" alt="sismics screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/15_folder_structure_thumb.png" alt="folder screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/16_app_data_thumb.png" alt="app data screenshot" />
+  </a>
+  <a href="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares.png">
+    <img src="https://blog.thesparktree.com/assets/images/mediadepot_software/17_samba_shares_thumb.png" alt="samba screenshot" />
+  </a>
+</div>
+
+<p>Still interested? Good. Now that we have an idea what the finished product will look like, lets discuss the actual software stack and my requirements.</p>
+
+<div class="github-widget" data-repo="mediadepot/docs"></div>
+
+<p>While this blog post will describe the step by step instructions for setting up CoreOS &amp; Mediadepot, then <a href="https://www.github.com/mediadepot/docs">mediadepot/docs</a>
+repo contains additional documentation that you might find interesting.</p>
+
+<p>Given that our goal of building the <strong>“The Ultimate Media Server”</strong> is pretty hard to quantify, lets give ourselves some constraints and requirements that we can actually track.</p>
+
+<ol>
+  <li>The server will be self hosted, with only <strong>one physical node</strong> (if you need a multi-node media server, this wont work for you)</li>
+  <li>The server will be running <strong>headless (no monitor is required)</strong></li>
+  <li>The server will be running a <strong>minimal OS/hypervisor</strong>. This is to limit the amount of OS maintenance required, and ensure that all software is run in a maintainable &amp; isolated way.</li>
+  <li>The server will be using <strong>JBOD disk storage</strong> (allowing you to aggregate and transparently interact with multiple physical disks as a single volume)
+    <ul>
+      <li><strong>Redundancy is should be supported but is not a requirement.</strong></li>
+    </ul>
+  </li>
+  <li>The server will provide a <strong>automation friendly folder structure</strong> for use by media managers (sickrage, couchpotato, sonar, plex, etc)</li>
+  <li>The server will provide a <strong>monitoring</strong> solution with a web GUI.</li>
+  <li>The server will provide a routing method to running web applications via a custom domain <strong>*.depot.lan</strong></li>
+  <li>The server will provide a method that user <strong>applications can use to notify the user</strong> when events have occurred (download started, completed, media added)</li>
+  <li>The server will provide a way to <strong>backup application configuration</strong> to a secondary location.</li>
+</ol>
+
+<p>The first two items on the list are already done. The hardware chosen in <a href="https://blog.thesparktree.com/ultimate-media-server-build-hardware">Part 1</a> was only for a single server.
+The headless requirement (<strong>#2</strong>) is solved by the IPMI functionality built into our SuperMicro X11SSL-CF motherboard.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/13_ipmi_kvm.png" alt="IPMI" style="max-height: 500px;" /></p>
+
+<p>IPMI provides us with the ability to remotely manage the server, including the ability to see what’s “running” on the server using a virtual display + KVM.</p>
+
+<h4 id="coreos">CoreOS</h4>
+
+<p>Requirement <strong>#3</strong> is where this blog post really starts.
+Rather than going with a traditional virtualization/hypervisor solution like VMWare ESXI or Proxmox, I’m going to evangelize
+the use of CoreOS Container Linux as the base Operating System for your Home Server</p>
+
+<p>So what is CoreOS?</p>
+
+<blockquote>
+  <p>As an operating system, Container Linux provides only the minimal functionality required for deploying applications inside software containers,
+together with built-in mechanisms for service discovery and configuration sharing.
+Container Linux provides no package manager as a way for distributing payload applications, requiring instead all applications to run inside their containers.</p>
+
+  <p>https://en.wikipedia.org/wiki/Container_Linux</p>
+</blockquote>
+
+<p>Basically CoreOS is an incredibly slim Linux OS that is designed to do one thing, and one thing only: run Docker containers.
+As mentioned in the wikipedia article, CoreOS does not have a package manager and requires that all user applications run in docker containers,
+drastically reducing the amount of OS maintenance required (<strong>#3</strong>)</p>
+
+<h4 id="jbod-storage">JBOD Storage</h4>
+
+<p>This latest iteration of my Home Server follows atleast a half dozen other Home Server’s I’ve built over the years. While I’ve used various
+software and hardware RAID solutions in the past, it’s been my experience that JBOD (Just-A-Bunch-Of-Drives) solutions work best for
+home servers.</p>
+
+<ul>
+  <li>JBOD allows you to easily mix-and-match drives, letting your server grow with you.</li>
+  <li>Performance &amp; Redundancy may not be as important as Raw Storage &amp; Simplicity for home servers</li>
+  <li>While disk failures can result in data loss, you only lose the content of that drive, rather the whole drive array (depending on RAID mode)</li>
+</ul>
+
+<p>While I have played with various JBOD file systems (mhddfs, greyhole, zfs), I’ve found that <a href="https://github.com/trapexit/mergerfs">MergerFS</a>
+is simple and bulletproof, without any weird file system hacks to get JBOD working.</p>
+
+<h4 id="folder-structure">Folder Structure</h4>
+
+<p>Next up is finding a folder structure that works for all the data we need to store on our server. While this seems like a fairly
+trivial problem, once we start using automatic media downloaders like SickChill, CouchPotato, Sonarr &amp; Radarr, things become much more complicated.</p>
+
+<p>Here’s the structure that I’ve been using for years:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">/media/temp/blackhole/*</code> - temporarily contains <code class="language-plaintext highlighter-rouge">.torrent</code> files. These files can be added manually via SMB, or automatically by apps like sickrage, couchpotato, sonarr, etc.</li>
+  <li><code class="language-plaintext highlighter-rouge">/media/temp/processing</code> - a cache directory used by your torent client. Temporarily holds current download files. Once complete they are moved into the correct subfolder of <code class="language-plaintext highlighter-rouge">/media/storage/downloads</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/media/storage/downloads/*</code> - contains completed torrent downloads. Files added here are automatically detected by media managers (sickrage, couchpotato, etc) then renamed/reorganized and moved to their
+final storage directory <code class="language-plaintext highlighter-rouge">/media/storage/*</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/media/storage/*</code> - contains the final renamed/organized media, to be used by your media streamer of choice (Plex/Emby/etc).
+All subfolders are automatically created as SMB shares</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/media
+├── storage/
+│   ├── downloads/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   ├── movies/
+│   ├── music/
+│   ├── tvshows/
+├── temp/
+│   ├── blackhole/
+│   │   ├── movies/
+│   │   ├── music/
+│   │   ├── tvshows/
+│   └── processing/
+
+</code></pre></div></div>
+
+<p>This structure is automation friendly, easy to manage via the commandline, and customizable.</p>
+
+<h4 id="monitoring">Monitoring</h4>
+
+<p>While Corporate and Enterprise monitoring solutions have a lot of features, for a home server I’ve found that theres
+really only 3 things that I need:</p>
+<ul>
+  <li>a nice light-weight dashboard that tracks CPU, Disk &amp; Memory usage</li>
+  <li>a way to track the S.M.A.R.T health status of my storage disks (and get notified if something has changed)</li>
+  <li>a way to manage the Dockerized applications running on my server, and restart/update them if necessary</li>
+</ul>
+
+<p>While <a href="https://prometheus.io/docs/visualization/grafana/">Graphana + Prometheus</a> solutions are common for generating nice server dashboards, it’s not quite as light-weight as
+I like. Netdata is extremely light-weight, extensible, gorgeous, and works out of the box.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/11_netdata.png" alt="netdata" style="max-height: 500px;" /></p>
+
+<p>On Linux, the defacto standard for S.M.A.R.T disk monitoring is <a href="https://www.smartmontools.org/">smartmontools</a>, so that’s an easy choice.
+With a bit of customization, we can also get notifications via PushBullet or PushOver.</p>
+
+<p>Finally, we’ll need a Docker manager with a web interface that we can use to remotely manage our Dockerized applications.
+Once again, there’s alot of alternatives, but there’s only one that has the functionality that want with the lightweight footprint that
+I desire: <a href="https://www.portainer.io/">Portainer</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/mediadepot_software/2_portainer.png" alt="portainer" style="max-height: 500px;" /></p>
+
+<h4 id="routing--subdomains">Routing &amp; Subdomains</h4>
+
+<p>Subdomains is a quality of life improvement that becomes almost a necessity when you’re running more than 3 or 4 services on your server.
+Remembering <code class="language-plaintext highlighter-rouge">sickrage.depot.lan</code> and <code class="language-plaintext highlighter-rouge">couchpotato.depot.lan</code> is much more reasonable than <code class="language-plaintext highlighter-rouge">10.0.1.100:54338</code> and <code class="language-plaintext highlighter-rouge">10.0.1.100:54221</code>.
+Having those subdomains map automatically to the relevant Docker container is the responsibility of a reverse proxy called <a href="https://traefik.io/">Traefik</a>
+Once configured it’ll automatically watch for new (or updated) Docker containers and automatically assign them a subdomain.
+No more ports.</p>
+
+<p>Routing is a bit more complicated. Now that you have these nice subdomains for applications on your server, how do you tell all your
+devices (including phones, laptops, tablets, etc) that these new websites exist on your home network rather than the internet?</p>
+
+<p>Traditionally you’d need to update your OS host file (located at <code class="language-plaintext highlighter-rouge">/etc/hosts</code> or <code class="language-plaintext highlighter-rouge">c:\Windows\System32\Drivers\etc\hosts</code>) with
+a new entry per domain, but that gets old fast, and doesn’t really work for locked down mobile devices like Tablets &amp; Phones.</p>
+
+<p>The solution here is to run a tiny (notice a pattern here?) DNS service on the server. This DNS service is configured to
+capture all requests for <code class="language-plaintext highlighter-rouge">*.depot.lan</code> and respond with the server’s IP address, while redirecting all other DNS requests to
+the public internet.</p>
+
+<p>Unlike the hosts file, DNS configuration is user customizable even on mobile &amp; tablet devices. Now all we need to do is
+update our devices to use this new DNS service. It introduces a bit of latency, but thankfully most mobile devices (laptops/tables/phones)
+configure DNS on a network by network basis, meaning your custom DNS service will only be activated when your on your home network.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>If you’ve been following along so far (or skipped ahead), you may have noticed a significant lack of code snippets or
+instructions for how to get this all setup.</p>
+
+<p>You’re in luck. All the steps required to customize a CoreOS based Home Media Server as I’ve described are codified in an Ignition project.</p>
+
+<div class="github-widget" data-repo="mediadepot/ignition"></div>
+
+<p>It’s all open source, and MIT licensed. Feel free to fork it, or add any features you think might be relevant, I’m open to PR’s.</p>
+
+<p>If you’re not familiar with Ignition, its the official configuration management solution for CoreOS.
+You can take the <a href="https://github.com/mediadepot/ignition/blob/master/ignition.yaml">configuration I wrote</a> and customize it for your needs. In addition the Ignition configuration references each feature
+separately, so you can disable any features that are irrelevant to your installation.</p>
+
+<p>Once you’ve modified the ignition.yaml file, you’ll need to “transpile” it to a JSON format that ignition actually understands.
+To do that, you’ll need to install the <a href="https://github.com/coreos/container-linux-config-transpiler/">Container Linux Config Transpiler</a>,
+but we’ll just use a simple Docker image with the Config Transpiler pre-installed.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run --rm -v $(pwd):/data keinos/coreos-transpiler ct -strict -pretty -in-file /data/ignition.yaml -out-file /data/ignition.json -files-dir=/data/files/  -platform=custom
+</code></pre></div></div>
+
+<p>With that all out of the way, lets get into the installation steps.</p>
+
+<ol>
+  <li>Download bootable CoreOS image from https://coreos.com/os/docs/latest/booting-with-iso.html</li>
+  <li>Create bootable USB/CD with contents of CoreOS image</li>
+  <li>Start server and boot from CoreOS USB/CD.</li>
+  <li>Determine the OS installation disk
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">sudo </span>fdisk <span class="nt">-l</span>
+
+ <span class="c"># note, the boot disk will probably be /dev/loop0</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Copy the ignition.json config bootstrap file that you created earlier to the file system (using CURL, or another USB)</li>
+  <li>Begin CoreOS installation on specified disk, <strong>NOTE: specified disk will be reformatted</strong>
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">sudo </span>coreos-install <span class="nt">-d</span> /dev/sda <span class="nt">-C</span> stable <span class="nt">-i</span> ignition.json
+</code></pre></div>    </div>
+  </li>
+  <li>On installation completion, remove bootable USB/CD</li>
+  <li>Restart server</li>
+  <li>Wait for CoreOS to start and <code class="language-plaintext highlighter-rouge">cloud-init</code> process to complete.</li>
+  <li>Go to <code class="language-plaintext highlighter-rouge">http://admin.depot.lan</code> to see Portainer dashboard and begin setup.</li>
+</ol>
+
+<p>I’ve been drinking the Docker kool-aid for years, and as a configuration management &amp; deployment tool it’s only gotten better and more popular.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration&amp;url=https://blog.thesparktree.com/ultimate-media-server-build-mediadepot"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/ultimate-media-server-build-mediadepot"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/ultimate-media-server-build-mediadepot"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/ultimate-media-server-build-mediadepot" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/ultimate-media-server-build-mediadepot'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_docker_hub.png)" href="/docker-hub-matrix-builds">
+            <section class="post">
+                <h2>Docker Hub - Matrix Builds and Tagging using Build Args</h2>
+                <p>If you're a heavy user of Docker, you're already intimately familiar with Docker Hub, the...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-log">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 2 - Build Log</h2>
+                <p>I’ve referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

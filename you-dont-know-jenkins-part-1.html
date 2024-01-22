@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>You Don't Know Jenkins - Part 1</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - You Don't Know Jenkins - Part 1" />
+    <meta name="twitter:description" content="Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-1" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - You Don't Know Jenkins - Part 1" />
+    <meta property="og:description" content="Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-1" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/you-dont-know-jenkins-part-1",
+        "image": "https://blog.thesparktree.com/assets/images/cover_jenkins.jpg",
+        "description": "Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_jenkins.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">You Don't Know Jenkins - Part 1</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2016-08-16">16 Aug 2016</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/Jenkins'>Jenkins</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/groovy'>Groovy</a>,
+                    
+                
+                    
+                       <a href='/tag/chef'>Chef</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
+It doesn’t matter if you’re team has 300 developers or 3, Jenkins can still make your life a lot easier.</p>
+
+<p>Having said all that, over time it can feel like the burdens out-weigh the benefits:</p>
+
+<ul>
+  <li>As your software grows you’ll find yourself cloning jobs to setup a new environments (test/stage/prod/etc), which quickly get out of sync with each other.</li>
+  <li>Refactoring a large number of jobs can be daunting using the config UI.</li>
+  <li>It’s easy for Jenkins (or any CI server) to become an untouchable <a href="https://martinfowler.com/bliki/SnowflakeServer.html">snowflake</a>.
+Its frightening to even contemplate upgrading your Jenkins version &amp; plugins, let alone building a new Jenkins installation.</li>
+  <li>Jenkins freestyle jobs work great for simple CI builds, but as you start using them for deployment &amp; orchestration, you’ll start to see their limits</li>
+</ul>
+
+<p>This series is all about solving these common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></strong></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></li>
+</ul>
+
+<h1 id="automated-jenkins-reinstall-using-chef">Automated Jenkins (Re)Install using Chef</h1>
+
+<p>You use configuration management (CM) systems to manage your production services, it only makes sense to do the same for other important internal systems.</p>
+
+<p>It doesn’t matter if you use Chef, Ansible, Puppet or Salt. Whichever CM system you choose should do the following:</p>
+
+<ul>
+  <li>Install Jenkins dependencies (like Java)</li>
+  <li>Configure server backups</li>
+  <li>Configure your Server firewall (eg. iptables)</li>
+  <li>Restrict SSH access &amp; other <a href="https://www.codelitt.com/blog/my-first-10-minutes-on-a-server-primer-for-securing-ubuntu/">“first 10 minute” tasks</a></li>
+  <li>Install Jenkins software</li>
+  <li>All company/third party tools required on the build server should be codified</li>
+  <li>Create a <strong>single</strong> automation administrator user on Jenkins</li>
+  <li>Install Jenkins plugins (and allow specific versions to be specified)</li>
+  <li>Credentials &amp; Secrets should be retrieved from a secure data source and configured in Jenkins.</li>
+  <li>Configure Jenkins (using xml files on the filesystem, or API calls)
+    <ul>
+      <li>security realm/authentication type (eg. LDAP)</li>
+      <li>execution nodes, slaves</li>
+      <li>installation directory</li>
+      <li>views</li>
+    </ul>
+  </li>
+  <li>Create a <strong>single</strong> bootstrap Jenkins DSL job that polls git for changes (we’ll talk about that below)</li>
+  <li>Completely disable <code class="language-plaintext highlighter-rouge">configure</code> access to the Jenkins server.</li>
+  <li>Configure your CM system to reconfigure the Jenkins server on a schedule (weekly/monthly you decide), which lets you continuously update to the latest stable release</li>
+</ul>
+
+<p>Here’s a few snippets of what this could look like in a Chef cookbook. If you’d like to jump straight to a fully working cookbook you can find it here: <a href="https://github.com/AnalogJ/you-dont-know-jenkins">AnalogJ/you-dont-know-jenkins</a>.
+Remember, none of this is unique to Chef, it can be re-implemented in any other CM system.</p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins"></div>
+
+<hr />
+
+<h2 id="cli-authentication">CLI Authentication</h2>
+
+<p>The first thing we need to do is specify our automation user credentials for the Jenkins server.
+This is a bit counter intuitive, as this is the first run and we haven’t created our automation user or turned on Authentication yet, but on subsequent Chef run this cookbook will fail if the automation user API credentials are not configured.
+Thankfully the Chef cookbook is smart enough to use the anonymous user first, and only use the specified credentials if required.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># TODO: this private key should be from secret databag</span>
+<span class="c1">#################################################</span>
+<span class="c1"># Install Jenkins</span>
+<span class="c1">#################################################</span>
+<span class="n">include_recipe</span> <span class="s1">'jenkins::master'</span>
+
+<span class="n">ruby_block</span> <span class="s1">'run as jenkins automation user'</span> <span class="k">do</span>
+  <span class="n">block</span> <span class="p">{</span>
+	<span class="n">key</span> <span class="o">=</span> <span class="no">OpenSSL</span><span class="o">::</span><span class="no">PKey</span><span class="o">::</span><span class="no">RSA</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">data_bag_item</span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">,</span> <span class="s1">'automation_user'</span><span class="p">)[</span><span class="s1">'cli_private_key'</span><span class="p">])</span>
+	<span class="n">node</span><span class="p">.</span><span class="nf">run_state</span><span class="p">[</span><span class="ss">:jenkins_private_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span><span class="p">.</span><span class="nf">to_pem</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="plugin-management">Plugin Management</h2>
+
+<p>Before we can do anything on this Jenkins server, we need to make sure it has the proper plugins installed (as some of the following steps will throw exceptions otherwise).
+When configuring Jenkins for the first time it can be easy to overlook the importance of controlling your plugin versions. Many a Jenkins server has failed spectacularly after an innocent plugin update. Unfortunately Jenkins doesn’t make it easy to lock or install old versions of plugins using its API (<a href="http://stackoverflow.com/a/34778163/1157633"><code class="language-plaintext highlighter-rouge">installNecessaryPlugins</code> doesn’t work</a>).
+I naively thought about <a href="https://groups.google.com/forum/#!topic/jenkinsci-users/hSwFfLeOPZo">implementing a package management system for Jenkins plugins</a>, however after taking some time to reflect, it became clear that re-inventing the wheel was unnecessary.
+Jenkins has already solved this problem for <a href="https://github.com/jenkinsci/gradle-jpi-plugin">Plugin developers</a>, and we can just piggy-back on top of what they use.</p>
+
+<p>It’s as simple as creating a <code class="language-plaintext highlighter-rouge">build.gradle</code> file in <code class="language-plaintext highlighter-rouge">$JENKINS_HOME</code>:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">buildscript</span> <span class="o">{</span>
+  <span class="n">repositories</span> <span class="o">{</span>
+	<span class="n">mavenCentral</span><span class="o">()</span>
+	<span class="n">maven</span> <span class="o">{</span>
+	  <span class="n">url</span> <span class="s1">'http://repo.jenkins-ci.org/releases/'</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+  <span class="n">dependencies</span> <span class="o">{</span>
+	<span class="n">classpath</span> <span class="s1">'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.1'</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'java'</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'org.jenkins-ci.jpi'</span>
+<span class="n">repositories</span> <span class="o">{</span>
+  <span class="n">maven</span> <span class="o">{</span>
+	<span class="n">url</span> <span class="s1">'http://repo.jenkins-ci.org/releases/'</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">dependencies</span> <span class="o">{</span>
+	  <span class="n">jenkinsPlugins</span><span class="o">([</span>
+		<span class="nl">group:</span> <span class="s1">''</span><span class="o">,</span>
+		<span class="nl">name:</span> <span class="s1">''</span><span class="o">,</span>
+		<span class="nl">version:</span> <span class="s1">''</span>
+	  <span class="o">])</span>
+<span class="o">}</span>
+
+<span class="n">task</span> <span class="nf">clean</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Delete</span><span class="o">){</span>
+  <span class="n">delete</span> <span class="s1">'plugins'</span>
+<span class="o">}</span>
+
+<span class="n">task</span> <span class="nf">install</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Copy</span><span class="o">,</span> <span class="nl">dependsOn:</span> <span class="o">[</span><span class="n">clean</span><span class="o">]){</span>
+  <span class="n">from</span> <span class="n">configurations</span><span class="o">.</span><span class="na">runtime</span>
+  <span class="n">include</span> <span class="s1">'**/*.hpi'</span>
+  <span class="n">into</span> <span class="s1">'plugins'</span>
+<span class="o">}</span>
+
+<span class="c1">// should be run with `gradle update --refresh-dependencies`</span>
+<span class="n">task</span> <span class="nf">update</span><span class="o">(</span><span class="nl">dependsOn:</span> <span class="o">[</span><span class="n">clean</span><span class="o">,</span> <span class="n">install</span><span class="o">])</span>
+</code></pre></div></div>
+
+<p>And then executing <code class="language-plaintext highlighter-rouge">gradle install</code> as part of your cookbook run.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span> <span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/build.gradle"</span> <span class="k">do</span>
+  <span class="n">source</span> <span class="s1">'jenkins_home_build_gradle.erb'</span>
+  <span class="n">variables</span><span class="p">(</span><span class="ss">:plugins</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'plugins'</span><span class="p">].</span><span class="nf">sort</span><span class="p">.</span><span class="nf">to_h</span><span class="p">)</span>
+  <span class="n">owner</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">mode</span> <span class="s1">'0640'</span>
+<span class="k">end</span>
+
+
+<span class="n">execute</span> <span class="s1">'install_plugins'</span> <span class="k">do</span>
+  <span class="n">command</span>  <span class="s1">'plugins.lock'</span>
+  <span class="no">EOH</span>
+  <span class="n">user</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">cwd</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Now you’ll have a <code class="language-plaintext highlighter-rouge">plugins.lock</code> file specifing all the plugins you used, and what version they’re at.
+Locking your plugins to specific versions is as easy as specifying the version in the <code class="language-plaintext highlighter-rouge">attributes.rb</code> file</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default['jenkins_wrapper_cookbook']['plugins']['job-dsl'] = {'version' =&gt; '1.48'}
+</code></pre></div></div>
+
+<p>You can even update your plugins to the latest version at any time by running <code class="language-plaintext highlighter-rouge">gradle --refresh-dependencies update &amp;&amp; gradle dependencies &gt; 'plugins.lock'</code> and then restarting Jenkins</p>
+
+<hr />
+
+<h2 id="automation-user">Automation User</h2>
+
+<p>Here’s where we create that automation user and populate its credentials.
+We’ll also set a flag on the filesystem so that we don’t continuously regenerate this Jenkins user.
+We only want to create a single Jenkins user via Chef, because all subsequent users will be defined in a config file, and won’t require a full Chef run to update.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Configure Jenkins automation user</span>
+<span class="c1">#################################################</span>
+<span class="c1"># TODO: this should be from an encrypted databag</span>
+<span class="c1"># make sure the plugins were installed before creating your first user because the mailer plugin is required</span>
+<span class="c1"># before we create any users https://github.com/chef-cookbooks/jenkins/issues/470</span>
+
+<span class="n">automation_user_public_key</span> <span class="o">=</span> <span class="no">OpenSSL</span><span class="o">::</span><span class="no">PKey</span><span class="o">::</span><span class="no">RSA</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">data_bag_item</span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">,</span> <span class="s1">'automation_user'</span><span class="p">)[</span><span class="s1">'cli_private_key'</span><span class="p">]).</span><span class="nf">public_key</span>
+<span class="n">automation_user_public_key_type</span> <span class="o">=</span> <span class="n">automation_user_public_key</span><span class="p">.</span><span class="nf">ssh_type</span>
+<span class="n">automation_user_public_key_data</span> <span class="o">=</span> <span class="p">[</span> <span class="n">automation_user_public_key</span><span class="p">.</span><span class="nf">to_blob</span> <span class="p">].</span><span class="nf">pack</span><span class="p">(</span><span class="s1">'m0'</span><span class="p">)</span>
+
+<span class="n">jenkins_user</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'automation_username'</span><span class="p">]</span> <span class="k">do</span>
+  <span class="n">full_name</span> <span class="s1">'Automation Account - used by chef to configure Jenkins &amp; create bootstrap job'</span>
+  <span class="n">public_keys</span> <span class="p">[</span><span class="s2">"</span><span class="si">#{</span><span class="n">automation_user_public_key_type</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">automation_user_public_key_data</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+  <span class="n">notifies</span> <span class="ss">:create</span><span class="p">,</span> <span class="s1">'file[flag_automation_user_created]'</span><span class="p">,</span> <span class="ss">:immediately</span>
+  <span class="n">not_if</span> <span class="p">{</span> <span class="o">::</span><span class="no">File</span><span class="p">.</span><span class="nf">exist?</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/.flags/automation_user_created"</span><span class="p">)}</span>
+<span class="k">end</span>
+
+<span class="n">file</span> <span class="s1">'flag_automation_user_created'</span> <span class="k">do</span>
+  <span class="n">path</span> <span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/.flags/automation_user_created"</span>
+  <span class="n">content</span> <span class="s1">''</span>
+  <span class="n">owner</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">mode</span> <span class="s1">'0644'</span>
+  <span class="n">action</span> <span class="ss">:nothing</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="dsl-bootstrap-job">DSL Bootstrap Job</h2>
+
+<p>Jenkins automation wouldn’t be complete without a way to define and manage Jenkins jobs as code. For that we’ll be looking at the
+<a href="https://github.com/jenkinsci/job-dsl-plugin">Job DSL Plugin</a>. The Job DSL lets you define any Jenkins job in a groovy DSL that’s
+easy to understand and well documented. You should store your DSL job definitions in a git repo so they are version controlled and
+easy to modify/update. Then all you need is a bootstrap job to pull down your DSL job definition repo and run it on your Jenkins server.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#################################################</span>
+<span class="err">#</span> <span class="n">Create</span> <span class="n">Bootstrap</span> <span class="n">job</span> <span class="n">using</span> <span class="n">script</span>
+<span class="err">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'dsl_bootstrap_job'</span> <span class="k">do</span>
+  <span class="n">command</span>  <span class="n">branchSpec</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.</span><span class="na">singletonList</span><span class="o">(</span><span class="k">new</span> <span class="n">BranchSpec</span><span class="o">(</span><span class="s2">"*/master"</span><span class="o">));</span>
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">submoduleconfig</span><span class="o">&gt;</span> <span class="n">submoduleConfig</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.&lt;</span><span class="n">submoduleconfig</span><span class="o">&gt;</span><span class="n">emptyList</span><span class="o">();</span>
+
+	<span class="c1">// If you're using a private git repo, you'll need to specify a credential id here:</span>
+	<span class="kt">def</span> <span class="n">credential_id</span> <span class="o">=</span> <span class="s1">''</span> <span class="c1">// maybe 'b2d9219b-30a2-41dd-9da1-79308aba3106'</span>
+
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">userremoteconfig</span><span class="o">&gt;</span> <span class="n">userRemoteConfig</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.</span><span class="na">singletonList</span><span class="o">(</span><span class="k">new</span> <span class="n">UserRemoteConfig</span><span class="o">(</span><span class="n">projectURL</span><span class="o">,</span> <span class="s1">''</span><span class="o">,</span> <span class="s1">''</span><span class="o">,</span> <span class="n">credential_id</span><span class="o">))</span>
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">gitscmextension</span><span class="o">&gt;</span> <span class="n">gitScmExt</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">gitscmextension</span><span class="o">&gt;();</span>
+	<span class="n">gitScmExt</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RelativeTargetDirectory</span><span class="o">(</span><span class="s1">'script'</span><span class="o">))</span>
+	<span class="kt">def</span> <span class="n">scm</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GitSCM</span><span class="o">(</span><span class="n">userRemoteConfig</span><span class="o">,</span> <span class="n">branchSpec</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="n">submoduleConfig</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">gitScmExt</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">setScm</span><span class="o">(</span><span class="n">scm</span><span class="o">)</span>
+
+	<span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">ExecuteDslScripts</span><span class="o">(</span>
+	  <span class="k">new</span> <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">ExecuteDslScripts</span><span class="o">.</span><span class="na">ScriptLocation</span><span class="o">(</span>
+		  <span class="s1">'false'</span><span class="o">,</span>
+		  <span class="s2">"script/jenkins_job_dsl/simple/tutorial_dsl.groovy"</span><span class="o">,</span>
+		  <span class="kc">null</span>
+	  <span class="o">),</span>
+	  <span class="kc">false</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">RemovedJobAction</span><span class="o">.</span><span class="na">DELETE</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">RemovedViewAction</span><span class="o">.</span><span class="na">DELETE</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">LookupStrategy</span><span class="o">.</span><span class="na">JENKINS_ROOT</span><span class="o">,</span>
+	  <span class="s1">''</span>
+	<span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">buildersList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">builder</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">save</span><span class="o">()</span>
+
+	<span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">restart</span><span class="o">()</span>
+  <span class="n">EOH</span>
+  <span class="n">notifies</span> <span class="o">:</span><span class="n">execute</span><span class="o">,</span> <span class="s1">'jenkins_command[run_job_dsl]'</span>
+<span class="n">end</span>
+
+<span class="err">#</span> <span class="n">execute</span> <span class="n">the</span> <span class="n">job</span> <span class="n">using</span> <span class="n">the</span> <span class="n">cli</span>
+<span class="n">jenkins_command</span> <span class="s1">'run_job_dsl'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="s2">"build '#{node['jenkins_wrapper_cookbook']['settings']['dsl_job_name']}'"</span>
+  <span class="n">action</span> <span class="o">:</span><span class="n">nothing</span>
+<span class="n">end</span>
+</code></pre></div></div>
+
+<p>At this point we’ve defined a Jenkins bootstrap job that runs on a daily schedule, clones our DSL defintion repo (using SSH credentials if required)
+and creates/updates the jobs on the Jenkins server.</p>
+
+<hr />
+
+<h2 id="configure-jenkins">Configure Jenkins</h2>
+<p>Configuring Jenkins requires a thorough look at the <a href="http://javadoc.jenkins-ci.org/jenkins/model/Jenkins.html">Jenkins</a> <a href="http://javadoc.jenkins-ci.org/hudson/model/Hudson.html">documentation</a>.
+Any setting you can change via the web UI can be set via Jenkins groovy code.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Configure Jenkins Installation</span>
+<span class="c1">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'jenkins_configure'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="o">&lt;&lt;-</span><span class="no">EOH</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/^ {4}/</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span><span class="sh">
+    import jenkins.model.Jenkins;
+    import jenkins.model.*;
+    import org.jenkinsci.main.modules.sshd.*;
+
+    instance = Jenkins.instance
+    instance.setDisableRememberMe(true)
+    instance.setNumExecutors(</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'master_num_executors'</span><span class="p">]</span><span class="si">}</span><span class="sh">)
+    instance.setSystemMessage('</span><span class="si">#{</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">.</span><span class="nf">capitalize</span><span class="si">}</span><span class="sh"> Jenkins Server - Managed by Chef Cookbook Version </span><span class="si">#{</span><span class="n">run_context</span><span class="p">.</span><span class="nf">cookbook_collection</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">].</span><span class="nf">metadata</span><span class="p">.</span><span class="nf">version</span><span class="si">}</span><span class="sh"> - Converged on ' + (new Date().format('dd-MM-yyyy')))
+
+    location = JenkinsLocationConfiguration.get()
+    location.setAdminAddress("</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">")
+    location.setUrl("http://</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_host_name'</span><span class="p">]</span><span class="si">}</span><span class="sh">/")
+    location.save()
+
+    sshd = SSHD.get()
+    sshd.setPort(</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'sshd_port'</span><span class="p">]</span><span class="si">}</span><span class="sh">)
+    sshd.save()
+
+    def mailer = instance.getDescriptor("hudson.tasks.Mailer")
+    mailer.setReplyToAddress("</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">")
+    mailer.setSmtpHost("localhost")
+    mailer.setDefaultSuffix("@example.com")
+    mailer.setUseSsl(false)
+    mailer.setSmtpPort("25")
+    mailer.setCharset("UTF-8")
+    instance.save()
+
+    def gitscm = instance.getDescriptor('hudson.plugins.git.GitSCM')
+    gitscm.setGlobalConfigName('Jenkins Build')
+    gitscm.setGlobalConfigEmail('</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">')
+    instance.save()
+
+</span><span class="no">  EOH</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="authentication-and-authorization">Authentication (and Authorization)</h2>
+
+<ul>
+  <li>Authentication verifies who you are.</li>
+  <li>Authorization verifies what you can do.</li>
+</ul>
+
+<p>One of the great things about Jenkins is that you can specify each independently. Meaning you can offload authentication to your LDAP server, while configuring authorization on a per-job basis if you wanted.</p>
+
+<p>At this point in the guide, all we’re going to do is enable LDAP Authentication and specify Authorization for the automation user. All other user creation and authorization will be done in Part 2 of this guide, rather than in this Chef cookbook. There’s two reasons for this:</p>
+
+<ul>
+  <li>Chef client runs restart the Jenkins service, which we don’t want to do very often.</li>
+  <li>We want to make sure we can add Jenkins users at any time, and they should be able to login almost immediately.</li>
+</ul>
+
+<p>Here’s a LDAP Authentication strategy:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Enable Jenkins Authentication</span>
+<span class="c1">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'enable_active_directory_authentication'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="o">&lt;&lt;-</span><span class="no">EOH</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/^ {4}/</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span><span class="sh">
+    import jenkins.model.*
+    import hudson.security.*
+    import hudson.plugins.active_directory.*
+
+    def instance = Jenkins.getInstance()
+
+    //set Active Directory security realm
+    String domain = 'my.domain.example.com'
+    String site = 'site'
+    String server = '192.168.1.1:3268'
+    String bindName = 'account@my.domain.com'
+    String bindPassword = 'password'
+    ad_realm = new ActiveDirectorySecurityRealm(domain, site, bindName, bindPassword, server)
+    instance.setSecurityRealm(ad_realm)
+
+    //set Project Matrix auth strategy
+    def strategy = new hudson.security.ProjectMatrixAuthorizationStrategy()
+    strategy.add(Permission.fromId('hudson.model.Hudson.Administer'),'</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'automation_username'</span><span class="p">]</span><span class="si">}</span><span class="sh">')
+    instance.setAuthorizationStrategy(strategy)
+
+    instance.save()
+</span><span class="no">  EOH</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h1 id="fin">Fin.</h1>
+
+<p>At this point we have a completely automated Jenkins server.</p>
+
+<ul>
+  <li>Installed all the software required for Jenkins</li>
+  <li>Jenkins is installed and configured</li>
+  <li>LDAP authentication is enabled</li>
+  <li>We have created an automation user (with credentials) so subsequent CM runs can update Jenkins server configuration</li>
+  <li>All plugins are managed, and can be locked to an old version easily.</li>
+  <li>All Jenkins job configuration is defined in code, and jobs are populated via a bootstrap job.</li>
+  <li>No more precious snowflake. You should feel comfortable completely destroying your Jenkins server and rebuilding it at any time.</li>
+  <li>The only thing left to do is add additional Jenkins users and configure some more complex Jenkins DSL Jobs.</li>
+</ul>
+
+<p>You’ll be tempted to define multiple users and jobs in your Jenkins CM script. Don’t.</p>
+
+<ul>
+  <li>Most CM systems don’t really understand Jenkins jobs, they just take a XML blob and write it to the filesystem. Jenkins Job XML is verbose and disgusting, and not designed to be edited manually.</li>
+  <li>Storing jobs and users in your CM script mean that changes will need to be done through the CM system, which usually restarts the Jenkins service.. not something you want to do often on a busy Jenkins server.</li>
+  <li>Defining complex Jenkins jobs in groovy is still a bit nasty, with very little documentation.</li>
+  <li>Thankfully this is all solved via the Jenkins DSL which we’ll talk about in Part 2 - Maintainable Jenkins Jobs using Job DSL (Coming Soon)</li>
+</ul>
+
+<p>All code found in this series is available in my github repo: AnalogJ/you-dont-know-jenkins.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=You Don't Know Jenkins - Part 1&amp;url=https://blog.thesparktree.com/you-dont-know-jenkins-part-1"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/you-dont-know-jenkins-part-1"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/you-dont-know-jenkins-part-1"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/you-dont-know-jenkins-part-1" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/you-dont-know-jenkins-part-1'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'You Don&#39;t Know Jenkins - Part 1';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_jenkins.jpg)" href="/you-dont-know-jenkins-part-2">
+            <section class="post">
+                <h2>You Don't Know Jenkins - Part 2</h2>
+                <p>Jenkins is great. It's the most popular CI/CD tool, with an incredibly active community writing...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_github.png)" href="/continuous-delivery-for-versioned">
+            <section class="post">
+                <h2>Continuous Delivery for Versioned Artifacts/Libraries (Npm, Chef, Gems, Bower, Pip, etc)</h2>
+                <p>So you’re the devops/automation guy or gal on your team. You live and die by...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

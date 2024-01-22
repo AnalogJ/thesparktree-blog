@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Devops for Startups & Small Teams</title>
+	  <link>/devops-for-startups</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-09-13T04:19:33-05:00</pubDate>
+	  <guid>/devops-for-startups</guid>
+	  <description><![CDATA[
+	     <p>When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.</p>
+
+<p>The following are the quick and dirty Devops patterns &amp; procedures that I put in place before working on any new system.
+I primarily focus on free tools and services because of how cheap I am, so feel free to replace them comparable tools of your choice,
+you big spender, you.</p>
+
+<h1 id="before-your-first-line">Before your first line</h1>
+<ul>
+  <li><strong>Store your code in Git</strong> - <a href="https://github.com/">Github</a> <em>[free open source]</em>/<a href="https://bitbucket.org/">Bitbucket</a>
+<em>[free private]</em>/<a href="https://www.gitlab.com">GitLab</a> <em>[free private]</em>  -
+there shouldn’t be more to say here other than, store your source in a VCS from day 1.</li>
+  <li>Design your app with <strong>multiple environments</strong> in mind. You should be able to switch between Local/Stage/Production development
+with no code changes, just configuration changes (via environmental variables or a config file). I love <a href="https://github.com/indexzero/nconf">nconf</a>
+for NodeJS, but most languages have something similar.</li>
+  <li><strong>Isolate your configuration.</strong> Its probably not necessary to move your configuration into a compeltely separate system yet,
+but make sure you can easily if you scale. Sprinkling your configuration in multiple places is just asking for an application re-write.</li>
+  <li><strong>Follow a branching pattern.</strong> At it’s simplest it could just be 2 branches, “master” and “develop” or you could go nuts
+and follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">gitflow</a>. It doesn’t matter, as long as you follow
+the damn thing, and don’t just commit directly to master. Setup branch protection to disable commits to “master”.
+This is going to be important later when you start doing Continuous Integration (CI). Bad habits are hard to break.</li>
+  <li><strong>Setup CI</strong>. You don’t need to go full throttle with a standalone Jenkins server. Just make sure your code is compiling
+in a clean-room environment, that doesn’t include the dozens of apps and libraries you already have installed on your
+dev machine. <a href="https://travis-ci.org/">TravisCI</a> <em>[free]</em> and <a href="https://circleci.com">CircleCI</a> <em>[free]</em> are great, and integrate
+with Github/Bitbucket. At a bare minimum build your artifacts inside a clean Docker container.</li>
+  <li>Setup an <strong>issue tracker/project management board</strong>. <a href="https://waffle.io">Waffle.io</a> <em>[free]</em> is great and integrates with Github,
+but you may be able to just get away with <a href="https://help.github.com/articles/creating-a-project-board/">Github Project Boards</a> <em>[free]</em> to start</li>
+  <li>Make some Architecture decisions:
+    <ul>
+      <li>Decide if you can get away with a <a href="https://github.com/myles/awesome-static-generators">static frontend</a> or SPA
+  architecture for your front end. If you can, you’ll get infinite scaling of your front-end for almost free.
+  Distributing static files is a solved problem–CDN’s have been doing it for years. <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em>
+  is your <del>cheapest</del> best friend. Pairing it with Github pages [free] is a poor developer’s dream.</li>
+      <li>Can you go Serverless/FAAS for your backend? You no longer need to maintain or monitor hardware, you get infinite*
+  scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="before-your-first-staging-environment-deploy">Before your first staging environment deploy</h1>
+<ul>
+  <li>Have a <strong>unit test suite</strong> - Yeah yeah, TDD. But be honest, when’s the last time you started a project with TDD? Still, you’ll thank
+yourself when you come back to your code after 2 weeks, or even just a couple of days. It’s also a pre-req for some of the next points.</li>
+  <li><strong>Code Coverage/Code Quality</strong> tools - When I feel that I have an application that can actually run on a server is when I
+know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
+cold water, they help stifle that feeling of euphoria that stops you from really digging into your code. A nice UI really helps
+and I’m a big fan of <a href="https://coveralls.io/">Coveralls.io</a> <em>[free open source]</em> and <a href="https://codecov.io/">CodeCov</a> <em>[free open source]</em>,
+both have great integration with SCM’s and CI platforms.</li>
+  <li><strong>Forward your logs</strong> to a centralized logging system (Cloud-watch is fine, if you don’t plan on actually debugging your app.)
+<a href="https://www.loggly.com">Loggly</a> <em>[free]</em> is great. Make sure you forward environment data and user data to your log aggregator as well, to give your
+logs context.</li>
+  <li><strong>Use a CDN</strong> like <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em> in front of your site if you haven’t already. You definitely don’t have the traffic yet
+that requires it, but don’t wait until you’re ready to launch. Its time-consuming, error prone and can cause DNS downtime,
+even if you don’t misconfigure something. It’s not something you want to leave to the last minute.</li>
+  <li><strong>Write documentation/setup instructions</strong> as you start building your Stage environment. Your documentation should always
+be relative to Stage, <strong>NOT</strong> Production. You will forget. You will copy and paste from your docs, and you will run a
+destructive operation against your production database. <a href="https://np.reddit.com/r/cscareerquestions/comments/6ez8ag/accidentally_destroyed_production_database_on/">Cough..</a>
+    <ul>
+      <li>List all the weird/one-off configuration you had to do to get your staging server working. New accounts on 3rd
+  party services, ip whitelisting, database population, you’ll need this checklist when you spin up Production, and
+  finding out whats different between Prod and Stage is going to be a huge pain without it. Infrastructure-as-code/Configuration Management
+   is your friend here, but may not be enough by itself.</li>
+    </ul>
+  </li>
+  <li><strong>Follow modern infrastructure practices.</strong> <a href="https://www.terraform.io/">Infrastructure-as-code</a> and <a href="https://www.chef.io/chef/">Configuration</a> <a href="https://puppet.com/">Management</a> are buzzwords for a reason.
+And they don’t have to be super complicated. You don’t need to design the Mona Lisa of Chef cookbooks. At a bare minimum
+make sure that you can spin up a whole environment with the click of a single button. Automation is the key here. You’ll
+be doing this a lot more than you’d expect, so take some time and do it right. When you find yourself under the gun, needing
+to scale your environment, you’ll be thankful.</li>
+  <li><strong>Version your code.</strong> Create releases, tag your software, its incredibly useful when debugging what software your actually
+running in different environments. It also makes it much easier to deploy previous versions when you want to do regression
+testing, or rollback a broken deployment. Check out something like <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>
+which can build, test, tag, merge branches and release your software automatically.</li>
+  <li><strong>Setup Continuous Deployments</strong> - If you’re already using a CI platform to test your code, why not automatically deploy your
+validated code to your Staging environment? Depending on your application architecture, this may be a bit complicated, but
+having your CI tested code deployed to a staging environment automatically is going to drastically improve your development
+cadence while still ensuring stability. And if your stability is being effected, prioritize your tests, they’re supposed to
+catch 90% of your errors before they even get to a staging env.</li>
+</ul>
+
+<h1 id="before-your-first-prod-deploy">Before your first prod deploy</h1>
+<ul>
+  <li><strong>Automate your backups.</strong> This is probably obvious to everyone, but a backup process without a verified restore process is
+useless. Try to setup a weekly backup and restore of your staging environment database. Use the same code/process you would in Production.</li>
+  <li>Write a script to <strong>populate your database</strong> with test data. Massive amounts of test data. <a href="https://github.com/marak/Faker.js/">Faker.js</a>
+has an API. Check how your Staging environment actually handles real data, not just the toy amounts you’ve thrown in.</li>
+</ul>
+
+<h1 id="once-your-application-is-live">Once your application is live</h1>
+<ul>
+  <li>Track the versions of your <strong>application’s dependencies, and their dependencies</strong>,
+<a href="https://en.wikipedia.org/wiki/Turtles_all_the_way_down">it’s turtles all the way down</a>. This is to ensure that you know
+what software makes up your stack, but also so you can be notified of bug fixes and security issues.</li>
+  <li>Make sure you have <strong>monitoring</strong> in place.
+    <ul>
+      <li><a href="https://www.pingdom.com/free">Pingdom</a> <em>[free]</em> will let notify you if your application is inaccessible externally.</li>
+      <li>Track system metrics like CPU and memory load on your servers. <a href="https://newrelic.com/">NewRelic</a> <em>[free]</em>,
+  <a href="https://www.librato.com/">Librato</a> <em>[free]</em> and <a href="https://cloud.google.com/stackdriver/">StackDriver</a> <em>[paid]</em> work well.</li>
+      <li>Configure a user analytics &amp; monitoring solution like <a href="https://www.google.com/analytics/">Google Analytics</a> <em>[free]</em>. Setup alerts when your traffic
+  increases or drops more than 15%.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This is just my checklist, but I’d love to hear yours. Is there any devopsy related tasks you think I’m missing?</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Devops for Startups & Small Teams</title>
+	  <link>/devops-for-startups</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-09-13T04:19:33-05:00</pubDate>
+	  <guid>/devops-for-startups</guid>
+	  <description><![CDATA[
+	     <p>When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.</p>
+
+<p>The following are the quick and dirty Devops patterns &amp; procedures that I put in place before working on any new system.
+I primarily focus on free tools and services because of how cheap I am, so feel free to replace them comparable tools of your choice,
+you big spender, you.</p>
+
+<h1 id="before-your-first-line">Before your first line</h1>
+<ul>
+  <li><strong>Store your code in Git</strong> - <a href="https://github.com/">Github</a> <em>[free open source]</em>/<a href="https://bitbucket.org/">Bitbucket</a>
+<em>[free private]</em>/<a href="https://www.gitlab.com">GitLab</a> <em>[free private]</em>  -
+there shouldn’t be more to say here other than, store your source in a VCS from day 1.</li>
+  <li>Design your app with <strong>multiple environments</strong> in mind. You should be able to switch between Local/Stage/Production development
+with no code changes, just configuration changes (via environmental variables or a config file). I love <a href="https://github.com/indexzero/nconf">nconf</a>
+for NodeJS, but most languages have something similar.</li>
+  <li><strong>Isolate your configuration.</strong> Its probably not necessary to move your configuration into a compeltely separate system yet,
+but make sure you can easily if you scale. Sprinkling your configuration in multiple places is just asking for an application re-write.</li>
+  <li><strong>Follow a branching pattern.</strong> At it’s simplest it could just be 2 branches, “master” and “develop” or you could go nuts
+and follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">gitflow</a>. It doesn’t matter, as long as you follow
+the damn thing, and don’t just commit directly to master. Setup branch protection to disable commits to “master”.
+This is going to be important later when you start doing Continuous Integration (CI). Bad habits are hard to break.</li>
+  <li><strong>Setup CI</strong>. You don’t need to go full throttle with a standalone Jenkins server. Just make sure your code is compiling
+in a clean-room environment, that doesn’t include the dozens of apps and libraries you already have installed on your
+dev machine. <a href="https://travis-ci.org/">TravisCI</a> <em>[free]</em> and <a href="https://circleci.com">CircleCI</a> <em>[free]</em> are great, and integrate
+with Github/Bitbucket. At a bare minimum build your artifacts inside a clean Docker container.</li>
+  <li>Setup an <strong>issue tracker/project management board</strong>. <a href="https://waffle.io">Waffle.io</a> <em>[free]</em> is great and integrates with Github,
+but you may be able to just get away with <a href="https://help.github.com/articles/creating-a-project-board/">Github Project Boards</a> <em>[free]</em> to start</li>
+  <li>Make some Architecture decisions:
+    <ul>
+      <li>Decide if you can get away with a <a href="https://github.com/myles/awesome-static-generators">static frontend</a> or SPA
+  architecture for your front end. If you can, you’ll get infinite scaling of your front-end for almost free.
+  Distributing static files is a solved problem–CDN’s have been doing it for years. <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em>
+  is your <del>cheapest</del> best friend. Pairing it with Github pages [free] is a poor developer’s dream.</li>
+      <li>Can you go Serverless/FAAS for your backend? You no longer need to maintain or monitor hardware, you get infinite*
+  scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="before-your-first-staging-environment-deploy">Before your first staging environment deploy</h1>
+<ul>
+  <li>Have a <strong>unit test suite</strong> - Yeah yeah, TDD. But be honest, when’s the last time you started a project with TDD? Still, you’ll thank
+yourself when you come back to your code after 2 weeks, or even just a couple of days. It’s also a pre-req for some of the next points.</li>
+  <li><strong>Code Coverage/Code Quality</strong> tools - When I feel that I have an application that can actually run on a server is when I
+know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
+cold water, they help stifle that feeling of euphoria that stops you from really digging into your code. A nice UI really helps
+and I’m a big fan of <a href="https://coveralls.io/">Coveralls.io</a> <em>[free open source]</em> and <a href="https://codecov.io/">CodeCov</a> <em>[free open source]</em>,
+both have great integration with SCM’s and CI platforms.</li>
+  <li><strong>Forward your logs</strong> to a centralized logging system (Cloud-watch is fine, if you don’t plan on actually debugging your app.)
+<a href="https://www.loggly.com">Loggly</a> <em>[free]</em> is great. Make sure you forward environment data and user data to your log aggregator as well, to give your
+logs context.</li>
+  <li><strong>Use a CDN</strong> like <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em> in front of your site if you haven’t already. You definitely don’t have the traffic yet
+that requires it, but don’t wait until you’re ready to launch. Its time-consuming, error prone and can cause DNS downtime,
+even if you don’t misconfigure something. It’s not something you want to leave to the last minute.</li>
+  <li><strong>Write documentation/setup instructions</strong> as you start building your Stage environment. Your documentation should always
+be relative to Stage, <strong>NOT</strong> Production. You will forget. You will copy and paste from your docs, and you will run a
+destructive operation against your production database. <a href="https://np.reddit.com/r/cscareerquestions/comments/6ez8ag/accidentally_destroyed_production_database_on/">Cough..</a>
+    <ul>
+      <li>List all the weird/one-off configuration you had to do to get your staging server working. New accounts on 3rd
+  party services, ip whitelisting, database population, you’ll need this checklist when you spin up Production, and
+  finding out whats different between Prod and Stage is going to be a huge pain without it. Infrastructure-as-code/Configuration Management
+   is your friend here, but may not be enough by itself.</li>
+    </ul>
+  </li>
+  <li><strong>Follow modern infrastructure practices.</strong> <a href="https://www.terraform.io/">Infrastructure-as-code</a> and <a href="https://www.chef.io/chef/">Configuration</a> <a href="https://puppet.com/">Management</a> are buzzwords for a reason.
+And they don’t have to be super complicated. You don’t need to design the Mona Lisa of Chef cookbooks. At a bare minimum
+make sure that you can spin up a whole environment with the click of a single button. Automation is the key here. You’ll
+be doing this a lot more than you’d expect, so take some time and do it right. When you find yourself under the gun, needing
+to scale your environment, you’ll be thankful.</li>
+  <li><strong>Version your code.</strong> Create releases, tag your software, its incredibly useful when debugging what software your actually
+running in different environments. It also makes it much easier to deploy previous versions when you want to do regression
+testing, or rollback a broken deployment. Check out something like <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>
+which can build, test, tag, merge branches and release your software automatically.</li>
+  <li><strong>Setup Continuous Deployments</strong> - If you’re already using a CI platform to test your code, why not automatically deploy your
+validated code to your Staging environment? Depending on your application architecture, this may be a bit complicated, but
+having your CI tested code deployed to a staging environment automatically is going to drastically improve your development
+cadence while still ensuring stability. And if your stability is being effected, prioritize your tests, they’re supposed to
+catch 90% of your errors before they even get to a staging env.</li>
+</ul>
+
+<h1 id="before-your-first-prod-deploy">Before your first prod deploy</h1>
+<ul>
+  <li><strong>Automate your backups.</strong> This is probably obvious to everyone, but a backup process without a verified restore process is
+useless. Try to setup a weekly backup and restore of your staging environment database. Use the same code/process you would in Production.</li>
+  <li>Write a script to <strong>populate your database</strong> with test data. Massive amounts of test data. <a href="https://github.com/marak/Faker.js/">Faker.js</a>
+has an API. Check how your Staging environment actually handles real data, not just the toy amounts you’ve thrown in.</li>
+</ul>
+
+<h1 id="once-your-application-is-live">Once your application is live</h1>
+<ul>
+  <li>Track the versions of your <strong>application’s dependencies, and their dependencies</strong>,
+<a href="https://en.wikipedia.org/wiki/Turtles_all_the_way_down">it’s turtles all the way down</a>. This is to ensure that you know
+what software makes up your stack, but also so you can be notified of bug fixes and security issues.</li>
+  <li>Make sure you have <strong>monitoring</strong> in place.
+    <ul>
+      <li><a href="https://www.pingdom.com/free">Pingdom</a> <em>[free]</em> will let notify you if your application is inaccessible externally.</li>
+      <li>Track system metrics like CPU and memory load on your servers. <a href="https://newrelic.com/">NewRelic</a> <em>[free]</em>,
+  <a href="https://www.librato.com/">Librato</a> <em>[free]</em> and <a href="https://cloud.google.com/stackdriver/">StackDriver</a> <em>[paid]</em> work well.</li>
+      <li>Configure a user analytics &amp; monitoring solution like <a href="https://www.google.com/analytics/">Google Analytics</a> <em>[free]</em>. Setup alerts when your traffic
+  increases or drops more than 15%.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This is just my checklist, but I’d love to hear yours. Is there any devopsy related tasks you think I’m missing?</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>State of the eBook ecosystem</title>
+	  <link>/state-of-the-ebook</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-08-31T04:19:33-05:00</pubDate>
+	  <guid>/state-of-the-ebook</guid>
+	  <description><![CDATA[
+	     <p>Here’s what I’m looking for.</p>
+
+<ul>
+  <li><strong>An always available library</strong>. I want my books stored in the cloud somewhere, and always available. I mostly end up reading books when I’m traveling/on flights, and being able to access my library on the go is a necessity.</li>
+  <li>I want to have control of my books; not learn to trust yet another cloud storage platform that may not be around in a couple of months/years. I want to <strong>store my books on a cloud storage platform that I already trust</strong>, like Dropbox or Google Drive.</li>
+  <li>Simple <strong>Drag &amp; Drop uploading</strong>. I don’t want to upload my books individually. I should be a able to drag and drop my library into a Dropbox folder and have them magically show up in my library. Integrate with my cloud storage provider.</li>
+  <li>Automatic metadata. I judge my books by their cover. If my ebook is missing cover art or metadata I’m less likely to read it or even remember what it’s about. When I add a book to the library it should <strong>get the books’ metadata automatically</strong>.</li>
+  <li><strong>Simple</strong>. While I love the customizability and power of Calibre, it can be a little much, especially for my Mom and Dad. I want something simple to use, that works with little to no configuration.</li>
+  <li><strong>Calibre support</strong>. Calibre is the standard ebook manager for good reason. Its incredibly powerful, and I should be able to import/export/manage my cloud library from Calibre, just like I would a physical ebook reader.</li>
+</ul>
+
+<p>Before you start mentioning Calibre Web Server, stop. I don’t want to open up ports on my home router. I don’t want to manage updates on an always-on server. I don’t think its something my Mom would be able to setup.</p>
+
+<p>Its been almost 4 years since I shut down my cloud ebook manager startup which had almost all of these features. I’ve kept hoping that someone else would come up with a viable alternative, and I could just pay them.</p>
+
+<p>These are the features I want. I’ve spending years searching for an alternative since I shut down QuietThyme, but I’ve grown impatient.</p>
+
+<p>I’ve completely re-written QuietThyme with these features at it’s core. It was always a service that I built for myself, but I don’t think I’m alone in my unhappiness with the current state of the ebook ecosystem.</p>
+
+<p>I’m looking for other ebook lovers that wish this shit just worked. If you’re willing to be a beta tester/guinea pig/developer/cofounder, <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2aknGDvbJ5J0MlLSBc4Mc9y4RPqK5In-EL--ZscwbMvcUSg/viewform?usp=sf_link">please get in touch</a>.</p>
+
+<p>-Jason</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

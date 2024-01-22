@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Building Multi-Arch Docker Images via Github Actions</title>
+	  <link>/docker-multi-arch-github-actions</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2022-06-11T04:19:33-05:00</pubDate>
+	  <guid>/docker-multi-arch-github-actions</guid>
+	  <description><![CDATA[
+	     <p>I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image.
+While its well known that Docker’s <code class="language-plaintext highlighter-rouge">buildx</code> tooling supports multi-arch builds, it can be complicated getting it working correctly
+via Github Actions.</p>
+
+<h2 id="what-is-a-multi-arch-docker-image">What is a Multi-Arch Docker Image?</h2>
+
+<p>Before we go any further, we should discuss how Docker Images (&amp; Multi-Arch Docker Images) actually work.</p>
+
+<blockquote>
+  <p>Each Docker image is represented by a manifest. A manifest is a JSON file containing all the information about a Docker 
+image. This includes references to each of its layers, their corresponding sizes, the hash of the image, its size and 
+also the platform it’s supposed to work on. This manifest can then be referenced by a tag so that it’s easy to find.</p>
+</blockquote>
+
+<p>A multi-arch image is actually just a manifest that contains multiple entries, 1 for each platform.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-multi-arch-manifest.png" alt="docker multi-arch manifest" style="max-height: 500px;" /></p>
+
+<p>To learn more, see this <a href="https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/">Docker blog post</a></p>
+
+<h2 id="basic-docker-build-via-github-actions">Basic Docker Build via Github Actions</h2>
+
+<p>Now that we know what a multi-arch docker image looks like under the hood, lets get started with a simple Github Action
+to build a Docker image.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Docker</span>
+<span class="na">on</span><span class="pi">:</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">branches</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">main'</span><span class="pi">]</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">docker</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Checkout repository</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Login to DockerHub</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/login-action@v2</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">username</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_USERNAME }}</span>
+          <span class="na">password</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_TOKEN }}</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build and push</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/build-push-action@v3</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">push</span><span class="pi">:</span> <span class="kc">true</span>
+          <span class="na">tags</span><span class="pi">:</span> <span class="s">user/app:latest</span>
+</code></pre></div></div>
+
+<h2 id="migrate-to-buildx">Migrate to Buildx</h2>
+
+<p>The first thing we need to do is add the <code class="language-plaintext highlighter-rouge">setup-buildx-action</code> step.</p>
+
+<blockquote>
+  <p>Docker Buildx is a CLI plugin that extends the docker command with the full support 
+of the features provided by Moby BuildKit builder toolkit. It provides the same 
+user experience as docker build with many new features like creating scoped 
+builder instances and building against multiple nodes concurrently.</p>
+</blockquote>
+
+<p>Unfortunately Buildx is not enabled by default, so even though <code class="language-plaintext highlighter-rouge">docker</code> is available in our Github Action VM, we’ll need to enable <code class="language-plaintext highlighter-rouge">buildx</code> mode.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:09:34.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:10:12.000000000 -0700
+</span><span class="p">@@ -1,20 +1,22 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up Docker Buildx
++        uses: docker/setup-buildx-action@v2
+</span>       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<h2 id="qemu-support">QEMU Support</h2>
+<p>After enabling <code class="language-plaintext highlighter-rouge">buildx</code>, the next change we need to make is to enable <code class="language-plaintext highlighter-rouge">QEMU</code>.</p>
+
+<blockquote>
+  <p>QEMU is a free and open-source emulator. It can interoperate with Kernel-based 
+Virtual Machine (KVM) to run virtual machines at near-native speed. QEMU can also 
+do emulation for user-level processes, allowing applications compiled for one 
+architecture to run on another</p>
+</blockquote>
+
+<p>GitHub Actions only provides a small set of host system types: <a href="https://github.com/actions/virtual-environments"><code class="language-plaintext highlighter-rouge">windows</code>, <code class="language-plaintext highlighter-rouge">macos</code> &amp; <code class="language-plaintext highlighter-rouge">ubuntu</code></a> – all running on <code class="language-plaintext highlighter-rouge">x86_64</code> architecture. 
+If you need to compile binaries/Docker images for other OS’s or architectures, you can use the <code class="language-plaintext highlighter-rouge">QEMU</code> Github Action.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:32:32.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:32:56.000000000 -0700
+</span><span class="p">@@ -1,22 +1,26 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up QEMU
++        uses: docker/setup-qemu-action@v2
++        with:
++          platforms: 'arm64,arm'
+</span>       - name: Set up Docker Buildx
+         uses: docker/setup-buildx-action@v2
+       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: you must add the <code class="language-plaintext highlighter-rouge">QEMU</code> step before the <code class="language-plaintext highlighter-rouge">buildx</code> step. 
+By default <code class="language-plaintext highlighter-rouge">QEMU</code> will create almost a dozen vm’s. You’ll want to limit it to just the architectures you care about.</p>
+</blockquote>
+
+<h2 id="architecture-specific-dockerfile-instructions">Architecture Specific Dockerfile Instructions</h2>
+
+<p>Depending on the content of your Dockerfile, at this point you may be done. 
+The <code class="language-plaintext highlighter-rouge">setup-qemu-action</code> will create 2 (or more) VMs, and the <code class="language-plaintext highlighter-rouge">build-push-action</code> will 
+compile your Dockerfile for various architectures, and push them to <code class="language-plaintext highlighter-rouge">Docker Hub</code> (within the same manifest).</p>
+
+<p>However, if you need to conditionalize your Dockerfile instructions depending on which architecture you’re building,
+you’ll need to make some additional changes.</p>
+
+<p>Under the hood, the <code class="language-plaintext highlighter-rouge">build-push-action</code> will provide the <code class="language-plaintext highlighter-rouge">--platform</code> flag to <code class="language-plaintext highlighter-rouge">docker buildx</code>. 
+This will <a href="https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope">automatically set</a> the following build <code class="language-plaintext highlighter-rouge">ARG</code>s:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code> - platform of the build result. Eg <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">windows/amd64</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETOS</code> - OS component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code> - platform of the node performing the build.</li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDOS</code> - OS component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+</ul>
+
+<p>To use these variables to conditionally download arch specific dependencies, you can modify your Dockerfile like so:</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> debian:bullseye-slim</span>
+<span class="k">ARG</span><span class="s"> TARGETARCH</span>
+
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get <span class="nb">install</span> <span class="nt">-y</span> curl <span class="se">\
+</span>    <span class="o">&amp;&amp;</span>  <span class="k">case</span> <span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span> <span class="k">in</span> <span class="se">\
+</span>            <span class="s2">"amd64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>amd64  <span class="p">;;</span> <span class="se">\
+</span>            <span class="s2">"arm64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>aarch64  <span class="p">;;</span> <span class="se">\
+</span>        <span class="k">esac</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="nt">-L</span> <span class="nt">-s</span> <span class="nt">--output</span> /tmp/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl <span class="nt">-L</span> https://dl.influxdata.com/influxdb/releases/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="nt">--output</span> /tmp/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> ....
+</code></pre></div></div>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="q-i-enabled-multi-arch-builds-and-my-builds-take-1h-what-gives">Q: I enabled Multi-arch builds and my builds take 1h+, what gives?</h3>
+<p><strong>A:</strong> This seems to be a <a href="https://github.com/docker/setup-qemu-action/issues/22">known issue with <code class="language-plaintext highlighter-rouge">QEMU</code></a>.
+I’ve also run into this with NPM installs and TypeScript compilation. 
+My workaround was to move non-architecture specific compilation before the Docker build &amp; QEMU steps.
+This means the steps are running outside the VMs and my build time dropped down to ~15 minutes, which is much more reasonable.</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://docs.docker.com/desktop/multi-arch/</li>
+  <li>https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/</li>
+  <li>https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope</li>
+  <li>https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/</li>
+  <li>https://github.com/BretFisher/multi-platform-docker-build</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

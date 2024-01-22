@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Git Mirror Anywhere using the Dumb Http Protocol</title>
+	  <link>/git-mirror-anywhere-using-dumb-http-protocol</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-08T03:19:33-06:00</pubDate>
+	  <guid>/git-mirror-anywhere-using-dumb-http-protocol</guid>
+	  <description><![CDATA[
+	     <p>Lets talk about <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git</a>. If you’ve done any professional software development, you’ve probably heard about Git.</p>
+
+<blockquote>
+  <p>Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency.</p>
+</blockquote>
+
+<p>It’s a tiny, but powerful piece of software, that most software developers use every day. Even so, under the hood there’s dozens of powerful features that most developers
+don’t even know exist. Today I hope to introduce you to one of them, the “Dumb HTTP Protocol”.</p>
+
+<hr />
+
+<p>I recently found myself in a position needing to mirror a git repo to a firewalled environment where I didn’t want to stand up a dedicated Git server.
+I had access to a blob storage account, that could be used to serve static content over HTTP, but no compute.</p>
+
+<p>While investigating the Git protocol for <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> I had previously learned about something called the “Dumb HTTP Protocol”.
+Unlike the SSH and HTTP Git protocol that most of your are aware of, the Dumb HTTP protocol expects the bare Git repository to be served like normal files from the web server.</p>
+
+<p>At first glance, this looks liked exactly what we want, however, as you read further into the <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_dumb_http">documentation</a>
+you’ll see “Basically, all you have to do is put a bare Git repository under your HTTP document root and set up a specific post-update hook, and you’re done”.</p>
+
+<p>Since we don’t want to run a server at all, a post-hook script seems like a non-starter. Thankfully this is not the case, as long as you are ok with a bit of extra work.</p>
+
+<hr />
+
+<h2 id="the-dumb-http-protocol">The Dumb HTTP Protocol</h2>
+
+<p>Before we go to the solution, lets take a moment to dive into what actually happens when you attempt to clone from a Git remote using the Dumb HTTP protocol.
+Please note, some of the following examples are copied from the Git Documentation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone http://server/simplegit-progit.git
+</code></pre></div></div>
+
+<p>The first thing this command does is pull down the <code class="language-plaintext highlighter-rouge">info/refs</code> file. This file is written by the <code class="language-plaintext highlighter-rouge">update-server-info</code> command in the Post hook, and does not normally exist.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/info/refs HTTP/1.0
+
+S: 200 OK
+S:
+S: 95dcfa3633004da0049d3d0fa03f80589cbcaf31	refs/heads/maint
+S: ca82a6dff817ec66f44342007202690a93763949	refs/heads/master
+S: 2cb58b79488a98d2721cea644875a8dd0026b115	refs/tags/v1.0
+S: a3c2e2402b99163d1d59756e5f207ae21cccba4c	refs/tags/v1.0^{}
+</code></pre></div></div>
+
+<p>The returned content is a UNIX formatted text file describing each ref and its known value.
+The file should not include the default ref named HEAD.</p>
+
+<p>Now you have a list of the remote references and SHA-1s. Next, you look for what the HEAD reference is so you know what to check out when you’re finished:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/HEAD HTTP/1.0
+
+ref: refs/heads/master
+</code></pre></div></div>
+
+<p>You need to check out the <code class="language-plaintext highlighter-rouge">master</code> branch when you’ve completed the process. At this point, you’re ready to start the walking process. Because your starting point is the <code class="language-plaintext highlighter-rouge">ca82a6</code> commit object you saw in the <code class="language-plaintext highlighter-rouge">info/refs</code> file, you start by fetching that:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/ca/82a6dff817ec66f44342007202690a93763949 HTTP/1.0
+
+(179 bytes of binary data)
+</code></pre></div></div>
+
+<p>You get an object back – that object is in loose format on the server, and you fetched it over a static HTTP GET request. You can zlib-uncompress it, strip off the header, and look at the commit content:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git cat-file -p ca82a6dff817ec66f44342007202690a93763949
+tree cfda3bf379e4f8dba8717dee55aab78aef7f4daf
+parent 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+author Scott Chacon &lt;schacon@gmail.com&gt; 1205815931 -0700
+committer Scott Chacon &lt;schacon@gmail.com&gt; 1240030591 -0700
+
+Change version number
+</code></pre></div></div>
+
+<p>Next, you have two more objects to retrieve – <code class="language-plaintext highlighter-rouge">cfda3b</code>, which is the tree of content that the commit we just retrieved points to; and <code class="language-plaintext highlighter-rouge">085bb3</code>, which is the parent commit:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/08/5bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+
+(179 bytes of data)
+</code></pre></div></div>
+
+<p>To see what packfiles are available on this server, you need to get the objects/info/packs file, which contains a listing of them (also generated by <code class="language-plaintext highlighter-rouge">update-server-info</code>):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/info/packs
+P pack-816a9b2334da9953e530f27bcac22082a9f5b835.pack
+</code></pre></div></div>
+
+<p>We’ll stop here. At this point we have a mechanism for retrieving information about the head of each branch, and a mechanism for retrieving the file content associated with a commit.</p>
+
+<h1 id="git-compatible-static-content-repository">Git Compatible Static Content Repository</h1>
+
+<p>So how do we leverage this knowledge to generate a version of our Git repository, that we can serve using a simple HTTP content server (no post-hook.sh necessary)?</p>
+
+<p>First we need to clone a bare version of our Git repository locally.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone --bare $GIT_REPO_URL
+</code></pre></div></div>
+
+<p>Then we’ll run the <code class="language-plaintext highlighter-rouge">git update-server-info</code> command on our bare repository, to generate the info files that Git clients expect.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd $REPO_DIR
+git update-server-info
+</code></pre></div></div>
+
+<p>At this point, we can copy this directory and serve it using a simple HTTP server (eg. S3 over CloudFront, Nginx, Apache, Artifactory, etc.).</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols</li>
+  <li>https://git-scm.com/docs/http-protocol</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

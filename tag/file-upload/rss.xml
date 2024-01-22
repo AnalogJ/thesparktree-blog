@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Python Fails - Multipart file uploads in Python</title>
+	  <link>/the-unfortunately-long-story-dealing-with</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2015-03-19T14:38:13-05:00</pubDate>
+	  <guid>/the-unfortunately-long-story-dealing-with</guid>
+	  <description><![CDATA[
+	     <p>Python: Its a scripting language you can basically do anything with. Err.. most things, some are a real pain in the ass out of the box.</p>
+
+<p>Before we start, a caveat. I’m working with Python 2.7, if you’re using Python 3.x, you may be able to use <code class="language-plaintext highlighter-rouge">urllib3</code>, which I’ve heard good things about. If you’re too lazy to look into it, the code I include below should still work for you.</p>
+
+<p>I found myself needing to upload a file via Python. Like any <strike>expert</strike> developer I began searching the compendium of human knowledge that is StackOverflow.</p>
+
+<p>I found many results, all of which looked promising at first glance.</p>
+
+<ul>
+  <li><a href="https://stackoverflow.com/questions/680305/using-multipartposthandler-to-post-form-data-with-python">Using MultipartPostHandler to POST form-data with Python</a></li>
+  <li><a href="https://stackoverflow.com/questions/68477/send-file-using-post-from-a-python-script">Send file using POST from a Python script</a></li>
+  <li><a href="https://stackoverflow.com/questions/12385179/how-to-send-a-multipart-form-data-with-requests-in-python">How to send a “multipart/form-data” with requests in python?</a></li>
+</ul>
+
+<p>I quickly realized that almost all questions referenced the incredible <a href="https://docs.python-requests.org/en/latest/">“requests”</a> , <a href="http://atlee.ca/software/poster/">“poster”</a> or other third party modules. While any sane developer would just bask in their single handed victory and then start on the next item of their to-do list, I’m a glutton for punishment. I needed to do my multipart upload like a real <strike>man</strike> developer: python standard libraries only.</p>
+
+<p>Luckily I was able to find a simple looking snippet that only used <a href="http://code.activestate.com/recipes/146306-http-client-to-post-using-multipartform-data/">urllib2</a> something I was familiar with. Huzzah! With a few test files in hand, I began testing my shiny new script. Alas it was all for naught, the multipart upload script would only work for some files, and would fail horribly for others.</p>
+
+<p>The error message I was getting <code class="language-plaintext highlighter-rouge">UnicodeDecodeError: 'utf8' codec can't decode byte 0x8d in position 516: invalid start byte</code> helped clue me into the fact that the files that failed were binary files rather than simple text documents. It seems the simple script was concatenating the file data directly into a string, at which point my binary files threw up. Ah the joys of file encoding.</p>
+
+<p>I tried a quick and proven fix: when in doubt, force “utf-8”. As the <code class="language-plaintext highlighter-rouge">open</code> command doesn’t allow us to force encoding, I switched to using the built-in <code class="language-plaintext highlighter-rouge">codecs</code> module. I tried a few different file encodings before doing a naive search for <a href="https://programmers.stackexchange.com/questions/187169/how-to-detect-the-encoding-of-a-file">“How to detect the encoding of a file”</a> at which point I felt like a real idiot as I saw the answer:</p>
+<blockquote>
+  <p>Files generally indicate their encoding with a file header. … However, even reading the header you can never be sure what encoding a file is really using.</p>
+</blockquote>
+
+<p>Great, back to square one.</p>
+
+<p>The most obvious solution was to rewrite the uploader script so that it used a binary buffer to store the file data, something that would be much more intelligent. I quickly hacked together a quick version of the file uploader script, but made sure to use <code class="language-plaintext highlighter-rouge">BytesIO</code> to store the form data, rather than joining all the data into a string. Again, no joy. Now I was getting the same error, but deep inside the <code class="language-plaintext highlighter-rouge">urllib2</code> function. Ugh, that means that internally <code class="language-plaintext highlighter-rouge">urllib2</code> is converting my beautiful binary buffer into a string. Son of a.</p>
+
+<p>Screw it. I’ll just rewrite it using <code class="language-plaintext highlighter-rouge">http</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="n">mimetools</span>
+<span class="kn">import</span> <span class="n">mimetypes</span>
+<span class="kn">import</span> <span class="n">io</span>
+<span class="kn">import</span> <span class="n">http</span>
+<span class="kn">import</span> <span class="n">json</span>
+
+
+<span class="n">form</span> <span class="o">=</span> <span class="nc">MultiPartForm</span><span class="p">()</span>
+<span class="n">form</span><span class="p">.</span><span class="nf">add_field</span><span class="p">(</span><span class="sh">"</span><span class="s">form_field</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">my awesome data</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Add a fake file
+</span><span class="n">form</span><span class="p">.</span><span class="nf">add_file</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">os</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="nf">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
+	<span class="n">fileHandle</span><span class="o">=</span><span class="n">codecs</span><span class="p">.</span><span class="nf">open</span><span class="p">(</span><span class="sh">"</span><span class="s">/path/to/my/file.zip</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">rb</span><span class="sh">"</span><span class="p">))</span>
+
+<span class="c1"># Build the request
+</span><span class="n">url</span> <span class="o">=</span> <span class="sh">"</span><span class="s">http://www.example.com/endpoint</span><span class="sh">"</span>
+<span class="n">schema</span><span class="p">,</span> <span class="n">netloc</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">fragments</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">.</span><span class="nf">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+	<span class="n">form_buffer</span> <span class="o">=</span>  <span class="n">form</span><span class="p">.</span><span class="nf">get_binary</span><span class="p">().</span><span class="nf">getvalue</span><span class="p">()</span>
+	<span class="n">http</span> <span class="o">=</span> <span class="n">httplib</span><span class="p">.</span><span class="nc">HTTPConnection</span><span class="p">(</span><span class="n">netloc</span><span class="p">)</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">connect</span><span class="p">()</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">putrequest</span><span class="p">(</span><span class="sh">"</span><span class="s">POST</span><span class="sh">"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">putheader</span><span class="p">(</span><span class="sh">'</span><span class="s">Content-type</span><span class="sh">'</span><span class="p">,</span><span class="n">form</span><span class="p">.</span><span class="nf">get_content_type</span><span class="p">())</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">putheader</span><span class="p">(</span><span class="sh">'</span><span class="s">Content-length</span><span class="sh">'</span><span class="p">,</span> <span class="nf">str</span><span class="p">(</span><span class="nf">len</span><span class="p">(</span><span class="n">form_buffer</span><span class="p">)))</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">endheaders</span><span class="p">()</span>
+	<span class="n">http</span><span class="p">.</span><span class="nf">send</span><span class="p">(</span><span class="n">form_buffer</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">socket</span><span class="p">.</span><span class="n">error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+	<span class="k">raise</span> <span class="nc">SystemExit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">http</span><span class="p">.</span><span class="nf">getresponse</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">r</span><span class="p">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+	<span class="k">return</span> <span class="n">json</span><span class="p">.</span><span class="nf">loads</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="nf">read</span><span class="p">())</span>
+<span class="k">else</span><span class="p">:</span>
+	<span class="nf">print</span><span class="p">(</span><span class="sh">'</span><span class="s">Upload failed (%s): %s</span><span class="sh">'</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">status</span><span class="p">,</span> <span class="n">r</span><span class="p">.</span><span class="n">reason</span><span class="p">))</span>
+
+<span class="k">class</span> <span class="nc">MultiPartForm</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sh">"""</span><span class="s">Accumulate the data to be used when posting a form.</span><span class="sh">"""</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+		<span class="n">self</span><span class="p">.</span><span class="n">form_fields</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">self</span><span class="p">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">self</span><span class="p">.</span><span class="n">boundary</span> <span class="o">=</span> <span class="n">mimetools</span><span class="p">.</span><span class="nf">choose_boundary</span><span class="p">()</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">get_content_type</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="sh">'</span><span class="s">multipart/form-data; boundary=%s</span><span class="sh">'</span> <span class="o">%</span> <span class="n">self</span><span class="p">.</span><span class="n">boundary</span>
+
+	<span class="k">def</span> <span class="nf">add_field</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="sh">"""</span><span class="s">Add a simple field to the form data.</span><span class="sh">"""</span>
+		<span class="n">self</span><span class="p">.</span><span class="n">form_fields</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">add_file</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fileHandle</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sh">"""</span><span class="s">Add a file to be uploaded.</span><span class="sh">"""</span>
+		<span class="n">body</span> <span class="o">=</span> <span class="n">fileHandle</span><span class="p">.</span><span class="nf">read</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">mimetype</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+			<span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="p">.</span><span class="nf">guess_type</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="sh">'</span><span class="s">application/octet-stream</span><span class="sh">'</span>
+		<span class="n">self</span><span class="p">.</span><span class="n">files</span><span class="p">.</span><span class="nf">append</span><span class="p">((</span><span class="n">fieldname</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">mimetype</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+		<span class="k">return</span>
+
+	<span class="k">def</span> <span class="nf">get_binary</span><span class="p">(</span><span class="n">self</span><span class="p">):</span>
+		<span class="sh">"""</span><span class="s">Return a binary buffer containing the form data, including attached files.</span><span class="sh">"""</span>
+		<span class="n">part_boundary</span> <span class="o">=</span> <span class="sh">'</span><span class="s">--</span><span class="sh">'</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">boundary</span>
+
+		<span class="n">binary</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="nc">BytesIO</span><span class="p">()</span>
+		<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="c1"># Add the form fields
+</span>		<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">self</span><span class="p">.</span><span class="n">form_fields</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">needsCLRF</span><span class="p">:</span>
+				<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">)</span>
+			<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">True</span>
+
+			<span class="n">block</span> <span class="o">=</span> <span class="p">[</span><span class="n">part_boundary</span><span class="p">,</span>
+			  <span class="sh">'</span><span class="s">Content-Disposition: form-data; name=</span><span class="sh">"</span><span class="s">%s</span><span class="sh">"'</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span>
+			  <span class="sh">''</span><span class="p">,</span>
+			  <span class="n">value</span>
+			<span class="p">]</span>
+			<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+
+		<span class="c1"># Add the files to upload
+</span>		<span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">self</span><span class="p">.</span><span class="n">files</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">needsCLRF</span><span class="p">:</span>
+				<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">)</span>
+			<span class="n">needsCLRF</span> <span class="o">=</span> <span class="bp">True</span>
+
+			<span class="n">block</span> <span class="o">=</span> <span class="p">[</span><span class="n">part_boundary</span><span class="p">,</span>
+			  <span class="nf">str</span><span class="p">(</span><span class="sh">'</span><span class="s">Content-Disposition: file; name=</span><span class="sh">"</span><span class="s">%s</span><span class="sh">"</span><span class="s">; filename=</span><span class="sh">"</span><span class="s">%s</span><span class="sh">"'</span> <span class="o">%</span> \
+			  <span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)),</span>
+			  <span class="sh">'</span><span class="s">Content-Type: %s</span><span class="sh">'</span> <span class="o">%</span> <span class="n">content_type</span><span class="p">,</span>
+			  <span class="sh">''</span>
+			  <span class="p">]</span>
+			<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+			<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">)</span>
+			<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+
+		<span class="c1"># add closing boundary marker,
+</span>		<span class="n">binary</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="sh">'</span><span class="se">\r\n</span><span class="s">--</span><span class="sh">'</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">boundary</span> <span class="o">+</span> <span class="sh">'</span><span class="s">--</span><span class="se">\r\n</span><span class="sh">'</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">binary</span>
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

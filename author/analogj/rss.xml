@@ -1,0 +1,2118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Go - Serverless Framework - Newrelic</title>
+	  <link>/go-serverless-framework-newrelic</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2024-01-21T03:19:33-06:00</pubDate>
+	  <guid>/go-serverless-framework-newrelic</guid>
+	  <description><![CDATA[
+	     <p>Because I seem to be a glutton for punishment, I decided to build an API for <a href="https://www.fastenhealth.com/">my startup Fasten Health</a> using Go + Serverless Framework + 
+Newrelic. As expected this was difficult for a number of reasons:</p>
+
+<ul>
+  <li>Go is not a first class citizen in the Serverless Framework ecosystem. While it is supported, it is not as well documented as NodeJS.</li>
+  <li>Newrelic’s AWS Lambda integration has gone through multiple iterations, and their documentation is not clear what is the “best” way to integrate.
+    <ul>
+      <li>Newrelic’s CloudWatch integration has been deprecated and replaced with a Lambda Layer.</li>
+      <li>The Lambda layer integration <a href="https://github.com/newrelic/serverless-newrelic-lambda-layers/issues/334">requires code changes in Go, unlike the NodeJS, Python and other integrations</a></li>
+      <li>The Lambda layer integration only works with the new <a href="https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/">Amazon Linux 2023 <code class="language-plaintext highlighter-rouge">provided</code> runtime</a> instead of the older but more commonly used <code class="language-plaintext highlighter-rouge">go1.x</code> runtime.</li>
+    </ul>
+  </li>
+  <li>The Amazon Linux 2023 <code class="language-plaintext highlighter-rouge">provided</code> runtime has a requirement that the entrypoint binary is named <code class="language-plaintext highlighter-rouge">bootstrap</code>. This is difficult to do natively with the Serverless Framework, and requires a custom plugin]()</li>
+  <li>There is no “agentless” integration for Newrelic. You must install the Newrelic agent in your Lambda function, and then configure your app/code to send data to Newrelic.</li>
+</ul>
+
+<p>Since there doesn’t seem to be much public documentation for how to get everything working correctly, I’ve documented my process below.</p>
+
+<div class="github-widget" data-repo="AnalogJ/newrelic-serverless-go-playground"></div>
+
+<h2 id="1-linking-aws--newrelic">1. Linking AWS &amp; Newrelic</h2>
+
+<p>The Newrelic documentation for <a href="https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/account-linking/">linking your AWS account</a> is pretty thorough,
+however the “Linking accounts manually” alternative method was completely broken for me.</p>
+
+<p>While I was unhappy installing another tool on my dev machine, the <code class="language-plaintext highlighter-rouge">newrelic-lambda</code> cli tool worked perfectly.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>newrelic-lambda integrations <span class="nb">install</span> <span class="nt">--nr-account-id</span> YOUR_NR_ACCOUNT_ID <span class="se">\</span>
+    <span class="nt">--nr-api-key</span> YOUR_NEW_RELIC_USER_KEY
+</code></pre></div></div>
+
+<p>Here’s how you get the Account ID and User Key for use with the CLI:</p>
+
+<ul>
+  <li><a href="https://docs.newrelic.com/docs/accounts/install-new-relic/account-setup/account-id/">YOUR_NR_ACCOUNT_ID</a>
+    <ul>
+      <li>From one.newrelic.com, click the user menu, and then go to: Administration &gt; Access management &gt; Accounts to see account IDs.</li>
+    </ul>
+  </li>
+  <li><a href="https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/">YOUR_NEW_RELIC_USER_KEY</a>
+    <ul>
+      <li>Create and manage your API keys from the <a href="https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher">API keys UI page</a> so you can start observing your data right away</li>
+      <li>NOTE: You must select a <code class="language-plaintext highlighter-rouge">USER</code> key, not an <code class="language-plaintext highlighter-rouge">INGEST - *</code> key, otherwise you’ll get an error when attemping to link your account.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Immediately after this step, you should be able to see your AWS account listed in the Newrelic UI. The <code class="language-plaintext highlighter-rouge">newrelic-lambda</code> cli tool will also 
+create a <code class="language-plaintext highlighter-rouge">NEW_RELIC_LICENSE_KEY</code> secret in your AWS Secrets Manager, which is used by the Newrelic Lambda Layer.</p>
+
+<blockquote>
+  <p>NOTE: if all you care about is invocation and error metrics, you can stop here. The AWS Integration will allow you to see invocation and error metrics in Newrelic, but you won’t be able to see any custom metrics, logs or traces.
+The following steps are required if you would like to see this additional telemetry in Newrelic.</p>
+</blockquote>
+
+<h2 id="2-serverless-framework---golang-plugin">2. Serverless Framework - Golang Plugin</h2>
+
+<p>The first change we need to make to our Serverless Framework configuration is to add the <a href="https://github.com/mthenw/serverless-go-plugin">Serverless Framework Golang Plugin</a>.</p>
+
+<p>This plugin allows us to build our Go binaries, and and is compatible with the Amazon Linux 2023 <code class="language-plaintext highlighter-rouge">provided</code> runtime which is required for the Newrelic Lambda Layer.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">plugins</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">serverless-go-plugin</span>
+<span class="nn">...</span>
+
+<span class="na">custom</span><span class="pi">:</span>
+  <span class="na">go</span><span class="pi">:</span>
+    <span class="na">baseDir</span><span class="pi">:</span> <span class="s">.</span>
+    <span class="na">binDir</span><span class="pi">:</span> <span class="s">bin</span>
+    <span class="na">cgo</span><span class="pi">:</span> <span class="m">0</span>
+    <span class="c1"># compile command, make sure GOOS and GOARCH are set correctly</span>
+    <span class="na">cmd</span><span class="pi">:</span> <span class="s">GOARCH=amd64 GOOS=linux go build -ldflags="-s -w"</span>
+    <span class="c1"># the plugin compiles a function only if runtime is declared here (either on function or provider level)</span>
+    <span class="na">supportedRuntimes</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">provided.al2"</span><span class="pi">]</span>
+    <span class="c1"># builds and archive function with only single "bootstrap" binary, required for `provided.al2` and `provided` runtime</span>
+    <span class="na">buildProvidedRuntimeAsBootstrap</span><span class="pi">:</span> <span class="kc">true</span>
+</code></pre></div></div>
+
+<h2 id="3-serverless-framework---newrelic-lambda-layer-plugin">3. Serverless Framework - Newrelic Lambda Layer Plugin</h2>
+
+<p>Next, we need to add the <a href="https://github.com/newrelic/serverless-newrelic-lambda-layers">Serverless Framework Newrelic Lambda Layer Plugin</a></p>
+
+<p>This plugin allows us to add the Newrelic Lambda Layer to our function, which contains a Newrelic agent that our Newrelic <code class="language-plaintext highlighter-rouge">go-agent</code> sdk will use send data to Newrelic.</p>
+
+<p>We need to install the Serverless plugin, specify the <code class="language-plaintext highlighter-rouge">provider</code> runtime and then specify the configuration.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">accountId</code> - this is the <code class="language-plaintext highlighter-rouge">YOUR_NR_ACCOUNT_ID</code> value from Step 1</li>
+  <li><code class="language-plaintext highlighter-rouge">apiKey</code> - this is the <code class="language-plaintext highlighter-rouge">YOUR_NEW_RELIC_USER_KEY</code> value from Step 1</li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">plugins</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">serverless-newrelic-lambda-layers</span>
+<span class="nn">...</span>
+
+<span class="na">provider</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">aws</span>
+  <span class="na">runtime</span><span class="pi">:</span> <span class="s">provided.al2</span>
+
+<span class="na">custom</span><span class="pi">:</span>
+  <span class="na">newRelic</span><span class="pi">:</span>
+    <span class="na">accountId</span><span class="pi">:</span> <span class="s">YOUR_NR_ACCOUNT_ID</span>
+    <span class="na">apiKey</span><span class="pi">:</span> <span class="s">YOUR_NEW_RELIC_USER_KEY</span>
+    <span class="na">debug</span><span class="pi">:</span> <span class="kc">true</span>
+
+</code></pre></div></div>
+
+<h2 id="4-serverless-framework---iam-role--iam-roles-per-function">4. Serverless Framework - IAM Role &amp; IAM Roles Per Function</h2>
+
+<p>While the steps above are documented in various locations on the internet, it wasn’t clear to me that the Newrelic Lambda Layer seems to require a AWS Secret Manager integration
+to retrieve the Newrelic License Key. Initially, I tried manually specifying the key using <code class="language-plaintext highlighter-rouge">newrelic.ConfigLicense(os.Getenv("NEW_RELIC_LICENSE_KEY"))</code> to configure the Newrelic <code class="language-plaintext highlighter-rouge">go-agent</code> sdk, but that didn’t work.
+The solution was to specify the an IAM Role for the Serverless function, giving it permissions to AWS Secret Manager to pull the <code class="language-plaintext highlighter-rouge">NEW_RELIC_LICENSE_KEY</code> secret.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">plugins</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">serverless-iam-roles-per-function</span>
+
+<span class="nn">...</span>
+
+<span class="na">functions</span><span class="pi">:</span>
+  <span class="na">healthcheck</span><span class="pi">:</span>
+    <span class="na">handler</span><span class="pi">:</span> <span class="s">cmd/health/health.go</span>
+    <span class="na">iamRoleStatements</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">Effect</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Allow"</span>
+        <span class="na">Action</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="s2">"</span><span class="s">secretsmanager:GetSecretValue"</span>
+        <span class="c1"># This is the secret that was created by the newrelic-lambda cli tool. </span>
+        <span class="c1"># To find it, open the AWS Console, and go to: Secrets Manager &gt; Secrets &gt; Find "NEW_RELIC_LICENSE_KEY", then copy the ARN</span>
+        <span class="na">Resource</span><span class="pi">:</span> <span class="s2">"</span><span class="s">arn:aws:secretsmanager:us-east-1:1234567890:secret:NEW_RELIC_LICENSE_KEY-XXXXX"</span>
+    <span class="na">events</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">httpApi</span><span class="pi">:</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">/health</span>
+          <span class="na">method</span><span class="pi">:</span> <span class="s">get</span>
+
+</code></pre></div></div>
+
+<h2 id="5-application-code---metrics">5. Application Code - Metrics</h2>
+
+<p>Finally, we need to modify our Serverless function code to use the <code class="language-plaintext highlighter-rouge">go-agent</code> sdk.</p>
+
+<p>Notice how the <code class="language-plaintext highlighter-rouge">newrelic.NewApplication()</code> call has minimal configuration options specified (compared to the <a href="https://github.com/newrelic/go-agent/blob/master/v3/integrations/nrawssdk-v2/example/main.go">Raw AWS SDK Example</a>)</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"context"</span>
+	<span class="s">"fmt"</span>
+
+	<span class="s">"github.com/newrelic/go-agent/v3/integrations/nrlambda"</span>
+	<span class="n">newrelic</span> <span class="s">"github.com/newrelic/go-agent/v3/newrelic"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">handler</span><span class="p">(</span><span class="n">ctx</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c">// The nrlambda handler instrumentation will add the transaction to the</span>
+	<span class="c">// context.  Access it using newrelic.FromContext to add additional</span>
+	<span class="c">// instrumentation.</span>
+	<span class="n">txn</span> <span class="o">:=</span> <span class="n">newrelic</span><span class="o">.</span><span class="n">FromContext</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+	<span class="n">txn</span><span class="o">.</span><span class="n">AddAttribute</span><span class="p">(</span><span class="s">"userLevel"</span><span class="p">,</span> <span class="s">"gold"</span><span class="p">)</span>
+	<span class="n">txn</span><span class="o">.</span><span class="n">Application</span><span class="p">()</span><span class="o">.</span><span class="n">RecordCustomEvent</span><span class="p">(</span><span class="s">"MyEvent"</span><span class="p">,</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="k">interface</span><span class="p">{}{</span>
+		<span class="s">"zip"</span><span class="o">:</span> <span class="s">"zap"</span><span class="p">,</span>
+	<span class="p">})</span>
+
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"hello world"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="c">// Pass nrlambda.ConfigOption() into newrelic.NewApplication to set</span>
+	<span class="c">// Lambda specific configuration settings including</span>
+	<span class="c">// Config.ServerlessMode.Enabled.</span>
+	<span class="n">app</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">newrelic</span><span class="o">.</span><span class="n">NewApplication</span><span class="p">(</span><span class="n">nrlambda</span><span class="o">.</span><span class="n">ConfigOption</span><span class="p">())</span>
+	<span class="k">if</span> <span class="no">nil</span> <span class="o">!=</span> <span class="n">err</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"error creating app (invalid config):"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="c">// nrlambda.Start should be used in place of lambda.Start.</span>
+	<span class="c">// nrlambda.StartHandler should be used in place of lambda.StartHandler.</span>
+	<span class="n">nrlambda</span><span class="o">.</span><span class="n">Start</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">app</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><img src="https://blog.thesparktree.com/assets/images/newrelic/metrics.png" alt="metrics" /></p>
+
+<h2 id="6-application-code---logs">6. Application Code - Logs</h2>
+
+<p>If you had deployed the Serverless function defined in Step 5 as-is, you would see your metrics, however you would not see any logs in Newrelic.
+This is because you’re missing the last bit of configuration to enable the Newrelic Lambda Extension to send logs to Newrelic.</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+<span class="k">import</span> <span class="p">(</span>
+  <span class="s">"context"</span>
+  <span class="s">"fmt"</span>
+
+  <span class="s">"github.com/newrelic/go-agent/v3/integrations/nrlambda"</span>
+  <span class="n">newrelic</span> <span class="s">"github.com/newrelic/go-agent/v3/newrelic"</span>
+<span class="p">)</span>
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="o">...</span>
+	
+	
+	<span class="n">app</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">newrelic</span><span class="o">.</span><span class="n">NewApplication</span><span class="p">(</span>
+        <span class="n">nrlambda</span><span class="o">.</span><span class="n">ConfigOption</span><span class="p">(),</span>
+        
+		<span class="c">// This is the configuration that enables the Newrelic Lambda Extension to send logs to Newrelic</span>
+        <span class="n">newrelic</span><span class="o">.</span><span class="n">ConfigAppLogForwardingEnabled</span><span class="p">(</span><span class="no">true</span><span class="p">),</span>
+		<span class="k">func</span><span class="p">(</span><span class="n">config</span> <span class="o">*</span><span class="n">newrelic</span><span class="o">.</span><span class="n">Config</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">logrus</span><span class="o">.</span><span class="n">SetLevel</span><span class="p">(</span><span class="n">logrus</span><span class="o">.</span><span class="n">DebugLevel</span><span class="p">)</span>
+			<span class="n">config</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">nrlogrus</span><span class="o">.</span><span class="n">StandardLogger</span><span class="p">()</span>
+		<span class="p">},</span>
+	<span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><img src="https://blog.thesparktree.com/assets/images/newrelic/logs.png" alt="metrics" /></p>
+
+<h1 id="fin">Fin</h1>
+
+<p>That’s it! Trigger a deployment, visit your Serverless function &amp; you should now be able to see your Serverless function metrics and logs in Newrelic.</p>
+
+<p>If you encounter any issues, refer to my <a href="https://github.com/AnalogJ/newrelic-serverless-go-playground">GitHub repository</a> for a working example. Happy coding!</p>
+
+<div class="github-widget" data-repo="AnalogJ/newrelic-serverless-go-playground"></div>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://github.com/newrelic/newrelic-lambda-extension/blob/main/examples/sam/go/main.go">Newrelic Lambda Extension Example</a></li>
+  <li><a href="https://github.com/newrelic/go-agent/blob/master/v3/integrations/nrlambda/example/main.go">Newrelic Go-Agent SDK Lamdba Example</a></li>
+  <li><a href="https://github.com/newrelic/go-agent/blob/master/GUIDE.md#full-list-of-config-options-and-application-settings">Newrelic Go-Agent SDK Full Options</a></li>
+  <li><a href="https://github.com/newrelic/docs-website/blob/develop/src/content/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/compatibility-requirements-aws-lambda-monitoring.mdx">Newrelic Lambda Layer Supported Runtimes</a></li>
+  <li><a href="https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/account-linking/#troubleshooting">Newrelic Troubleshooting Guide for Lambdas</a></li>
+  <li><a href="https://forum.newrelic.com/s/hubtopic/aAX8W0000008eWv/lambda-troubleshooting-framework-troubleshooting-lambda-part-1">Newrelic Troubleshooting Guide for Lambdas - Forum Post - Part 1</a></li>
+  <li><a href="https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/enable-serverless-monitoring-aws-lambda-legacy/">Newrelic Legacy manual instrumentation for Lambda monitoring</a></li>
+  <li><a href="https://github.com/newrelic/serverless-newrelic-lambda-layers">Newrelic Lambda Layer Plugin for Serverless Framework</a></li>
+  <li><a href="https://github.com/mthenw/serverless-go-plugin">Serverless Framework Go Plugin</a></li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Building Multi-Arch Docker Images via Github Actions</title>
+	  <link>/docker-multi-arch-github-actions</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2022-06-11T04:19:33-05:00</pubDate>
+	  <guid>/docker-multi-arch-github-actions</guid>
+	  <description><![CDATA[
+	     <p>I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image.
+While its well known that Docker’s <code class="language-plaintext highlighter-rouge">buildx</code> tooling supports multi-arch builds, it can be complicated getting it working correctly
+via Github Actions.</p>
+
+<h2 id="what-is-a-multi-arch-docker-image">What is a Multi-Arch Docker Image?</h2>
+
+<p>Before we go any further, we should discuss how Docker Images (&amp; Multi-Arch Docker Images) actually work.</p>
+
+<blockquote>
+  <p>Each Docker image is represented by a manifest. A manifest is a JSON file containing all the information about a Docker 
+image. This includes references to each of its layers, their corresponding sizes, the hash of the image, its size and 
+also the platform it’s supposed to work on. This manifest can then be referenced by a tag so that it’s easy to find.</p>
+</blockquote>
+
+<p>A multi-arch image is actually just a manifest that contains multiple entries, 1 for each platform.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-multi-arch-manifest.png" alt="docker multi-arch manifest" style="max-height: 500px;" /></p>
+
+<p>To learn more, see this <a href="https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/">Docker blog post</a></p>
+
+<h2 id="basic-docker-build-via-github-actions">Basic Docker Build via Github Actions</h2>
+
+<p>Now that we know what a multi-arch docker image looks like under the hood, lets get started with a simple Github Action
+to build a Docker image.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Docker</span>
+<span class="na">on</span><span class="pi">:</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">branches</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">main'</span><span class="pi">]</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">docker</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Checkout repository</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Login to DockerHub</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/login-action@v2</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">username</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_USERNAME }}</span>
+          <span class="na">password</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_TOKEN }}</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build and push</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/build-push-action@v3</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">push</span><span class="pi">:</span> <span class="kc">true</span>
+          <span class="na">tags</span><span class="pi">:</span> <span class="s">user/app:latest</span>
+</code></pre></div></div>
+
+<h2 id="migrate-to-buildx">Migrate to Buildx</h2>
+
+<p>The first thing we need to do is add the <code class="language-plaintext highlighter-rouge">setup-buildx-action</code> step.</p>
+
+<blockquote>
+  <p>Docker Buildx is a CLI plugin that extends the docker command with the full support 
+of the features provided by Moby BuildKit builder toolkit. It provides the same 
+user experience as docker build with many new features like creating scoped 
+builder instances and building against multiple nodes concurrently.</p>
+</blockquote>
+
+<p>Unfortunately Buildx is not enabled by default, so even though <code class="language-plaintext highlighter-rouge">docker</code> is available in our Github Action VM, we’ll need to enable <code class="language-plaintext highlighter-rouge">buildx</code> mode.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:09:34.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:10:12.000000000 -0700
+</span><span class="p">@@ -1,20 +1,22 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up Docker Buildx
++        uses: docker/setup-buildx-action@v2
+</span>       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<h2 id="qemu-support">QEMU Support</h2>
+<p>After enabling <code class="language-plaintext highlighter-rouge">buildx</code>, the next change we need to make is to enable <code class="language-plaintext highlighter-rouge">QEMU</code>.</p>
+
+<blockquote>
+  <p>QEMU is a free and open-source emulator. It can interoperate with Kernel-based 
+Virtual Machine (KVM) to run virtual machines at near-native speed. QEMU can also 
+do emulation for user-level processes, allowing applications compiled for one 
+architecture to run on another</p>
+</blockquote>
+
+<p>GitHub Actions only provides a small set of host system types: <a href="https://github.com/actions/virtual-environments"><code class="language-plaintext highlighter-rouge">windows</code>, <code class="language-plaintext highlighter-rouge">macos</code> &amp; <code class="language-plaintext highlighter-rouge">ubuntu</code></a> – all running on <code class="language-plaintext highlighter-rouge">x86_64</code> architecture. 
+If you need to compile binaries/Docker images for other OS’s or architectures, you can use the <code class="language-plaintext highlighter-rouge">QEMU</code> Github Action.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:32:32.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:32:56.000000000 -0700
+</span><span class="p">@@ -1,22 +1,26 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up QEMU
++        uses: docker/setup-qemu-action@v2
++        with:
++          platforms: 'arm64,arm'
+</span>       - name: Set up Docker Buildx
+         uses: docker/setup-buildx-action@v2
+       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: you must add the <code class="language-plaintext highlighter-rouge">QEMU</code> step before the <code class="language-plaintext highlighter-rouge">buildx</code> step. 
+By default <code class="language-plaintext highlighter-rouge">QEMU</code> will create almost a dozen vm’s. You’ll want to limit it to just the architectures you care about.</p>
+</blockquote>
+
+<h2 id="architecture-specific-dockerfile-instructions">Architecture Specific Dockerfile Instructions</h2>
+
+<p>Depending on the content of your Dockerfile, at this point you may be done. 
+The <code class="language-plaintext highlighter-rouge">setup-qemu-action</code> will create 2 (or more) VMs, and the <code class="language-plaintext highlighter-rouge">build-push-action</code> will 
+compile your Dockerfile for various architectures, and push them to <code class="language-plaintext highlighter-rouge">Docker Hub</code> (within the same manifest).</p>
+
+<p>However, if you need to conditionalize your Dockerfile instructions depending on which architecture you’re building,
+you’ll need to make some additional changes.</p>
+
+<p>Under the hood, the <code class="language-plaintext highlighter-rouge">build-push-action</code> will provide the <code class="language-plaintext highlighter-rouge">--platform</code> flag to <code class="language-plaintext highlighter-rouge">docker buildx</code>. 
+This will <a href="https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope">automatically set</a> the following build <code class="language-plaintext highlighter-rouge">ARG</code>s:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code> - platform of the build result. Eg <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">windows/amd64</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETOS</code> - OS component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code> - platform of the node performing the build.</li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDOS</code> - OS component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+</ul>
+
+<p>To use these variables to conditionally download arch specific dependencies, you can modify your Dockerfile like so:</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> debian:bullseye-slim</span>
+<span class="k">ARG</span><span class="s"> TARGETARCH</span>
+
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get <span class="nb">install</span> <span class="nt">-y</span> curl <span class="se">\
+</span>    <span class="o">&amp;&amp;</span>  <span class="k">case</span> <span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span> <span class="k">in</span> <span class="se">\
+</span>            <span class="s2">"amd64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>amd64  <span class="p">;;</span> <span class="se">\
+</span>            <span class="s2">"arm64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>aarch64  <span class="p">;;</span> <span class="se">\
+</span>        <span class="k">esac</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="nt">-L</span> <span class="nt">-s</span> <span class="nt">--output</span> /tmp/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl <span class="nt">-L</span> https://dl.influxdata.com/influxdb/releases/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="nt">--output</span> /tmp/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> ....
+</code></pre></div></div>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="q-i-enabled-multi-arch-builds-and-my-builds-take-1h-what-gives">Q: I enabled Multi-arch builds and my builds take 1h+, what gives?</h3>
+<p><strong>A:</strong> This seems to be a <a href="https://github.com/docker/setup-qemu-action/issues/22">known issue with <code class="language-plaintext highlighter-rouge">QEMU</code></a>.
+I’ve also run into this with NPM installs and TypeScript compilation. 
+My workaround was to move non-architecture specific compilation before the Docker build &amp; QEMU steps.
+This means the steps are running outside the VMs and my build time dropped down to ~15 minutes, which is much more reasonable.</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://docs.docker.com/desktop/multi-arch/</li>
+  <li>https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/</li>
+  <li>https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope</li>
+  <li>https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/</li>
+  <li>https://github.com/BretFisher/multi-platform-docker-build</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Hatchet - Cut down spam in your Gmail Inbox</title>
+	  <link>/hatchet</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2022-01-17T03:19:33-06:00</pubDate>
+	  <guid>/hatchet</guid>
+	  <description><![CDATA[
+	     <p>I got frustrated with the amount of daily spam in my Gmail “Promotions” tab – especially since it made searching for 
+email basically impossible. While there are services that will help me unsubscribe from all the mailing lists I’m signed 
+up to, they wanted unfettered access to my Google account, which I would never give.</p>
+
+<p>I wrote an open source tool called <a href="https://github.com/AnalogJ/hatchet">hatchet</a> which will access your Gmail account 
+using IMAP, find the latest unsubscribe link for each unique email sender, and write it all to a csv/spreadsheet file.</p>
+
+<p>It’s open source and doesn’t require any external service.</p>
+
+<div class="github-widget" data-repo="AnalogJ/hatchet"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>OpenLDAP using STARTTLS & LetsEncrypt</title>
+	  <link>/openldap-using-starttls-and-letsencrypt</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-06-13T04:19:33-05:00</pubDate>
+	  <guid>/openldap-using-starttls-and-letsencrypt</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication.</p>
+
+  <p>LDAP provides the communication language that applications use to
+communicate with other directory services servers. Directory services
+store the users, passwords, and computer accounts, and share that
+information with other entities on the network.</p>
+
+  <p><strong>OpenLDAP</strong> is a <a href="https://en.wikipedia.org/wiki/Free_software">free</a>,
+<a href="https://en.wikipedia.org/wiki/Open-source_software" title="Open-source software">open-source</a> implementation of the
+<a href="https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol" title="Lightweight Directory Access Protocol">Lightweight Directory Access Protocol</a>
+(LDAP) developed by the OpenLDAP Project. It is released under its own BSD-style license called the OpenLDAP Public License.<a href="https://en.wikipedia.org/wiki/OpenLDAP#cite_note-4">[4]</a></p>
+</blockquote>
+
+<p>There are 2 commonly used mechanisms to secure LDAP traffic - LDAPS and StartTLS. LDAPS is deprecated in favor of Start TLS [RFC2830].</p>
+
+<p>During some recent infrastructure changes I found out the hard way that <a href="https://issues.jenkins.io/browse/JENKINS-14520">LDAP plugin for Jenkins does not support LDAP over TLS (StartTLS)</a>.
+Given that LDAPS is officially deprecated, I began work on a PR to add StartTLS support myself.</p>
+
+<p>Before I could start coding, I needed to create a local development environment with an LDAP server speaking StartTLS.
+Unfortunately, this was harder than I anticipated, as StartTLS (while officially supported since LDAPv3) is not well documented.</p>
+
+<p>In the following post ,I’ll show you how to get OpenLDAP up and running with StartTLS, using valid certificates from LetsEncrypt.</p>
+
+<p>As always, the code is Open Source and lives on Github:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<h1 id="self-signed-vs-trusted-ca-certificates">Self-Signed vs Trusted CA Certificates</h1>
+
+<p>There are two types of <strong>SSL Certificates</strong> when you’re talking about signing. There are <strong>Self-Signed SSL Certificates</strong> and certificates
+that are signed by a Trusted Certificate Authority (and are usually already trusted by your system).</p>
+
+<p>Most OpenLDAP documentation I was able to find used Self-Signed certifates. While that works fine for most development,
+I am trying to replicate a production-like environment, which means real, trusted certificates. Thankfully, we can utilize
+short-lived trusted certificates provided by LetsEncrypt to secure our test OpenLDAP server.</p>
+
+<h1 id="generate-letsencrypt-certificate">Generate LetsEncrypt Certificate</h1>
+
+<div class="github-widget" data-repo="matrix-org/docker-dehydrated"></div>
+
+<p>The <a href="https://matrix.org/">matrix.org</a> team provide a simple <a href="https://github.com/matrix-org/docker-dehydrated#behaviour">Docker image</a>
+that you can use to generate LetsEncrypt certificates using the DNS-01 challenge. All you need is a custom domain, and a
+<a href="https://github.com/AnalogJ/lexicon">DNS provider with an API</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>data
+
+<span class="c"># We cannot use a wildcard domain with OpenLDAP, so let's pick a simple obvious subdomain.</span>
+<span class="nb">echo</span> <span class="s2">"ldap.example.com"</span> <span class="o">&gt;</span> data/domains.txt
+
+docker run <span class="nt">--rm</span> <span class="se">\</span>
+<span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/data:/data <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_GENERATE_CONFIG</span><span class="o">=</span><span class="nb">yes</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_CA</span><span class="o">=</span><span class="s2">"https://acme-v02.api.letsencrypt.org/directory"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_CHALLENGE</span><span class="o">=</span><span class="s2">"dns-01"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_KEYSIZE</span><span class="o">=</span><span class="s2">"4096"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_HOOK</span><span class="o">=</span><span class="s2">"/usr/local/bin/lexicon-hook"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_RENEW_DAYS</span><span class="o">=</span><span class="s2">"30"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_KEY_RENEW</span><span class="o">=</span><span class="s2">"yes"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_ACCEPT_TERMS</span><span class="o">=</span><span class="nb">yes</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_EMAIL</span><span class="o">=</span><span class="s2">"myemail@gmail.com"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">PROVIDER</span><span class="o">=</span>cloudflare <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span><span class="s2">"mycloudflareusername"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span><span class="s2">"mycloudflaretoken"</span> <span class="se">\</span>
+docker.io/matrixdotorg/dehydrated
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: pay attention to those last 3 environmental variables. They are passed to <a href="https://github.com/AnalogJ/lexicon">lexicon</a>
+and should be changed to match your DNS provider.</p>
+</blockquote>
+
+<p>Once <code class="language-plaintext highlighter-rouge">dehydrated</code> prints its success messge , you should see a handful of new subfolders in <code class="language-plaintext highlighter-rouge">data</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data
+├── accounts
+│ └── xxxxxxxxxxxxxx
+│     ├── account_id.json
+│     ├── account_key.pem
+│     └── registration_info.json
+├── certs
+│ └── ldap.example.com
+│     ├── cert-xxxxxx.csr
+│     ├── cert-xxxxxx.pem
+│     ├── cert.csr -&gt; cert-xxxxxx.csr
+│     ├── cert.pem -&gt; cert-xxxxxx.pem
+│     ├── chain-xxxxxx.pem
+│     ├── chain.pem -&gt; chain-xxxxxx.pem
+│     ├── combined.pem
+│     ├── fullchain-xxxxxx.pem
+│     ├── fullchain.pem -&gt; fullchain-xxxxxx.pem
+│     ├── privkey-xxxxxx.pem
+│     └── privkey.pem -&gt; privkey-xxxxxx.pem
+├── chains
+├── config
+└── domains.txt
+</code></pre></div></div>
+
+<p>Let’s leave these files alone for now, and continue to standing up and configuring our OpenLDAP server.</p>
+
+<h1 id="deploying-openldap-via-docker">Deploying OpenLDAP via Docker</h1>
+
+<p>Since we’re not actually deploying a production instance (with HA/monitoring/security hardening/etc) we can take
+some short-cuts and use an off-the-shelf Docker image.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>The <a href="https://github.com/AnalogJ/docker-openldap-starttls">analogj/docker-openldap-starttls</a> image we’re using in the
+example below is based on the  <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild/test-openldap</a> Docker image,
+ which provies a vanilla install of OpenLDAP, and adds Futurama characters as test users.</p>
+
+<p>I’ve customized it to add support for custom Domains, dynamic configuration &amp; the ability to enforce StartTLS on the
+serverside (which is great for testing).</p>
+
+<p>Before we start the OpenLDAP container, lets rename and re-organize our LetsEncrypt certificates in a folder structure that the container expects:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir -p ldap
+cp data/fullchain.pem ldap/fullchain.crt
+cp data/cert.pem ldap/ldap.crt
+cp data/privkey.pem ldap/ldap.key
+</code></pre></div></div>
+
+<p>Next, lets start the OpenLDAP Docker container:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run --rm \
+-v `pwd`/ldap:/etc/ldap/ssl/ \
+-p 10389:10389 \
+-p 10636:10636 \
+-e LDAP_DOMAIN="example.com" \
+-e LDAP_BASEDN="dc=example,dc=com" \
+-e LDAP_ORGANISATION="Custom Organization Name, Example Inc." \
+-e LDAP_BINDDN="cn=admin,dc=example,dc=com" \
+-e LDAP_FORCE_STARTTLS="true" \
+ghcr.io/analogj/docker-openldap-starttls:master
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: the <code class="language-plaintext highlighter-rouge">LDAP_DOMAIN</code> should be your root domain (<code class="language-plaintext highlighter-rouge">example.com</code> vs <code class="language-plaintext highlighter-rouge">ldap.example.com</code> from your certificate).
+It’s used for test user email addresses.</p>
+
+  <p>Pay attention to the <code class="language-plaintext highlighter-rouge">LDAP_BASEDN</code> and <code class="language-plaintext highlighter-rouge">LDAP_BINDDN</code> variables, they should match your Domain root as well.</p>
+
+  <p><code class="language-plaintext highlighter-rouge">LDAP_FORCE_STARTTLS=true</code> is optional, you can use it to conditionally start your LDAP server with StartTLS enforced.</p>
+</blockquote>
+
+<p>If everything is correct, you should see <code class="language-plaintext highlighter-rouge">slapd starting</code> as your last log message.</p>
+
+<p>Lets test that the container is responding correctly, though the certificate will not match since we’re going to query it
+using <code class="language-plaintext highlighter-rouge">localhost:10389</code></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># LDAPTLS_REQCERT=never tells ldapsearch to skip certificate validation</span>
+<span class="c"># -Z is required if we used LDAP_FORCE_STARTTLS="true" to start the container.</span>
+
+<span class="nv">LDAPTLS_REQCERT</span><span class="o">=</span>never ldapsearch <span class="nt">-H</span> ldap://localhost:10389 <span class="nt">-Z</span> <span class="nt">-x</span> <span class="nt">-b</span> <span class="s2">"ou=people,dc=example,dc=com"</span> <span class="nt">-D</span> <span class="s2">"cn=admin,dc=example,dc=com"</span> <span class="nt">-w</span> GoodNewsEveryone <span class="s2">"(objectClass=inetOrgPerson)"</span>
+
+<span class="c"># ...</span>
+<span class="c"># search result</span>
+<span class="c"># search: 3</span>
+<span class="c"># result: 0 Success</span>
+<span class="c">#</span>
+<span class="c"># numResponses: 8</span>
+<span class="c"># numEntries: 7</span>
+</code></pre></div></div>
+
+<h1 id="dns">DNS</h1>
+
+<p>Wiring up DNS to correctly resolve to the new container running on you host is left as a exercise for the user.</p>
+
+<p>For testing, I just setup a simple A record pointing <code class="language-plaintext highlighter-rouge">ldap.example.com</code> to my laptop’s private IP address <code class="language-plaintext highlighter-rouge">192.168.0.123</code>.
+It obviously won’t resolve correctly outside my home network, but it works fine for testing.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ping ldap.example.com
+PING ldap.example.com (192.168.0.123): 56 data bytes
+64 bytes from 192.168.0.123: icmp_seq=0 ttl=64 time=0.045 ms
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: Remember, DNS updates can take a while to propagate. You’ll want to set a low TTL for the new record if your IP will
+be changing constantly (DHCP). You may also need to flush your DNS cache if the changes do not propagate correctly.</p>
+</blockquote>
+
+<h1 id="testing">Testing</h1>
+
+<p>You can test that the container is up and running (and accessible via our custom domain) with some handy <code class="language-plaintext highlighter-rouge">ldapsearch</code> commands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># List all Users (only works with LDAP_FORCE_STARTTLS=false)
+ldapsearch -H ldap://ldap.example.com:10389 -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Response:
+# ldap_bind: Confidentiality required (13)
+#	additional info: TLS confidentiality required
+
+# Request StartTLS (works with LDAP_FORCE_STARTTLS=true/false)
+ldapsearch -H ldap://ldap.example.com:10389 -Z -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Enforce StartTLS (only works with LDAP_FORCE_STARTTLS=true)
+ldapsearch -H ldap://example:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Query Open LDAP using Localhost url, also works with self-signed certs (-ZZ forces StartTLS)
+LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+</code></pre></div></div>
+
+<h1 id="how-does-it-work">How does it work?</h1>
+
+<p>Other than my changes that allow you to customize the domain, there are only 2 main changes from <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild’s amazing work</a>.</p>
+
+<ul>
+  <li>
+    <p>A slightly modified <code class="language-plaintext highlighter-rouge">tls.ldif</code> file, which uses the fullchain, private key and certificate provided by LetsEncrypt</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dn: cn=config
+changetype: modify
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ldap/ssl/fullchain.crt
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ldap/ssl/ldap.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ldap/ssl/ldap.key
+-
+replace: olcTLSVerifyClient
+olcTLSVerifyClient: never
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>A new (conditionally loaded) <code class="language-plaintext highlighter-rouge">force-starttls.ldif</code> file, which tells OpenLDAP to force TLS</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dn: cn=config
+changetype:  modify
+add: olcSecurity
+olcSecurity: tls=1
+
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h1 id="fin">Fin</h1>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>Getting all the details right took some time, but it was worth it. With this containerized setup, its easy to start
+up a fresh “trusted” OpenLDAP image for testing, and conditionally enforce StartTLS.</p>
+
+<p>Thankfully, I was able to use this local containerized OpenLDAP server to finish my work in the
+<a href="https://github.com/jenkinsci/ldap-plugin/pull/97">Jenkins LDAP-Plugin</a>, which I’ll be writing about in a future blog post.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Running Cron in Docker</title>
+	  <link>/cron-in-docker</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-04-26T04:19:33-05:00</pubDate>
+	  <guid>/cron-in-docker</guid>
+	  <description><![CDATA[
+	     <p>Running <code class="language-plaintext highlighter-rouge">cron</code> in a Docker container is incredibly difficult to do correctly.
+This is partially because <code class="language-plaintext highlighter-rouge">cron</code> was designed to run in an environment that looks very different than a docker container,
+and partially because what we traditionally think of as <code class="language-plaintext highlighter-rouge">cron</code> is actually a different tool in each flavor of Linux.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="what-is-cron">What is <code class="language-plaintext highlighter-rouge">cron</code></h2>
+
+<blockquote>
+  <p>The software utility <strong>cron</strong> also known as <strong>cron job</strong> is a time-based job scheduler in Unix-like computer operating
+systems. Users who set up and maintain software environments use cron to schedule jobs (commands or shell scripts) to run
+periodically at fixed times, dates, or intervals. It typically automates system maintenance or administration—though its
+general-purpose nature makes it useful for things like downloading files from the Internet and downloading email at regular
+intervals.</p>
+</blockquote>
+
+<p><a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a></p>
+
+<p>Basically it’s a language/platform/distro agnostic tool for scheduling tasks/scripts to run automatically at some interval.</p>
+
+<h2 id="differences-between-various-versions">Differences between various versions</h2>
+
+<p>Though <code class="language-plaintext highlighter-rouge">cron</code>’s API is standardized, there are multiple implementations, which vary as the default for various distros
+(<a href="http://www.jimpryor.net/linux/dcron.html">dcron</a>, <a href="https://github.com/cronie-crond/cronie">cronie</a>,
+<a href="http://fcron.free.fr/">fcron</a> and <a href="https://directory.fsf.org/wiki/Vixie-cron">vixie-cron</a>)</p>
+
+<p>To add to the complexity, some of <code class="language-plaintext highlighter-rouge">cron</code>’s functionality is actually defined/provided by <code class="language-plaintext highlighter-rouge">anachron</code>. <code class="language-plaintext highlighter-rouge">anacron</code> was
+previously a stand-alone binary which was used to run commands periodically with a frequency defined in days. It works
+a little different from cron; assumes that a machine will not be powered on all the time.</p>
+
+<p>So to summarize, there are multiple <code class="language-plaintext highlighter-rouge">cron</code> implementations, with differing flags &amp; features, some with <code class="language-plaintext highlighter-rouge">anacron</code>
+functionality built-in, and some without. In the following sections I’ll call out different solutions for different
+distros/<code class="language-plaintext highlighter-rouge">cron</code> implementations (keep an eye out for <code class="language-plaintext highlighter-rouge">NOTE:</code> blocks)</p>
+
+<blockquote>
+  <p>NOTE: Installation instructions differ per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="language-plaintext highlighter-rouge">apt-get update &amp;&amp; apt-get install -y cron &amp;&amp; cron</code></li>
+    <li>Alpine: <code class="language-plaintext highlighter-rouge">which crond</code> # comes pre-installed</li>
+    <li>Centos: <code class="language-plaintext highlighter-rouge">yum install -y cronie &amp;&amp; crond -V</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="config-file">Config File</h2>
+
+<p>Let’s start with a simple issue. <code class="language-plaintext highlighter-rouge">cron</code> is designed to run in a multi-user environment, which is great when you’re running
+<code class="language-plaintext highlighter-rouge">cron</code> on a desktop, but less useful when running <code class="language-plaintext highlighter-rouge">cron</code> in a docker container.</p>
+
+<p>Rather than creating a user specific <code class="language-plaintext highlighter-rouge">crontab</code> file, in our Docker container we’ll modify the system-level <code class="language-plaintext highlighter-rouge">crontab</code>.</p>
+
+<p>Let’s create/update a file called <code class="language-plaintext highlighter-rouge">/etc/crontab</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date
+</code></pre></div></div>
+
+<p>This file will configure <code class="language-plaintext highlighter-rouge">cron</code> to run the <code class="language-plaintext highlighter-rouge">date</code> command every minute. We’ll talk about the output for this command in a later section.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: replace the existing <code class="language-plaintext highlighter-rouge">/etc/crontab</code> which contains <code class="language-plaintext highlighter-rouge">anacron</code> entries</li>
+    <li>Alpine: the crontab file should be written to <code class="language-plaintext highlighter-rouge">/var/spool/cron/crontabs/root</code>, also the format is slightly different (the <code class="language-plaintext highlighter-rouge">user</code> field should be removed).</li>
+    <li>Centos: replace the existing <code class="language-plaintext highlighter-rouge">/etc/crontab</code> which contains <code class="language-plaintext highlighter-rouge">anacron</code> entries</li>
+  </ul>
+</blockquote>
+
+<h2 id="foreground">Foreground</h2>
+
+<p>Now that we have created a <code class="language-plaintext highlighter-rouge">cron</code> config file, we need to start <code class="language-plaintext highlighter-rouge">cron</code>. On a normal system, we would start <code class="language-plaintext highlighter-rouge">cron</code> as a
+daemon, a background process usually managed by service manager. In the Docker world, the convention is 1 process per container,
+ running in the foreground.</p>
+
+<p>Thankfully most <code class="language-plaintext highlighter-rouge">cron</code> implementations support this, even though the flags may be different.</p>
+
+<blockquote>
+  <p>NOTE: Running cron in the foreground differs per distro</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="language-plaintext highlighter-rouge">cron -f -l 2</code></li>
+    <li>Alpine: <code class="language-plaintext highlighter-rouge">crond -f -l 2</code></li>
+    <li>Centos: <code class="language-plaintext highlighter-rouge">crond -n</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="environment">Environment</h2>
+
+<p>As mentioned earlier, <code class="language-plaintext highlighter-rouge">cron</code> is designed to work in a multi-user environment, which also means the <code class="language-plaintext highlighter-rouge">cron</code> daemon cannot
+make assumptions about the runtime environment (process environmental variables, etc). The way <code class="language-plaintext highlighter-rouge">cron</code> enforces this is
+by starting each job with a custom environment, using an implementation specific environmental variables file (usually <code class="language-plaintext highlighter-rouge">/etc/environment</code>)</p>
+
+<p>Since using environmental variables is a common configuration mechanism for Docker containers, we need a way to ensure the current
+Docker container environment is passed into the cron sub-processes. The best way to do this is by creating a custom
+entrypoint script which dumps the environment to the <code class="language-plaintext highlighter-rouge">cron</code> environment file, before starting <code class="language-plaintext highlighter-rouge">cron</code> in the foreground.</p>
+
+<p>Create the following <code class="language-plaintext highlighter-rouge">/entrypoint.sh</code> script in your Docker image.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nb">env</span> <span class="o">&gt;&gt;</span> /etc/environment
+
+<span class="c"># start cron in the foreground (replacing the current process)</span>
+<span class="nb">exec</span> <span class="s2">"cron -f"</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Centos: unfortunately <code class="language-plaintext highlighter-rouge">cronie</code> doesn’t read variables from <code class="language-plaintext highlighter-rouge">/etc/environment</code>.
+      <ul>
+        <li>You’ll need to manually source it before your script: <code class="language-plaintext highlighter-rouge">* * * * * root . /etc/environment; date</code></li>
+        <li>
+          <p>If you have multiple entries in your <code class="language-plaintext highlighter-rouge">crontab</code>, you can change the default <code class="language-plaintext highlighter-rouge">SHELL</code> for your <code class="language-plaintext highlighter-rouge">crontab</code> file, and make use of <code class="language-plaintext highlighter-rouge">BASH_ENV</code></p>
+
+          <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   SHELL=/bin/bash
+   BASH_ENV=/etc/environment
+   * * * * * root echo "${CUSTOM_ENV_VAR}"
+</code></pre></div>          </div>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</blockquote>
+
+<h2 id="stdoutstderr">STDOUT/STDERR</h2>
+
+<p>If you’ve been following along so far, you might be wondering why you’re not seeing any output from <code class="language-plaintext highlighter-rouge">date</code> in your
+terminal. That’s because even though <code class="language-plaintext highlighter-rouge">cron</code> is running in the foreground, the output from its child processes is designed
+to go to a log file (traditionally at <code class="language-plaintext highlighter-rouge">/var/log/cron</code>). Again, this might be fine on a standard linux host, but it’s
+sub-optimal for a Docker container.</p>
+
+<p>Let’s use some shell redirect magic to redirect the <code class="language-plaintext highlighter-rouge">STDOUT</code> and <code class="language-plaintext highlighter-rouge">STDERR</code> from our <code class="language-plaintext highlighter-rouge">cron</code> jobs, to the <code class="language-plaintext highlighter-rouge">cron</code> process
+(running as the primary process in the Docker container, with <a href="https://en.wikipedia.org/wiki/Process_identifier">PID 1</a>).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># &gt;/proc/1/fd/1 redirects STDOUT from the `date` command to PID1's STDOUT
+# 2&gt;/proc/1/fd/2 redirects STDERR from the `date` command to PID1's STDERR
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+</code></pre></div></div>
+
+<p>While <code class="language-plaintext highlighter-rouge">&gt;/proc/1/fd/1 2&gt;/proc/1/fd/2</code> may look intimidating, it’s the most consistent way to pass <code class="language-plaintext highlighter-rouge">cronjob</code> logs to the container’s
+STDOUT, without leveraging clunky solutions like <code class="language-plaintext highlighter-rouge">crond &amp;&amp; tail -f /var/log/cron</code></p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Alpine, as long as you start cron with the following command:</p>
+  <ul>
+    <li>Alpine: <code class="language-plaintext highlighter-rouge">crond -f -l 2</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="cron-package-installation">Cron package installation</h2>
+
+<p>Now that we have a working container with <code class="language-plaintext highlighter-rouge">cron</code>, we should take the time to clean up some of the unused cruft that our
+<code class="language-plaintext highlighter-rouge">cron</code> package installs, specifically configs for <code class="language-plaintext highlighter-rouge">anacron</code>.</p>
+
+<blockquote>
+  <p>NOTE:</p>
+
+  <ul>
+    <li>Debian/Ubuntu: <code class="language-plaintext highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+    <li>Alpine: <code class="language-plaintext highlighter-rouge">rm -rf /etc/periodic</code></li>
+    <li>Centos: <code class="language-plaintext highlighter-rouge">rm -rf /etc/cron.*/*</code></li>
+  </ul>
+</blockquote>
+
+<h2 id="kill">Kill</h2>
+
+<p>Finally, as you’ve been playing around, you may have noticed that it’s difficult to kill the container running <code class="language-plaintext highlighter-rouge">cron</code>.
+You may have had to use <code class="language-plaintext highlighter-rouge">docker kill</code> or <code class="language-plaintext highlighter-rouge">docker-compose kill</code> to terminate the container, rather than using <code class="language-plaintext highlighter-rouge">ctrl + C</code> or <code class="language-plaintext highlighter-rouge">docker stop</code>.</p>
+
+<p>Unfortunately, it seems like <code class="language-plaintext highlighter-rouge">SIGINT</code> is not always correctly handled by <code class="language-plaintext highlighter-rouge">cron</code> implementations when running in the foreground.</p>
+
+<p>After researching a couple of alternatives, the only solution that seemed to work was using a process supervisor (like
+<code class="language-plaintext highlighter-rouge">tini</code> or <code class="language-plaintext highlighter-rouge">s6-overlay</code>). Since <code class="language-plaintext highlighter-rouge">tini</code> was merged into Docker 1.13, technically, you can use it transparently by passing
+<code class="language-plaintext highlighter-rouge">--init</code> to your docker run command. In practice you often can’t because your cluster manager doesn’t support it.</p>
+
+<blockquote>
+  <p>NOTE: this is unnecessary in Centos, SIGTERM works correctly with <code class="language-plaintext highlighter-rouge">cronie</code> in the foreground.</p>
+</blockquote>
+
+<h2 id="putting-it-all-together">Putting it all together</h2>
+
+<p>Let’s see what all of this would look like for an <code class="language-plaintext highlighter-rouge">ubuntu</code> base image.</p>
+
+<p>Create a <code class="language-plaintext highlighter-rouge">Dockerfile</code></p>
+
+<div class="language-Dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> ubuntu</span>
+
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get <span class="nb">install</span> <span class="nt">-y</span> cron <span class="o">&amp;&amp;</span> which cron <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    <span class="nb">rm</span> <span class="nt">-rf</span> /etc/cron.<span class="k">*</span>/<span class="k">*</span>
+
+<span class="k">COPY</span><span class="s"> entrypoint.sh /entrypoint.sh</span>
+
+<span class="k">ENTRYPOINT</span><span class="s"> ["/entrypoint.sh"]</span>
+<span class="k">CMD</span><span class="s"> ["cron","-f", "-l", "2"]</span>
+</code></pre></div></div>
+
+<p>Create an <code class="language-plaintext highlighter-rouge">entrypoint.sh</code></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nb">env</span> <span class="o">&gt;&gt;</span> /etc/environment
+
+<span class="c"># execute CMD</span>
+<span class="nb">echo</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+<span class="nb">exec</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+
+</code></pre></div></div>
+
+<p>Create a <code class="language-plaintext highlighter-rouge">crontab</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+* * * * * root date &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+* * * * * root echo "${CUSTOM_ENV_VAR}" &gt;/proc/1/fd/1 2&gt;/proc/1/fd/2
+
+# An empty line is required at the end of this file for a valid cron file.
+
+</code></pre></div></div>
+
+<p>Build the Dockerfile and run it with <code class="language-plaintext highlighter-rouge">--init</code> (package <code class="language-plaintext highlighter-rouge">tini</code> or <code class="language-plaintext highlighter-rouge">s6-overlay</code> for containers in production)</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker build <span class="nt">-t</span> analogj/cron <span class="nb">.</span>
+docker run <span class="nt">--rm</span> <span class="nt">--name</span> cron <span class="nt">-e</span> <span class="nv">CUSTOM_ENV_VAR</span><span class="o">=</span>foobar <span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/crontab:/etc/crontab analogj/cron
+</code></pre></div></div>
+
+<p>You should see output like the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>foobar
+Tue Apr 27 14:31:00 UTC 2021
+</code></pre></div></div>
+
+<h1 id="fin">Fin</h1>
+
+<p>I’ve put together a working example of dockerized <code class="language-plaintext highlighter-rouge">cron</code> for multiple distros:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-cron"></div>
+
+<h2 id="references">References</h2>
+<ul>
+  <li>https://hynek.me/articles/docker-signals/</li>
+  <li>https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</title>
+	  <link>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-28T04:19:33-05:00</pubDate>
+	  <guid>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</guid>
+	  <description><![CDATA[
+	     <p>Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal in most cases. However,
+even them most robust software can run into issues. Which brings us to the <code class="language-plaintext highlighter-rouge">CrashLoopBackOff</code> error. A CrashloopBackOff
+means that you have a pod starting, crashing, starting again, and then crashing again.</p>
+
+<p>Crash loops can happen for a variety of reasons, but (in my opinion) the most difficult to fix are  CrashloopBackOff errors
+associated with a corrupted PersistentVolumeClaim. In this post we’ll discuss a technique you can use to safely detach
+and repair a PersistentVolumeClaim, to fix a CrashloopBackOff error.</p>
+
+<h1 id="detach-the-volume">Detach the Volume</h1>
+
+<p>The first step is to scale our failing deployment to 0. This is because by default PVC’s have a <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"><code class="language-plaintext highlighter-rouge">ReadWriteOnce</code> AccessMode</a>,
+meaning the volume can be mounted as read-write by a single node. If the failing pod is binding to the corrupted volume in <code class="language-plaintext highlighter-rouge">write</code> mode, then our
+debugging container can’t make any changes to it. Even if your PVC is <code class="language-plaintext highlighter-rouge">ReadWriteMany</code>, it’s safer to ensure nothing else is writing to the volume while
+wee make our repairs.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl scale deployment failed-deployment <span class="nt">--replicas</span><span class="o">=</span>0
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre></div></div>
+
+<h1 id="debugging-pod">Debugging Pod</h1>
+
+<p>Next we’ll need to inspect the deployment config to find the PVC identifier to repair.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get deployment <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">"{.spec.template.spec.volumes[*].persistentVolumeClaim.claimName}"</span> failed-deployment
+my-pvc-claim
+</code></pre></div></div>
+
+<p>Now that we know the identifier for the failing PVC, we need to create a debugging pod spec which mounts the PVC.
+In this example we’ll use <code class="language-plaintext highlighter-rouge">busybox</code>, but you could use any debugging tools image here.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># my-pvc-debugger.yaml</span>
+
+<span class="nn">---</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">volume-debugger</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+      <span class="na">persistentVolumeClaim</span><span class="pi">:</span>
+       <span class="na">claimName</span><span class="pi">:</span> <span class="s">&lt;CLAIM_IDENTIFIER_HERE&gt;</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">debugger</span>
+      <span class="na">image</span><span class="pi">:</span> <span class="s">busybox</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">sleep'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">3600'</span><span class="pi">]</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/data"</span>
+          <span class="na">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+</code></pre></div></div>
+
+<p>Next, lets create a new pod and run a shell inside it.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> /path/to/my-pvc-debugger.yaml
+pod <span class="s2">"volume-debugger"</span> created
+<span class="nv">$ </span>kubectl <span class="nb">exec</span> <span class="nt">-it</span> volume-debugger sh
+/ <span class="c">#</span>
+</code></pre></div></div>
+
+<p>Now that we’re inside the container we can explore the volume which is mounted at <code class="language-plaintext highlighter-rouge">/data</code> and fix the issue.</p>
+
+<h1 id="restore-pod">Restore Pod</h1>
+
+<p>Once we’ve repaired the PVC volume, we can exit the shell within the container and delete the debugger pod.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/ <span class="c"># logout</span>
+<span class="nv">$ </span>kubectl delete <span class="nt">-f</span> /path/to/my-pvc-debugger.yaml
+</code></pre></div></div>
+
+<p>Next, we’ll scale our deployment back up.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl scale deployment failed-deployment <span class="nt">--replicas</span><span class="o">=</span>1
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre></div></div>
+
+<h1 id="fin">Fin</h1>
+
+<p>In a perfect world we should never have to get hands on with our volumes, but occasionally bugs cause if to have to go
+and clean things up. This example shows a quick way to hop into a volume for a container which does not have any user environment.</p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://itnext.io/debugging-kubernetes-pvcs-a150f5efbe95
+    <ul>
+      <li>The guide above is a slightly modified version of Jacob Tomlinson’s work. Copied for ease of reference.</li>
+    </ul>
+  </li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Git Mirror Anywhere using the Dumb Http Protocol</title>
+	  <link>/git-mirror-anywhere-using-dumb-http-protocol</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-08T03:19:33-06:00</pubDate>
+	  <guid>/git-mirror-anywhere-using-dumb-http-protocol</guid>
+	  <description><![CDATA[
+	     <p>Lets talk about <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols">Git</a>. If you’ve done any professional software development, you’ve probably heard about Git.</p>
+
+<blockquote>
+  <p>Git is a free and open source distributed version control system designed to handle everything from small to very large projects with speed and efficiency.</p>
+</blockquote>
+
+<p>It’s a tiny, but powerful piece of software, that most software developers use every day. Even so, under the hood there’s dozens of powerful features that most developers
+don’t even know exist. Today I hope to introduce you to one of them, the “Dumb HTTP Protocol”.</p>
+
+<hr />
+
+<p>I recently found myself in a position needing to mirror a git repo to a firewalled environment where I didn’t want to stand up a dedicated Git server.
+I had access to a blob storage account, that could be used to serve static content over HTTP, but no compute.</p>
+
+<p>While investigating the Git protocol for <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> I had previously learned about something called the “Dumb HTTP Protocol”.
+Unlike the SSH and HTTP Git protocol that most of your are aware of, the Dumb HTTP protocol expects the bare Git repository to be served like normal files from the web server.</p>
+
+<p>At first glance, this looks liked exactly what we want, however, as you read further into the <a href="https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols#_dumb_http">documentation</a>
+you’ll see “Basically, all you have to do is put a bare Git repository under your HTTP document root and set up a specific post-update hook, and you’re done”.</p>
+
+<p>Since we don’t want to run a server at all, a post-hook script seems like a non-starter. Thankfully this is not the case, as long as you are ok with a bit of extra work.</p>
+
+<hr />
+
+<h2 id="the-dumb-http-protocol">The Dumb HTTP Protocol</h2>
+
+<p>Before we go to the solution, lets take a moment to dive into what actually happens when you attempt to clone from a Git remote using the Dumb HTTP protocol.
+Please note, some of the following examples are copied from the Git Documentation.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone http://server/simplegit-progit.git
+</code></pre></div></div>
+
+<p>The first thing this command does is pull down the <code class="language-plaintext highlighter-rouge">info/refs</code> file. This file is written by the <code class="language-plaintext highlighter-rouge">update-server-info</code> command in the Post hook, and does not normally exist.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/info/refs HTTP/1.0
+
+S: 200 OK
+S:
+S: 95dcfa3633004da0049d3d0fa03f80589cbcaf31	refs/heads/maint
+S: ca82a6dff817ec66f44342007202690a93763949	refs/heads/master
+S: 2cb58b79488a98d2721cea644875a8dd0026b115	refs/tags/v1.0
+S: a3c2e2402b99163d1d59756e5f207ae21cccba4c	refs/tags/v1.0^{}
+</code></pre></div></div>
+
+<p>The returned content is a UNIX formatted text file describing each ref and its known value.
+The file should not include the default ref named HEAD.</p>
+
+<p>Now you have a list of the remote references and SHA-1s. Next, you look for what the HEAD reference is so you know what to check out when you’re finished:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/HEAD HTTP/1.0
+
+ref: refs/heads/master
+</code></pre></div></div>
+
+<p>You need to check out the <code class="language-plaintext highlighter-rouge">master</code> branch when you’ve completed the process. At this point, you’re ready to start the walking process. Because your starting point is the <code class="language-plaintext highlighter-rouge">ca82a6</code> commit object you saw in the <code class="language-plaintext highlighter-rouge">info/refs</code> file, you start by fetching that:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/ca/82a6dff817ec66f44342007202690a93763949 HTTP/1.0
+
+(179 bytes of binary data)
+</code></pre></div></div>
+
+<p>You get an object back – that object is in loose format on the server, and you fetched it over a static HTTP GET request. You can zlib-uncompress it, strip off the header, and look at the commit content:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git cat-file -p ca82a6dff817ec66f44342007202690a93763949
+tree cfda3bf379e4f8dba8717dee55aab78aef7f4daf
+parent 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+author Scott Chacon &lt;schacon@gmail.com&gt; 1205815931 -0700
+committer Scott Chacon &lt;schacon@gmail.com&gt; 1240030591 -0700
+
+Change version number
+</code></pre></div></div>
+
+<p>Next, you have two more objects to retrieve – <code class="language-plaintext highlighter-rouge">cfda3b</code>, which is the tree of content that the commit we just retrieved points to; and <code class="language-plaintext highlighter-rouge">085bb3</code>, which is the parent commit:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/08/5bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+
+(179 bytes of data)
+</code></pre></div></div>
+
+<p>To see what packfiles are available on this server, you need to get the objects/info/packs file, which contains a listing of them (also generated by <code class="language-plaintext highlighter-rouge">update-server-info</code>):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GET $GIT_REPO_URL/objects/info/packs
+P pack-816a9b2334da9953e530f27bcac22082a9f5b835.pack
+</code></pre></div></div>
+
+<p>We’ll stop here. At this point we have a mechanism for retrieving information about the head of each branch, and a mechanism for retrieving the file content associated with a commit.</p>
+
+<h1 id="git-compatible-static-content-repository">Git Compatible Static Content Repository</h1>
+
+<p>So how do we leverage this knowledge to generate a version of our Git repository, that we can serve using a simple HTTP content server (no post-hook.sh necessary)?</p>
+
+<p>First we need to clone a bare version of our Git repository locally.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone --bare $GIT_REPO_URL
+</code></pre></div></div>
+
+<p>Then we’ll run the <code class="language-plaintext highlighter-rouge">git update-server-info</code> command on our bare repository, to generate the info files that Git clients expect.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd $REPO_DIR
+git update-server-info
+</code></pre></div></div>
+
+<p>At this point, we can copy this directory and serve it using a simple HTTP server (eg. S3 over CloudFront, Nginx, Apache, Artifactory, etc.).</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols</li>
+  <li>https://git-scm.com/docs/http-protocol</li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</title>
+	  <link>/customize-flatcar-kernel-part-3</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-12-12T03:19:33-06:00</pubDate>
+	  <guid>/customize-flatcar-kernel-part-3</guid>
+	  <description><![CDATA[
+	     <p>It’s been a while since I discussed building kernel modules for CoreOS (in <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-1">Part 1</a> and <a href="https://blog.thesparktree.com/customize-coreos-kernel-part-2">Part 2</a>)
+and lot’s has changed in the CoreOS world. <a href="https://www.redhat.com/en/about/press-releases/red-hat-acquire-coreos-expanding-its-kubernetes-and-containers-leadership">CoreOS was acquired by RedHat</a> and eventually replaced by
+<a href="https://docs.fedoraproject.org/en-US/fedora-coreos/faq/">CoreOS Fedora</a> but the original project lives on in <a href="https://kinvolk.io/blog/2018/03/announcing-the-flatcar-linux-project/">FlatCar linux</a>,
+a fork of CoreOS.</p>
+
+<p>Since those last posts, I’ve also started using a dedicated GPU to do hardware transcoding of video files. Unfortunately
+using a dedicated NVidia GPU means I need to change the process I use for building kernel modules.</p>
+
+<hr />
+
+<h1 id="building-a-developer-container">Building a Developer Container</h1>
+
+<p>As with CoreOS, the first step is building a <a href="https://docs.flatcar-linux.org/os/kernel-modules/">FlatCar Development Container</a>.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-developer"></div>
+
+<p>With the help of Github Actions, I’ve created a repository that will automatically generate versioned Docker images for each
+<a href="https://www.flatcar-linux.org/releases/">FlatCar Release Channel</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://stable.release.flatcar-linux.net/amd64-usr/current/version.txt <span class="nt">-o</span> version.txt
+<span class="nb">cat </span>version.txt
+<span class="nb">export</span> <span class="si">$(</span><span class="nb">cat </span>version.txt | xargs<span class="si">)</span>
+
+<span class="nb">echo</span> <span class="s2">"Download Developer Container"</span>
+curl <span class="nt">-L</span> https://stable.release.flatcar-linux.net/amd64-usr/<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>/flatcar_developer_container.bin.bz2 <span class="nt">-o</span> flatcar_developer_container.bin.bz2
+bunzip2 <span class="nt">-k</span> flatcar_developer_container.bin.bz2
+<span class="nb">mkdir</span> <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+<span class="nb">sudo </span>mount <span class="nt">-o</span> ro,loop,offset<span class="o">=</span>2097152 flatcar_developer_container.bin <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+<span class="nb">sudo tar</span> <span class="nt">-cp</span> <span class="nt">--one-file-system</span> <span class="nt">-C</span> <span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span> <span class="nb">.</span> | docker import - mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+<span class="nb">rm</span> <span class="nt">-rf</span> flatcar_developer_container.bin flatcar_developer_container.bin.bz2
+
+docker push mediadepot/flatcar-developer:<span class="k">${</span><span class="nv">FLATCAR_VERSION</span><span class="k">}</span>
+</code></pre></div></div>
+
+<p>While it’s useful to have the Flatcar Development Container easily accessible on Docker Hub, it’s not functional out of
+the box for building Kernel Modules. At the very least we need to provide the kernel source within the container.
+We need to be careful that the source code for the kernel matches the linux kernel deployed with the specific version of
+Flatcar.</p>
+
+<p>To do that, we’ll use a <a href="https://github.com/mediadepot/docker-flatcar-developer/blob/master/Dockerfile">Dockerfile</a>.</p>
+
+<div class="language-Dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ARG</span><span class="s"> FLATCAR_VERSION</span>
+<span class="k">FROM</span><span class="s"> mediadepot/flatcar-developer:${FLATCAR_VERSION}</span>
+<span class="k">LABEL</span><span class="s"> maintainer="Jason Kulatunga &lt;jason@thesparktree.com&gt;"</span>
+<span class="k">ARG</span><span class="s"> FLATCAR_VERSION</span>
+<span class="k">ARG</span><span class="s"> FLATCAR_BUILD</span>
+
+<span class="c"># Create a Flatcar Linux Developer image as defined in:</span>
+<span class="c"># https://docs.flatcar-linux.org/os/kernel-modules/</span>
+
+<span class="k">RUN </span>emerge-gitclone <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> <span class="nb">export</span> <span class="si">$(</span><span class="nb">cat</span> /usr/share/coreos/release | xargs<span class="si">)</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> <span class="nb">export </span><span class="nv">OVERLAY_VERSION</span><span class="o">=</span><span class="s2">"flatcar-</span><span class="k">${</span><span class="nv">FLATCAR_BUILD</span><span class="k">}</span><span class="s2">"</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> <span class="nb">export </span><span class="nv">PORTAGE_VERSION</span><span class="o">=</span><span class="s2">"flatcar-</span><span class="k">${</span><span class="nv">FLATCAR_BUILD</span><span class="k">}</span><span class="s2">"</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> <span class="nb">env</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> git <span class="nt">-C</span> /var/lib/portage/coreos-overlay checkout <span class="s2">"</span><span class="nv">$OVERLAY_VERSION</span><span class="s2">"</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> git <span class="nt">-C</span> /var/lib/portage/portage-stable checkout <span class="s2">"</span><span class="nv">$PORTAGE_VERSION</span><span class="s2">"</span>
+
+<span class="c"># try to use pre-built binaries and fall back to building from source</span>
+<span class="k">RUN </span>emerge <span class="nt">-gKq</span> <span class="nt">--jobs</span> 4 <span class="nt">--load-average</span> 4 coreos-sources <span class="o">||</span> <span class="nb">echo</span> <span class="s2">"failed to download binaries, fallback build from source:"</span> <span class="o">&amp;&amp;</span> emerge <span class="nt">-q</span> <span class="nt">--jobs</span> 4 <span class="nt">--load-average</span> 4 coreos-sources
+
+<span class="c"># Prepare the filesystem</span>
+<span class="c"># KERNEL_VERSION is determined from kernel source, not running kernel.</span>
+<span class="c"># see https://superuser.com/questions/504684/is-the-version-of-the-linux-kernel-listed-in-the-source-some-where</span>
+<span class="k">RUN </span><span class="nb">cp</span> /usr/lib64/modules/<span class="si">$(</span><span class="nb">ls</span> /usr/lib64/modules<span class="si">)</span>/build/.config /usr/src/linux/ <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> make <span class="nt">-C</span> /usr/src/linux modules_prepare <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> <span class="nb">cp</span> /usr/lib64/modules/<span class="si">$(</span><span class="nb">ls</span> /usr/lib64/modules<span class="si">)</span>/build/Module.symvers /usr/src/linux/
+</code></pre></div></div>
+
+<h1 id="pre-compiling-nvidia-kernel-driver">Pre-Compiling Nvidia Kernel Driver</h1>
+
+<p>Now that we have a Docker image matching our Flatcar version, the next thing we need to do is build the Nvidia Drivers against
+the kernel source. Again, we’ll be using Github Actions to pre-build our Docker image, meaning we need to take special care
+when we compile the driver, since Docker images share a kernel with the host machine, and the Github Action server is
+definitely running a kernel that is different from the kernel we’ll be running on our actual Flatcar host.</p>
+
+<div class="github-widget" data-repo="mediadepot/docker-flatcar-nvidia-driver"></div>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+./nvidia-installer <span class="nt">-s</span> <span class="nt">-n</span> <span class="se">\</span>
+  <span class="nt">--kernel-name</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">KERNEL_VERSION</span><span class="k">}</span><span class="s2">"</span> <span class="se">\</span>
+  <span class="nt">--kernel-source-path</span><span class="o">=</span>/usr/src/linux <span class="se">\</span>
+  <span class="nt">--no-check-for-alternate-installs</span> <span class="se">\</span>
+  <span class="nt">--no-opengl-files</span> <span class="se">\</span>
+  <span class="nt">--no-distro-scripts</span> <span class="se">\</span>
+  <span class="nt">--kernel-install-path</span><span class="o">=</span><span class="s2">"/</span><span class="nv">$PWD</span><span class="s2">"</span> <span class="se">\</span>
+  <span class="nt">--log-file-name</span><span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>/nvidia-installer.log <span class="o">||</span> <span class="nb">true</span>
+
+</code></pre></div></div>
+
+<p>The important flags for compiling the Nvidia driver for a different kernel are the following:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">--kernel-name</code> - build and install the NVIDIA kernel module for the non-running kernel specified by KERNEL-NAME
+  (KERNEL-NAME should be the output of <code class="language-plaintext highlighter-rouge">uname -r</code> when the target kernel is actually running).</li>
+  <li><code class="language-plaintext highlighter-rouge">--kernel-source-path</code> - The directory containing the kernel source files that should be used when compiling the NVIDIA kernel module.</li>
+</ul>
+
+<p>Now that we can pre-compile the Nvidia driver for Flatcar, we need a way to download the drivers and install them automatically
+since Flatcar is an auto-updating OS.</p>
+
+<h1 id="forklift---auto-updating-kernel-drivers">Forklift - Auto Updating Kernel Drivers</h1>
+
+<div class="github-widget" data-repo="mediadepot/flatcar-forklift"></div>
+
+<p>Forklift is the last part of the equation. It’s a Systemd service and a simple script, which runs automatically on startup
+pulling the relevant Docker image containing a Nvidia driver and matches the version of Flatcar, caches the drivers to a specific folder, and then
+installs the kernel module.</p>
+
+<h1 id="extending-forklift">Extending Forklift</h1>
+
+<p>There’s nothing unique about this pattern, it can be used to continuously build any other kernel module (eg. wireguard), and
+contributions are welcome!</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Home Server - Disk Management</title>
+	  <link>/disk-management</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-11-20T03:19:33-06:00</pubDate>
+	  <guid>/disk-management</guid>
+	  <description><![CDATA[
+	     <h1 id="adding-a-new-disk-to-your-homeserver">Adding a new disk to your homeserver</h1>
+
+<h2 id="identify-your-new-devices">Identify your new devices</h2>
+
+<ol>
+  <li>Take photos of your drives before inserting them. Specifically, you’ll want to track the serial number, manufacturer and model.
+This will make identifying the new drives in a large system much easier.</li>
+  <li>Install the drives and power on your server.</li>
+  <li>Get a list of your mounted drives using <code class="language-plaintext highlighter-rouge">cat /etc/mtab | grep /dev/</code>.
+If you use specific drive mounting folder structure, you can be fairly certain these devices do not correspond with your newly added drives.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/dev/sdg /mnt/drive4 ext4 rw,seclabel,relatime 0 0
+/dev/sdb /mnt/drive5 ext4 rw,seclabel,relatime 0 0
+/dev/sdf /mnt/drive1 ext4 rw,seclabel,relatime 0 0
+/dev/sdd /mnt/drive2 ext4 rw,seclabel,relatime 0 0
+</code></pre></div></div>
+
+<ol>
+  <li>List all device detected by your system, and ignore references to devices that you already recognize.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ls -alt /dev/sd*
+brw-rw----. 1 root disk 8, 32 Nov 21 16:40 /dev/sdc
+brw-rw----. 1 root disk 8, 64 Nov 21 16:23 /dev/sde
+brw-rw----. 1 root disk 8,  1 Nov 21 16:01 /dev/sda1
+brw-rw----. 1 root disk 8,  2 Nov 21 16:01 /dev/sda2
+brw-rw----. 1 root disk 8,  0 Nov 21 16:01 /dev/sda
+brw-rw----. 1 root disk 8, 16 Nov 21 16:01 /dev/sdb
+brw-rw----. 1 root disk 8, 80 Nov 21 16:01 /dev/sdf
+brw-rw----. 1 root disk 8, 96 Nov 21 16:01 /dev/sdg
+brw-rw----. 1 root disk 8, 48 Nov 21 16:01 /dev/sdd
+</code></pre></div>    </div>
+    <p>In this case, all we care about are <code class="language-plaintext highlighter-rouge">/dev/sdc</code> and /dev/sde`</p>
+  </li>
+  <li>Get information about these unknown devices, to match against the Manufacturer, Model &amp; Serial number of the inserted drives.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ fdisk -l
+
+...
+
+Disk /dev/sde: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+Disk /dev/sdc: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</code></pre></div></div>
+
+<p>The models listed match our disk models, but lets get their serial numbers to be sure.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ udevadm info --query=all --name=/dev/sdc | grep SERIAL
+E: ID_SERIAL_SHORT=Y5HXXXXX
+
+$ udevadm info --query=all --name=/dev/sde | grep SERIAL
+E: ID_SERIAL_SHORT=9LGXXXXXX
+</code></pre></div></div>
+<p>Once we’ve confirmed these serial numbers match the devices we added, it’s time to format the devices.</p>
+
+<h2 id="format">Format</h2>
+
+<p>We’ll be using <a href="https://github.com/trapexit/backup-and-recovery-howtos">trapexit’s excellent backup &amp; recovery guide</a> as a reference here.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ mkfs.ext4 -m 0 -T largefile4 -L &lt;label&gt; /dev/&lt;device&gt;
+
+mke2fs 1.42.9 (4-Feb-2014)
+Discarding device blocks: done
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+16 inodes, 4096 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=0
+1 block group
+32768 blocks per group, 32768 fragments per group
+16 inodes per group
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+</code></pre></div></div>
+
+<ul>
+  <li>-m <reserved-blocks-percentage>: Reserved blocks for super-user. We set it to zero because these drives aren't used in a way where that really matters.a</reserved-blocks-percentage></li>
+  <li>-T <usage-type>: Specifies how the filesystem is going to be used so optimal paramters can be chosen. Types are defined in `/etc/mke2fs.conf`. We set it to `largefile4` because we expect fewer, large files relative to typical usage. If you expect a large number of files or are unsure simply remove the option all together.</usage-type></li>
+  <li>-L <label>: Sets the label for the filesystem. A suggested format is: SIZE-MANUFACTURE-N. For example: <code class="language-plaintext highlighter-rouge">2.0TB-Seagate-0</code> for the first 2.0TB Seagate drive installed.</label></li>
+</ul>
+
+<p>It’s generally a good idea to format the raw device rather than creating partitions.</p>
+
+<ol>
+  <li>The partition is mostly useless to us since we plan on using the entire drive for storage.</li>
+  <li>We won’t need to worry about MBR vs GPT.</li>
+  <li>We won’t need to worry about block alignment which can effect performance if misaligned.</li>
+  <li>When a 512e/4k drive is moved between a native SATA controller and a USB SATA adaptor there won’t be partition block misalignment. Often USB adapters will report 4k/4k to the OS while the drive will report 512/4k causing the OS to fail to find the paritions or filesystems. This can be fixed but no tools exist to do the procedure automatically.</li>
+</ol>
+
+<h2 id="mount">Mount</h2>
+<p>Next we’ll need to mount the devices.</p>
+
+<p>Lets make the mount directories, following our folder naming structure.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir -p /mnt/drive3
+mkdir -p /mnt/drive6
+</code></pre></div></div>
+<p>Next we can actually mount the devices the new directories</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mount /dev/sde /mnt/drive3
+mount /dev/sdc /mnt/drive6
+</code></pre></div></div>
+
+<p>These mounts are just for testing, and are not persistent. Since we’re using Systemd, we can create mount config files
+and tell Systemd to automatically mount our drives and manage them.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl edit --force --full mnt-drive3.mount
+
+[Mount]
+What=/dev/disk/by-uuid/e1378723-7861-49b9-8e01-0bd063f0ecdd
+Where=/mnt/drive3
+Type=ext4
+
+[Install]
+WantedBy=local-fs.target
+</code></pre></div></div>
+
+<p>Finally  we need to “enable” the systemd service:</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl enable mnt-drive3.mount</code></p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Traefik v2 - Advanced Configuration</title>
+	  <link>/traefik-advanced-config</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-05-28T00:37:09-05:00</pubDate>
+	  <guid>/traefik-advanced-config</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based applications that is easy,
+dynamic, automatic, fast, full-featured, production proven, provides metrics, and integrates with every major cluster technology
+      https://containo.us/traefik/</p>
+</blockquote>
+
+<p>Still not sure what Traefik is? Basically it’s a load balancer &amp; reverse proxy that integrates with docker/kubernetes to automatically
+route requests to your containers, with very little configuration.</p>
+
+<p>The release of Traefik v2, while adding tons of features, also completely threw away backwards compatibility, meaning that
+ the documentation and guides you can find on the internet are basically useless.
+It doesn’t help that the auto-magic configuration only works for toy examples. To do anything complicated requires some actual configuration.</p>
+
+<p>This guide assumes you’re somewhat familiar with Traefik, and you’re interested in adding some of the advanced features mentioned in the Table of Contents.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<ul>
+  <li>Docker</li>
+  <li>A custom domain to assign to Traefik, or a <a href="https://blog.thesparktree.com/local-development-with-wildcard-dns">fake domain (.lan) configured for wildcard local development</a></li>
+</ul>
+
+<h2 id="base-traefik-docker-compose">Base Traefik Docker-Compose</h2>
+
+<p>Before we start working with the advanced features of Traefik, lets get a simple example working.
+We’ll use this example as the base for any changes necessary to enable an advanced Traefik feature.</p>
+
+<ul>
+  <li>
+    <p>First, we need to create a shared Docker network. Docker Compose (which we’ll be using in the following examples) will create your container(s)
+but it will also create a docker network specifically for containers defined in the compose file. This is fine until
+you notice that traefik is unable to route to containers defined in other <code class="language-plaintext highlighter-rouge">docker-compose.yml</code> files, or started manually via <code class="language-plaintext highlighter-rouge">docker run</code>
+To solve this, we’ll need to create a shared docker network using <code class="language-plaintext highlighter-rouge">docker network create traefik</code> first.</p>
+  </li>
+  <li>
+    <p>Next, lets create a new folder and a <code class="language-plaintext highlighter-rouge">docker-compose.yml</code> file. In the subsequent examples, all differences from this config will be bolded.</p>
+  </li>
+</ul>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">traefik</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">traefik:v2.2</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="c1"># The HTTP port</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">80:80"</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="c1"># For Traefik's automated config to work, the docker socket needs to be</span>
+      <span class="c1"># mounted. There are some security implications to this.</span>
+      <span class="c1"># See https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface</span>
+      <span class="c1"># and https://docs.traefik.io/providers/docker/#docker-api-access</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">/var/run/docker.sock:/var/run/docker.sock:ro"</span>
+    <span class="na">command</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">--providers.docker</span>
+      <span class="pi">-</span> <span class="s">--entrypoints.web.address=:80</span>
+      <span class="pi">-</span> <span class="s">--providers.docker.network=traefik</span>
+    <span class="na">networks</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">traefik</span>
+
+<span class="c1"># Use our previously created `traefik` docker network, so that we can route to</span>
+<span class="c1"># containers that are created in external docker-compose files and manually via</span>
+<span class="c1"># `docker run`</span>
+<span class="na">networks</span><span class="pi">:</span>
+  <span class="na">traefik</span><span class="pi">:</span>
+    <span class="na">external</span><span class="pi">:</span> <span class="kc">true</span>
+</code></pre></div></div>
+
+<h2 id="webui-dashboard">WebUI Dashboard</h2>
+
+<p>First, lets start by enabling the built in Traefik dashboard. This dashboard is useful for debugging as we enable other
+advanced features, however you’ll want to ensure that it’s disabled in production.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      <b># The Web UI (enabled by --api.insecure=true)</b>
+      <b>- "8080:8080"</b>
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      <b>- --api.insecure=true</b>
+    labels:
+      <b>- 'traefik.http.routers.traefik.rule=Host(`traefik.example.com`)'</b>
+      <b>- 'traefik.http.routers.traefik.service=api@internal'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>In a browser, just open up <code class="language-plaintext highlighter-rouge">http://traefik.example.com</code> or the domain name you specified in the <code class="language-plaintext highlighter-rouge">traefik.http.routers.traefik.rule</code> label.
+You should see the following dashboard:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-dashboard.png" alt="traefik dashboard" style="max-height: 500px;" /></p>
+
+<h2 id="automatic-subdomain-routing">Automatic Subdomain Routing</h2>
+
+<p>One of the most useful things about Traefik is its ability to dynamically route traffic to containers.
+Rather than have to explicitly assign a domain or subdomain for each container, you can tell Traefik to use the container name
+(or service name in a docker-compose file) prepended to a domain name for dynamic routing. eg. <code class="language-plaintext highlighter-rouge">container_name.example.com</code></p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      <b>- '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Next, lets start up a Docker container running the actual server that we want to route to.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="se">\</span>
+    <span class="nt">--rm</span> <span class="se">\</span>
+    <span class="nt">--label</span> <span class="s1">'traefik.http.services.foo.loadbalancer.server.port=80'</span> <span class="se">\</span>
+    <span class="nt">--name</span> <span class="s1">'foo'</span> <span class="se">\</span>
+    <span class="nt">--network</span><span class="o">=</span>traefik <span class="se">\</span>
+    containous/whoami
+
+</code></pre></div></div>
+
+<p>Whenever a container starts Traefik will interpolate the <code class="language-plaintext highlighter-rouge">defaultRule</code> and configure a router for this container.
+In this example, we’ve specified that the container name is <code class="language-plaintext highlighter-rouge">foo</code>, so the container will be accessible at
+<code class="language-plaintext highlighter-rouge">foo.example.com</code></p>
+
+<blockquote>
+  <p>Note: if your service is running in another docker-compose file, <code class="language-plaintext highlighter-rouge">{{ normalize .Name }}</code> will be interpolated as: <code class="language-plaintext highlighter-rouge">service_name-folder_name</code>,
+so your container will be accessible at <code class="language-plaintext highlighter-rouge">service_name-folder_name.example.com</code></p>
+</blockquote>
+
+<h3 id="override-subdomain-routing-using-container-labels">Override Subdomain Routing using Container Labels</h3>
+
+<p>You can override the default routing rule (<code class="language-plaintext highlighter-rouge">providers.docker.defaultRule</code>) for your container by adding a <code class="language-plaintext highlighter-rouge">traefik.http.routers.*.rule</code> label.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="se">\</span>
+    <span class="nt">--rm</span> <span class="se">\</span>
+    <span class="nt">--label</span> <span class="s1">'traefik.http.services.foo.loadbalancer.server.port=80'</span> <span class="se">\</span>
+    <span class="nt">--label</span> <span class="s1">'traefik.http.routers.foo.rule=Host(`bar.example.com`)'</span>
+    <span class="nt">--name</span> <span class="s1">'foo'</span> <span class="se">\</span>
+    <span class="nt">--network</span><span class="o">=</span>traefik <span class="se">\</span>
+    containous/whoami
+
+</code></pre></div></div>
+
+<h2 id="restrict-scope">Restrict Scope</h2>
+<p>By default Traefik will watch for all containers running on the Docker daemon, and attempt to automatically configure routes and services for each.
+If you’d like a litte more control, you can pass the <code class="language-plaintext highlighter-rouge">--providers.docker.exposedByDefault=false</code> CMD argument to the Traefik container and selectively
+enable routing for your containers by adding a <code class="language-plaintext highlighter-rouge">traefik.enable=true</code> label.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      <b>- '--providers.docker.exposedByDefault=false'</b>
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      <b>- traefik.enable=true</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>As I mentioned earlier, <code class="language-plaintext highlighter-rouge">normalize .Name</code> will be interpolated as <code class="language-plaintext highlighter-rouge">service_name-folder_name</code> for containers started via docker-compose.
+So my Hello-World test container will be accessible as <code class="language-plaintext highlighter-rouge">hellosvc-tmp.example.com</code> on my local machine.</p>
+
+<h2 id="automated-ssl-certificates-using-letsencrypt-dns-integration">Automated SSL Certificates using LetsEncrypt DNS Integration</h2>
+<p>Next, lets look at how to securely access Traefik managed containers over SSL using LetsEncrypt certificates.</p>
+
+<p>The great thing about this setup is that Traefik will automatically request and renew the SSL certificate for you, even if your
+site is not accessible on the public internet.</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      <b># The HTTPS port</b>
+      <b>- "443:443"</b>
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      <b># It's a good practice to persist the Letsencrypt certificates so that they don't change if the Traefik container needs to be restarted.</b>
+      <b>- "./letsencrypt:/letsencrypt"</b>
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      <b>- --entrypoints.websecure.address=:443</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      <b># We're going to use the DNS challenge since it allows us to generate</b>
+      <b># certificates for intranet/lan sites as well</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"</b>
+      <b># We're using cloudflare for this example, but many DNS providers are</b>
+      <b># supported: https://docs.traefik.io/https/acme/#providers </b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"</b>
+      <b>- "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"</b>
+    environment:
+      <b># We need to provide credentials to our DNS provider.</b>
+      <b># See https://docs.traefik.io/https/acme/#providers </b>
+      <b>- "CF_DNS_API_TOKEN=XXXXXXXXX"</b>
+      <b>- "CF_ZONE_API_TOKEN=XXXXXXXXXX"</b>
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      <b>- traefik.http.routers.hellosvc.entrypoints=websecure</b>
+      <b>- 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'</b>
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Now we can visit our Hello World container by visiting <code class="language-plaintext highlighter-rouge">https://hellosvc-tmp.example.com</code>.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-letsencrypt.jpg" alt="letsencrypt ssl certificate" style="max-height: 500px;" /></p>
+
+<p>Note: Traefik requires additional configuration to automatically redirect HTTP to HTTPS. See the instructions in the next section.</p>
+
+<h3 id="automatically-redirect-http---https">Automatically Redirect HTTP -&gt; HTTPS.</h3>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      <b>- --entrypoints.web.http.redirections.entryPoint.to=websecure</b>
+      <b>- --entrypoints.web.http.redirections.entryPoint.scheme=https</b>
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>Note, the <code class="language-plaintext highlighter-rouge">--entrypoints.web.http.redirections.entryPoint.*</code> <code class="language-plaintext highlighter-rouge">command line flags</code> are only available in Traefik v2.2+. If you need HTTP to HTTPS
+redirection for Traefik v2.0 or v2.1, you’ll need to add the following <code class="language-plaintext highlighter-rouge">labels</code> instead:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>traefik:
+  ....
+  labels:
+    - traefik.http.routers.https-redirect.entrypoints=web
+    - traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)
+    - traefik.http.routers.https-redirect.middlewares=https-only
+    - traefik.http.middlewares.https-only.redirectscheme.scheme=https
+</code></pre></div></div>
+
+<h2 id="2fa-sso-and-saml">2FA, SSO and SAML</h2>
+
+<p>Traefik supports using an external service to check for credentials. This external service can then be used to enable
+single sign on (SSO) for your apps, including 2FA and/or SAML.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-authforward.png" alt="Traefik external service" style="max-height: 500px;" /></p>
+
+<p>In this example, I’ll be using <a href="https://github.com/authelia/authelia">Authelia</a> to enable SSO, but please note that Authelia does
+not support SAML, only 2FA and Forward Auth.</p>
+
+<p>Authelia requires HTTPS, so we’ll base our Traefik configuration on the previous example (Traefik with Letsencrypt certificates &amp; Http to Https redirects)</p>
+
+<pre><code class="yaml">
+version: '2'
+services:
+  traefik:
+    image: traefik:v2.2
+    ports:
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --providers.docker.network=traefik
+      - '--providers.docker.defaultRule=Host(`{{ normalize .Name }}.example.com`)'
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.mydnschallenge.acme.email=postmaster@example.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
+
+    environment:
+      - "CF_DNS_API_TOKEN=XXXXXXXXX"
+      - "CF_ZONE_API_TOKEN=XXXXXXXXXX"
+    networks:
+      - traefik
+
+  authelia:
+    image: authelia/authelia
+    volumes:
+      - './authelia/configuration.yml:/etc/authelia/configuration.yml:ro'
+      - './authelia/users_database.yml:/etc/authelia/users_database.yml:ro'
+      - './authelia/data:/etc/authelia/data:rw'
+    environment:
+      - 'TZ=America/Los_Angeles'
+    labels:
+      - 'traefik.http.services.authelia.loadbalancer.server.port=9091'
+      - 'traefik.http.routers.authelia.rule=Host(`login.example.com`)'
+      - 'traefik.http.routers.authelia.entrypoints=websecure'
+      - 'traefik.http.routers.authelia.tls.certresolver=mydnschallenge'
+    networks:
+      - traefik
+
+  hellosvc:
+    image: containous/whoami
+    labels:
+      - traefik.http.routers.hellosvc.entrypoints=websecure
+      - 'traefik.http.routers.hellosvc.tls.certresolver=mydnschallenge'
+      <b>- 'traefik.http.routers.hellosvc.middlewares=authme'</b>
+
+      <b># this forwardauth.address is complex but incredibly important.</b>
+      <b># http://authelia:9091 is the internal routable container name.</b>
+      <b># https://login.example.com is the external url for authelia </b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.address=http://authelia:9091/api/verify?rd=https://login.example.com/'</b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.trustforwardheader=true'</b>
+      <b>- 'traefik.http.middlewares.authme.forwardauth.authresponseheaders=X-Forwarded-User'</b>
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+</code></pre>
+
+<p>In the above <code class="language-plaintext highlighter-rouge">docker-compose.yml</code> file, under the <code class="language-plaintext highlighter-rouge">authelia</code> service, 2 config files are referenced <code class="language-plaintext highlighter-rouge">configuration.yml</code> and <code class="language-plaintext highlighter-rouge">users_database.yml</code>.</p>
+
+<p><code class="language-plaintext highlighter-rouge">configuration.yml</code> is the configuration file for Authelia. Here’s an example of what that file looks like. You will need ensure that
+all references to the <code class="language-plaintext highlighter-rouge">example.com</code> domain are replaced with your chosen (sub)domain.</p>
+
+<p>See <a href="https://github.com/authelia/authelia/blob/master/config.template.yml">config.template.yml on github</a> for a comprehensive list of options.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">###############################################################</span>
+<span class="c1">#                   Authelia configuration                    #</span>
+<span class="c1">###############################################################</span>
+
+<span class="c1"># The host and port to listen on</span>
+<span class="na">host</span><span class="pi">:</span> <span class="s">0.0.0.0</span>
+<span class="na">port</span><span class="pi">:</span> <span class="m">9091</span>
+
+<span class="c1"># Level of verbosity for logs: info, debug, trace</span>
+<span class="na">log_level</span><span class="pi">:</span> <span class="s">info</span>
+
+<span class="c1"># The secret used to generate JWT tokens when validating user identity by</span>
+<span class="c1"># email confirmation.</span>
+<span class="na">jwt_secret</span><span class="pi">:</span> <span class="s">change_this_secret</span>
+
+<span class="c1"># Default redirection URL</span>
+<span class="c1">#</span>
+<span class="c1"># If user tries to authenticate without any referer, Authelia</span>
+<span class="c1"># does not know where to redirect the user to at the end of the</span>
+<span class="c1"># authentication process.</span>
+<span class="c1"># This parameter allows you to specify the default redirection</span>
+<span class="c1"># URL Authelia will use in such a case.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: this parameter is optional. If not provided, user won't</span>
+<span class="c1"># be redirected upon successful authentication.</span>
+<span class="na">default_redirection_url</span><span class="pi">:</span> <span class="s">http://example.com/</span>
+
+<span class="c1"># TOTP Issuer Name</span>
+<span class="c1">#</span>
+<span class="c1"># This will be the issuer name displayed in Google Authenticator</span>
+<span class="c1"># See: https://github.com/google/google-authenticator/wiki/Key-Uri-Format for more info on issuer names</span>
+<span class="na">totp</span><span class="pi">:</span>
+  <span class="na">issuer</span><span class="pi">:</span> <span class="s">authelia.com</span>
+
+<span class="c1"># Duo Push API</span>
+<span class="c1">#</span>
+<span class="c1"># Parameters used to contact the Duo API. Those are generated when you protect an application</span>
+<span class="c1"># of type "Partner Auth API" in the management panel.</span>
+<span class="c1"># duo_api:</span>
+<span class="c1">#   hostname: api-123456789.example.com</span>
+<span class="c1">#   integration_key: ABCDEF</span>
+<span class="c1">#   secret_key: 1234567890abcdefghifjkl</span>
+
+<span class="c1"># The authentication backend to use for verifying user passwords</span>
+<span class="c1"># and retrieve information such as email address and groups</span>
+<span class="c1"># users belong to.</span>
+<span class="c1">#</span>
+<span class="c1"># There are two supported backends: `ldap` and `file`.</span>
+<span class="na">authentication_backend</span><span class="pi">:</span>
+
+  <span class="c1"># File backend configuration.</span>
+  <span class="c1">#</span>
+  <span class="c1"># With this backend, the users database is stored in a file</span>
+  <span class="c1"># which is updated when users reset their passwords.</span>
+  <span class="c1"># Therefore, this backend is meant to be used in a dev environment</span>
+  <span class="c1"># and not in production since it prevents Authelia to be scaled to</span>
+  <span class="c1"># more than one instance.</span>
+  <span class="c1">#</span>
+  <span class="na">file</span><span class="pi">:</span>
+    <span class="na">path</span><span class="pi">:</span> <span class="s">/etc/authelia/users_database.yml</span>
+
+<span class="c1"># Access Control</span>
+<span class="c1">#</span>
+<span class="c1"># Access control is a list of rules defining the authorizations applied for one</span>
+<span class="c1"># resource to users or group of users.</span>
+<span class="c1">#</span>
+<span class="c1"># If 'access_control' is not defined, ACL rules are disabled and the `bypass`</span>
+<span class="c1"># rule is applied, i.e., access is allowed to anyone. Otherwise restrictions follow</span>
+<span class="c1"># the rules defined.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: One can use the wildcard * to match any subdomain.</span>
+<span class="c1"># It must stand at the beginning of the pattern. (example: *.mydomain.com)</span>
+<span class="c1">#</span>
+<span class="c1"># Note: You must put patterns containing wildcards between simple quotes for the YAML</span>
+<span class="c1"># to be syntactically correct.</span>
+<span class="c1">#</span>
+<span class="c1"># Definition: A `rule` is an object with the following keys: `domain`, `subject`,</span>
+<span class="c1"># `policy` and `resources`.</span>
+<span class="c1">#</span>
+<span class="c1"># - `domain` defines which domain or set of domains the rule applies to.</span>
+<span class="c1">#</span>
+<span class="c1"># - `subject` defines the subject to apply authorizations to. This parameter is</span>
+<span class="c1">#    optional and matching any user if not provided. If provided, the parameter</span>
+<span class="c1">#    represents either a user or a group. It should be of the form 'user:&lt;username&gt;'</span>
+<span class="c1">#    or 'group:&lt;groupname&gt;'.</span>
+<span class="c1">#</span>
+<span class="c1"># - `policy` is the policy to apply to resources. It must be either `bypass`,</span>
+<span class="c1">#   `one_factor`, `two_factor` or `deny`.</span>
+<span class="c1">#</span>
+<span class="c1"># - `resources` is a list of regular expressions that matches a set of resources to</span>
+<span class="c1">#    apply the policy to. This parameter is optional and matches any resource if not</span>
+<span class="c1">#    provided.</span>
+<span class="c1">#</span>
+<span class="c1"># Note: the order of the rules is important. The first policy matching</span>
+<span class="c1"># (domain, resource, subject) applies.</span>
+<span class="na">access_control</span><span class="pi">:</span>
+  <span class="c1"># Default policy can either be `bypass`, `one_factor`, `two_factor` or `deny`.</span>
+  <span class="c1"># It is the policy applied to any resource if there is no policy to be applied</span>
+  <span class="c1"># to the user.</span>
+  <span class="na">default_policy</span><span class="pi">:</span> <span class="s">deny</span>
+
+  <span class="na">rules</span><span class="pi">:</span>
+    <span class="c1"># Rules applied to everyone</span>
+
+    <span class="pi">-</span> <span class="na">domain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">*.example.com"</span>
+      <span class="na">policy</span><span class="pi">:</span> <span class="s">one_factor</span>
+
+<span class="c1"># Configuration of session cookies</span>
+<span class="c1">#</span>
+<span class="c1"># The session cookies identify the user once logged in.</span>
+<span class="na">session</span><span class="pi">:</span>
+  <span class="c1"># The name of the session cookie. (default: authelia_session).</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">authelia_session</span>
+
+  <span class="c1"># The secret to encrypt the session cookie.</span>
+  <span class="na">secret</span><span class="pi">:</span> <span class="s">change_this_secret</span>
+
+  <span class="c1"># The time in seconds before the cookie expires and session is reset.</span>
+  <span class="na">expiration</span><span class="pi">:</span> <span class="m">3600</span> <span class="c1"># 1 hour</span>
+
+  <span class="c1"># The inactivity time in seconds before the session is reset.</span>
+  <span class="na">inactivity</span><span class="pi">:</span> <span class="m">300</span> <span class="c1"># 5 minutes</span>
+
+  <span class="c1"># The domain to protect.</span>
+  <span class="c1"># Note: the authenticator must also be in that domain. If empty, the cookie</span>
+  <span class="c1"># is restricted to the subdomain of the issuer.</span>
+  <span class="na">domain</span><span class="pi">:</span> <span class="s">example.com</span>
+
+<span class="c1"># Configuration of the authentication regulation mechanism.</span>
+<span class="c1">#</span>
+<span class="c1"># This mechanism prevents attackers from brute forcing the first factor.</span>
+<span class="c1"># It bans the user if too many attempts are done in a short period of</span>
+<span class="c1"># time.</span>
+<span class="na">regulation</span><span class="pi">:</span>
+  <span class="c1"># The number of failed login attempts before user is banned.</span>
+  <span class="c1"># Set it to 0 to disable regulation.</span>
+  <span class="na">max_retries</span><span class="pi">:</span> <span class="m">3</span>
+
+  <span class="c1"># The time range during which the user can attempt login before being banned.</span>
+  <span class="c1"># The user is banned if the authentication failed `max_retries` times in a `find_time` seconds window.</span>
+  <span class="na">find_time</span><span class="pi">:</span> <span class="m">120</span>
+
+  <span class="c1"># The length of time before a banned user can login again.</span>
+  <span class="na">ban_time</span><span class="pi">:</span> <span class="m">300</span>
+
+<span class="c1"># Configuration of the storage backend used to store data and secrets.</span>
+<span class="c1">#</span>
+<span class="c1"># You must use only an available configuration: local, sql</span>
+<span class="na">storage</span><span class="pi">:</span>
+  <span class="c1"># The directory where the DB files will be saved</span>
+  <span class="na">local</span><span class="pi">:</span>
+    <span class="na">path</span><span class="pi">:</span> <span class="s">/etc/authelia/data/db.sqlite3</span>
+
+<span class="c1"># Configuration of the notification system.</span>
+<span class="c1">#</span>
+<span class="c1"># Notifications are sent to users when they require a password reset, a u2f</span>
+<span class="c1"># registration or a TOTP registration.</span>
+<span class="c1"># Use only an available configuration: filesystem, gmail</span>
+<span class="na">notifier</span><span class="pi">:</span>
+  <span class="c1"># For testing purpose, notifications can be sent in a file</span>
+  <span class="na">filesystem</span><span class="pi">:</span>
+    <span class="na">filename</span><span class="pi">:</span> <span class="s">/etc/authelia/data/notification.txt</span>
+
+  <span class="c1"># Sending an email using a Gmail account is as simple as the next section.</span>
+  <span class="c1"># You need to create an app password by following: https://support.google.com/accounts/answer/185833?hl=en</span>
+  <span class="c1">## smtp:</span>
+  <span class="c1">##   username: myaccount@gmail.com</span>
+  <span class="c1">##   password: yourapppassword</span>
+  <span class="c1">##   sender: admin@example.com</span>
+  <span class="c1">##   host: smtp.gmail.com</span>
+  <span class="c1">##   port: 587</span>
+</code></pre></div></div>
+
+<p>In this example we use a hard coded user database, defined in <code class="language-plaintext highlighter-rouge">users_database.yml</code>. Authelia also supports LDAP integration.</p>
+
+<p>See the <a href="https://docs.authelia.com/configuration/authentication/file.html#password-hash-algorithm-tuning">password-hash-algorithm-tuning</a> documentation for more information.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">users</span><span class="pi">:</span>
+  <span class="na">testuser</span><span class="pi">:</span> <span class="c1">## I have set the password below to 'test' for you</span>
+    <span class="na">password</span><span class="pi">:</span> <span class="s1">'</span><span class="s">{CRYPT}$6$rounds=500000$Bui4ldW5hXOI9qwJ$IUHQPCusUKpTs/OrfE9UuGb1Giqaa5OZA.mqIpH.Hh8RGFsEBHViCwQDx6DfkGUiF60pqNubFBugfTvCJIDNw1'</span>
+    <span class="na">email</span><span class="pi">:</span> <span class="s">your@email.address</span>
+    <span class="na">groups</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">admins</span>
+      <span class="pi">-</span> <span class="s">dev</span>
+</code></pre></div></div>
+
+<p>Once you start your docker-compose file and try to access the <code class="language-plaintext highlighter-rouge">hellosvc</code> url, you’ll be redirected automatically to the Authelia login page.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/traefik/traefik-authelia.png" alt="Authelia login page" style="max-height: 500px;" /></p>
+
+<h1 id="fin">Fin.</h1>
+
+<p>As you can see, Traefik v2 is pretty powerful, if a bit verbose with its configuration syntax. With its native docker
+integration, support for LetsEncrypt and SSO, it’s become a staple of my docker based server environments.</p>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

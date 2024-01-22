@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>I Built That - 2015</title>
+	  <link>/i-built-that-2015</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-01-17T02:37:54-06:00</pubDate>
+	  <guid>/i-built-that-2015</guid>
+	  <description><![CDATA[
+	     <p>Its 2016 now, and like many others, I thought it would be a good idea to review my accomplisments in the last year. Like most devs, I find myself scratching that itch to build by hacking on side projects in my free time.</p>
+
+<p>After looking though my projects in the last year, it’s pretty obvious that I’m missing on the follow-through to completion, and I <strong>HATE</strong> doing documentation. Both flaws I’ll have to focus on in the new year.</p>
+
+<p>This is a list of open source projects that I worked on in 2015.</p>
+
+<h1 id="filefog">Filefog</h1>
+
+<p><a href="https://github.com/filefog/filefog">Filefog</a> is a Nodejs library that lets you run common commands against popular cloud storage providers (like dropbox, google drive, microsoft onedrive) in an agnostic way.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/filefog/filefog">https://github.com/filefog/filefog</a></li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="filefog/filefog"></div>
+
+<h1 id="kickback">Kickback</h1>
+
+<p><a href="https://github.com/AnalogJ/kickback">Kickback</a> is a Google Spreadsheet Addon/Wizard that lets you easily split trip/travel expenses between friends.</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/kickback">https://github.com/AnalogJ/kickback</a></li>
+  <li><strong>Language</strong>: Google Apps Script (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires app store submission</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/kickback"></div>
+
+<h1 id="goodreadsjs">Goodreads.js</h1>
+
+<p><a href="https://github.com/AnalogJ/goodreads.js">Goodreads.js</a> is a Nodejs library that wraps the (terrible) Goodreads API.</p>
+
+<ul>
+  <li><strong>Source</strong>: https://github.com/AnalogJ/goodreads.js</li>
+  <li><strong>Language</strong>: Nodejs (Javascript)</li>
+  <li><strong>Status</strong>: Mostly Complete - Requires documentation</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="tomecast">Tomecast</h1>
+
+<p><a href="https://www.tomecast.com">Tomecast</a> automatically transcribes some of the most popular podcasts (using Google Speech API and Microsoft Project Oxford) and generates a searchable website.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="https://www.tomecast.com">https://www.tomecast.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/tomecast">https://github.com/tomecast</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: In-Progress - Transcription stopped.</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/goodreads.js"></div>
+
+<h1 id="quietthyme">QuietThyme</h1>
+
+<p><a href="https://www.quietthyme.com">QuietThyme</a> is a plugin for Calibre which allows you to access your cloud storage as a library in Calibre, allowing you to add and remove books with ease. Quietthyme also generates an OPDS catalog for your library in the cloud, allowing you to access your books at any time, from any device.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="https://www.quietthyme.com">https://www.quietthyme.com</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/quietthyme.plugin">https://github.com/AnalogJ/quietthyme.plugin</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: Hosting down</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/quietthyme.plugin"></div>
+
+<h1 id="banditio">Bandit.io</h1>
+
+<p><a href="https://www.bandit.io">Bandit.io</a> is a Docker based man-in-the-middle proxy + website that lets you debug all http and https requests and responses on remote devices. Its basically like Charles and Fiddler, but without requiring the debugged device to be on the local network. Its also built ontop of the Chrome Remote Debugging Protocol, meaning the ui looks like the Chrome developer tools.</p>
+
+<ul>
+  <li><strong>Link</strong>: <a href="http://www.bandit.io">https://www.bandit.io</a></li>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/banditio.engine">https://github.com/AnalogJ/banditio.engine</a></li>
+  <li><strong>Language</strong>: Python</li>
+  <li><strong>Status</strong>: In-Progress - Requires documentation and hosting</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/banditio.engine"></div>
+
+<h1 id="capsulecd">CapsuleCD</h1>
+
+<p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is a set of platform agnostic Continuous Delivery scripts for automating package releases (npm, cookbooks, gems, pip, jars, etc).</p>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/AnalogJ/capsulecd">https://github.com/AnalogJ/capsulecd</a></li>
+  <li><strong>Language</strong>: Ruby</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<h1 id="mediadepot">MediaDepot</h1>
+
+<p><a href="https://github.com/mediadepot">MediaDepot</a> is Docker based self-hosted media server with the following capabilities:</p>
+
+<ol>
+  <li>Some form of JBOD disk storage (most likely greyhole as that’s what I’m currently using)</li>
+  <li>Media server applications such as plex, sickbeard, couchpotato, etc to manage and view media</li>
+  <li>Utility applications such as ajenti, openvpn, conky, btsync, bittorrent, vnc.</li>
+  <li>Notifications system (so that you are notified whenever any service stops or starts, and when media is added)</li>
+</ol>
+
+<ul>
+  <li><strong>Source</strong>: <a href="https://github.com/mediadepot">https://github.com/mediadepot</a></li>
+  <li><strong>Language</strong>: Docker + Chef</li>
+  <li><strong>Status</strong>: Incomplete</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>HyperV How to allow remote access to MMC Snap Ins</title>
+	  <link>/hyperv-how-to-allow-remote-access-to-mmc-snap-ins</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-10-03T02:00:00-05:00</pubDate>
+	  <guid>/hyperv-how-to-allow-remote-access-to-mmc-snap-ins</guid>
+	  <description><![CDATA[
+	     <p>http://blogs.technet.com/b/server_core/archive/2008/01/14/configuring-the-firewall-for-remote-management-of-a-workgroup-server-core-installation.aspx</p>
+
+<p>Not every MMC snap-in has a firewall group, here are those that do:</p>
+
+<table class="MsoTableGrid" style="border-right: medium none; border-collapse: collapse; border: medium none -moz-use-text-color;" border="1" cellspacing="0" cellpadding="0"><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: 1pt solid black;" width="295" valign="top">MMC Snap-in</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: 1pt 1pt 1pt medium solid solid solid none black black black #f0f0f0;" width="295" valign="top">Rule Group</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Event Viewer</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">Remote Event Log Management</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Services</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">Remote Service Management</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Shared Folders</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">File and Printer Sharing</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Task Scheduler</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">Remote Scheduled Tasks Management</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Reliability and Performance </td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">“Performance Logs and Alerts” and “File and Printer Sharing”</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Disk Management</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">Remote Volume Management</td></tr><tr><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt none solid solid #f0f0f0 black black;" width="295" valign="top">Windows Firewall with Advanced Security</td><td style="border-right: 1pt solid black; padding: 0in 5.4pt; width: 221.4pt; background-color: transparent; border: medium 1pt 1pt medium none solid solid none #f0f0f0 black black #f0f0f0;" width="295" valign="top">Windows Firewall Remote Management</td></tr></table>
+<p>On the Server Core box you can enable these by running:
+Netsh advfirewall firewall set rule group=“<rule group="">” new enable=yes
+Where <rule group=""> is the name in the above table.</rule></rule></p>
+
+<p>You can remotely enable these using the Windows Firewall with Advanced Security MMC snap-in, after you have locally on the Server Core box enabled the rule group to allow it to connect.</p>
+
+<h2 id="mmc-snap-ins-without-a-rule-group">MMC Snap-ins without a Rule Group</h2>
+
+<p>Not every MMC snap-in has a rule group to allow it access through the firewall, however many of them use the same ports for management as those that do. Therefore, you will find that enabling the rules for Event Viewer, Services, or Shared Folders will allow most other MMC snap-ins to connect. Of course, you can also simply enable the remote administration rule group (see my last post).</p>
+
+<h2 id="mmc-snap-ins-that-require-addition-configuration">MMC Snap-ins that Require Addition Configuration</h2>
+
+<p>In addition to allowing the MMC snap-ins through the firewall, the following MMC snap-ins require additional configuration:</p>
+
+<h2 id="device-manager">Device Manager</h2>
+
+<p>To allow Device Manager to connect, you must first enable the “Allow remote access to the PnP interface” policy</p>
+<ol>
+  <li>On a Windows Vista or full Server installation, start the Group Policy Object MMC snap-in</li>
+  <li>Connect to the Server Core installation</li>
+  <li>Navigate to Computer Configuration\Administrative Templates\Device Installation</li>
+  <li>Enable “Allow remote access to the PnP interface”</li>
+  <li>Restart the Server Core installation</li>
+</ol>
+
+<h2 id="disk-management">Disk Management</h2>
+<p>You must first start the Virtual Disk Service (VDS) on the Server Core installation</p>
+
+<h2 id="ipsec-mgmt">IPSec Mgmt</h2>
+<p>On the Server Core installation you must first enable remote management of IPSec. This can be done using the scregedit.wsf script:
+Cscript \windows\system32\scregedit.wsf /im 1</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>HyperV Server Remote Management Link</title>
+	  <link>/hyperv-server-remote-management-link</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-09-30T02:00:00-05:00</pubDate>
+	  <guid>/hyperv-server-remote-management-link</guid>
+	  <description><![CDATA[
+	     <p>Best instructions for setting up Hyper V Server</p>
+
+<p>https://technet.microsoft.com/en-us/library/ee256062%28WS.10%29.aspx</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Hyper V Server No Network Connection After External Virtual Network</title>
+	  <link>/hyper-v-server-no-network-connection-after</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-09-30T02:00:00-05:00</pubDate>
+	  <guid>/hyper-v-server-no-network-connection-after</guid>
+	  <description><![CDATA[
+	     <p>Run <code class="language-plaintext highlighter-rouge">nvspscrub.js /P</code> to clear all Virtual Networks</p>
+
+<p>https://social.technet.microsoft.com/Forums/en-US/winserverhyperv/thread/708aef60-05ad-40ed-af70-5ddcaf2a7a36</p>
+
+<p>https://social.technet.microsoft.com/Forums/en/winserverhyperv/thread/7f92804c-0489-48b6-92da-6cf03902406d</p>
+
+<p>https://social.technet.microsoft.com/Forums/en-US/winserverhyperv/thread/e6eb2454-084c-4754-9075-6f22ca717f2b/</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Hyper-V Server Injecting Network Drivers</title>
+	  <link>/hyper-v-server-injecting-network-drivers</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-09-30T02:00:00-05:00</pubDate>
+	  <guid>/hyper-v-server-injecting-network-drivers</guid>
+	  <description><![CDATA[
+	     <p>How to inject network drivers into HyperV Server when you see the message “No active network adapters found”</p>
+
+<p>Download device driver
+Change Directory to driver location
+<code class="language-plaintext highlighter-rouge">execute pnputil -i -a driverfile.inf</code></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

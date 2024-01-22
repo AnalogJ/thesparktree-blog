@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>AngularJS + Media Queries = matchmedia-ng</title>
+	  <link>/angularjs-media-queries-matchmedia-ng</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-01-09T15:05:05-06:00</pubDate>
+	  <guid>/angularjs-media-queries-matchmedia-ng</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> is a set of AngularJS bindings and helper functions for the matchMedia javascript api. With matchMedia, AngularJS and <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> you can automatically respond to the orientation, browser height, width and other properties supported by CSS Media Queries.</p>
+
+<p>Responsive design is very powerful, allowing you to change the design of your site to fit the device, without changing your content. However there are times where you will want to execute some arbitrary javascript code or change the content when your display window changes, that’s what <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> is for.</p>
+
+<p>Check it out: <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/matchmedia-ng"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

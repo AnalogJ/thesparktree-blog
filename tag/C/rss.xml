@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Customize the Rich Text Editor in Sitecore</title>
+	  <link>/customize-the-rich-text-editor-in-sitecore</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-01-31T22:53:45-06:00</pubDate>
+	  <guid>/customize-the-rich-text-editor-in-sitecore</guid>
+	  <description><![CDATA[
+	     <p>We ran into some issues at work with sitecore. It seems that by default the Rich Text Editor that Sitecore uses, Telerik’s RadEditor, will automatically convert <code class="language-plaintext highlighter-rouge">&lt;b&gt;</code> and <code class="language-plaintext highlighter-rouge">&lt;i&gt;</code> tags to <code class="language-plaintext highlighter-rouge">&lt;strong&gt;</code> and <code class="language-plaintext highlighter-rouge">&lt;em&gt;</code>. Our designers prefer to use the <code class="language-plaintext highlighter-rouge">&lt;i&gt;</code> tag for bootstrap’s icon classes so we needed a fix.</p>
+
+<p>First you need to create a class that inherits from <code class="language-plaintext highlighter-rouge">Sitecore.Shell.Controls.RichTextEditor.EditorConfiguration</code></p>
+
+<div class="language-cs highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">public</span> <span class="k">class</span> <span class="nc">RichTextEditorCustomConfiguration</span><span class="p">:</span> <span class="n">Sitecore</span><span class="p">.</span><span class="n">Shell</span><span class="p">.</span><span class="n">Controls</span><span class="p">.</span><span class="n">RichTextEditor</span><span class="p">.</span><span class="n">EditorConfiguration</span>
+<span class="p">{</span>
+	<span class="c1">/// &lt;summary&gt;</span>
+	<span class="c1">/// Initializes a new instance of the &lt;see cref="RichTextEditorCustomConfiguration"&gt;&lt;/see&gt; class.</span>
+	<span class="c1">/// &lt;/summary&gt;</span>
+	<span class="c1">/// &lt;param name="profile"&gt;The profile.</span>
+	<span class="k">public</span> <span class="nf">RichTextEditorCustomConfiguration</span><span class="p">(</span><span class="n">Item</span> <span class="n">profile</span><span class="p">)</span>
+		<span class="p">:</span> <span class="k">base</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+	<span class="p">{</span>
+	<span class="p">}</span>
+
+	<span class="c1">/// &lt;summary&gt;</span>
+	<span class="c1">/// Setup editor filters.</span>
+	<span class="c1">/// &lt;/summary&gt;</span>
+	<span class="k">protected</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">SetupFilters</span><span class="p">()</span>
+	<span class="p">{</span>
+		<span class="c1">//Disable the automatic conversion of &lt;i&gt; and &lt;b&gt; tags to &lt;em&gt; and &lt;strong&gt; for icon-* classes</span>
+		<span class="k">this</span><span class="p">.</span><span class="n">Editor</span><span class="p">.</span><span class="nf">DisableFilter</span><span class="p">(</span><span class="n">EditorFilters</span><span class="p">.</span><span class="n">FixUlBoldItalic</span><span class="p">);</span>
+		<span class="k">this</span><span class="p">.</span><span class="n">Editor</span><span class="p">.</span><span class="nf">DisableFilter</span><span class="p">(</span><span class="n">EditorFilters</span><span class="p">.</span><span class="n">MozEmStrong</span><span class="p">);</span>
+		<span class="k">this</span><span class="p">.</span><span class="n">Editor</span><span class="p">.</span><span class="nf">EnableFilter</span><span class="p">(</span><span class="n">EditorFilters</span><span class="p">.</span><span class="n">IndentHTMLContent</span><span class="p">);</span>
+		<span class="k">base</span><span class="p">.</span><span class="nf">SetupFilters</span><span class="p">();</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>then you need to register the new class as the default editior configuration</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;setting name="HtmlEditor.DefaultConfigurationType" value="MyProject.RichTextEditorCustomConfiguration, MyProject"&gt;&lt;/setting&gt;
+</code></pre></div></div>
+
+<p>That’s it, it your tags will no longer be automatically converted.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>How to get the current Item index from a databound ListView</title>
+	  <link>/how-to-get-the-current-item-index-from-a-databound</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-01-31T22:25:20-06:00</pubDate>
+	  <guid>/how-to-get-the-current-item-index-from-a-databound</guid>
+	  <description><![CDATA[
+	     <p>You can use <code class="language-plaintext highlighter-rouge">&lt;%# Container.DisplayIndex %&gt;</code> to get your position in the current list. You can use <code class="language-plaintext highlighter-rouge">Items.Count</code> on the <code class="language-plaintext highlighter-rouge">Control</code> to get the total <code class="language-plaintext highlighter-rouge">Item</code> count.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>The breakpoint will not currently be hit. No symbols have been loaded for this document.</title>
+	  <link>/the-breakpoint-will-not-currently-be-hit-no</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-11-24T02:00:00-06:00</pubDate>
+	  <guid>/the-breakpoint-will-not-currently-be-hit-no</guid>
+	  <description><![CDATA[
+	     <p>I’m posting this blog mostly to remind myself how to fix this if ever I run into it again, but if anyone else benefits from it, then awesome.</p>
+
+<p>In the Visual Studio IDE, when I set a breakpoint at a line of code, and start debugging, the breakpoint becomes that hollow maroon circle with a warning that says The breakpoint will not currently be hit. No symbols have been loaded for this document.</p>
+
+<p>I’ve read a bunch of articles about makiing sure you’re running in debug versus release mode, and making sure you deleted your obj AND bin folders. None of that worked for me. After some digging, and some help from <a href="https://geekswithblogs.net/jalexander">John Alexander</a> and <a href="https://geekswithblogs.net/jjulian">Jeff Julian</a>, I found one way that works for me.</p>
+
+<ul>
+  <li>While debugging in Visual Studio, click on Debug &gt; Windows &gt; Modules. The IDE will dock a Modules window, showing all the modules that have been loaded for your project.</li>
+  <li>Look for your project’s DLL, and check the Symbol Status for it.</li>
+  <li>If it says Symbols Loaded, then you’re golden. If it says something like Cannot find or open the PDB file, right-click on your module, select Load Symbols, and browse to the path of your PDB.</li>
+</ul>
+
+<p>I’ve found that it’s sometimes necessary to</p>
+
+<ul>
+  <li>stop the debugger</li>
+  <li>close the IDE</li>
+  <li>close the hosting application</li>
+  <li>nuke the obj and bin folders</li>
+  <li>restart the IDE</li>
+  <li>rebuild the project</li>
+  <li>go through the Modules window again</li>
+</ul>
+
+<p>Once you browse to the location of your PDB file, the Symbol Status should change to Symbols Loaded, and you should now be able to set and catch a breakpoint at your line in code.</p>
+
+<ul>
+  <li>From : <a href="https://geekswithblogs.net/dbutscher/archive/2007/06/26/113472.aspx">https://geekswithblogs.net/dbutscher/archive/2007/06/26/113472.aspx</a></li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>How to call a function on a databound value in ListView</title>
+	  <link>/how-to-call-a-function-on-a-databound-value-in</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2011-09-12T02:00:00-05:00</pubDate>
+	  <guid>/how-to-call-a-function-on-a-databound-value-in</guid>
+	  <description><![CDATA[
+	     <p>Wrap your Eval call:</p>
+
+<p>Markup:
+    &lt;asp:LinkButton id=”whatever” runat=”server”
+     Visible=’’&lt;%# ShowHideLink(Eval(“Storage”)) %&gt;</p>
+
+<p>Code-Behind:</p>
+
+<div class="language-cs highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">protected</span> <span class="kt">bool</span> <span class="nf">ShowHideLink</span><span class="p">(</span><span class="kt">object</span> <span class="n">obj</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="kt">bool</span> <span class="n">result</span> <span class="p">=</span> <span class="k">false</span><span class="p">;</span>
+<span class="c1">//cast obj to whatever datatype it is</span>
+<span class="kt">int</span> <span class="n">numOfProducts</span> <span class="p">=</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">obj</span><span class="p">;</span>
+
+<span class="c1">//do some evaluating</span>
+<span class="k">if</span><span class="p">(</span><span class="n">numOfProducts</span> <span class="p">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="m">10</span><span class="p">)</span> <span class="c1">//whatever your biz logic is</span>
+<span class="p">{</span>
+    <span class="n">result</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>reference: https://stackoverflow.com/questions/1530704/how-to-use-evalx-value-in-listview</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

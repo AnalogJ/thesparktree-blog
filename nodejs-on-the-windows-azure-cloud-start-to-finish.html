@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>NodeJS on the Windows Azure Cloud, Start to Finish</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - NodeJS on the Windows Azure Cloud, Start to Finish" />
+    <meta name="twitter:description" content="So you want to run nodejs on a linux image on Azure, easy right? Well.. kinda.. NodeJS on the Windows Azure Cloud, Start to Finish Remote..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_nodejs.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - NodeJS on the Windows Azure Cloud, Start to Finish" />
+    <meta property="og:description" content="So you want to run nodejs on a linux image on Azure, easy right? Well.. kinda.. NodeJS on the Windows Azure Cloud, Start to Finish Remote..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_nodejs.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish",
+        "image": "https://blog.thesparktree.com/assets/images/cover_nodejs.jpg",
+        "description": "So you want to run nodejs on a linux image on Azure, easy right? Well.. kinda.. NodeJS on the Windows Azure Cloud, Start to Finish Remote..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_nodejs.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">NodeJS on the Windows Azure Cloud, Start to Finish</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2013-09-28">28 Sep 2013</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/azure'>Azure</a>,
+                    
+                
+                    
+                       <a href='/tag/nodejs'>Nodejs</a>,
+                    
+                
+                    
+                       <a href='/tag/javascript'>Javascript</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>So you want to run nodejs on a linux image on Azure, easy right?
+Well.. kinda..</p>
+
+<h1 id="nodejs-on-the-windows-azure-cloud-start-to-finish">NodeJS on the Windows Azure Cloud, Start to Finish</h1>
+
+<h2 id="remote-in">Remote In</h2>
+
+<p>The first step to setting up your nodejs application is to remote into your linux image. I’ve taken the following steps from the great guide on <a href="https://www.windowsazure.com/en-us/manage/linux/how-to-guides/log-on-a-linux-vm/">windowsazure.com</a></p>
+
+<p>For a virtual machine that is running the Linux operating system, you use a Secure Shell (SSH) client to logon.</p>
+
+<p>You must install an SSH client on your computer that you want to use to log on to the virtual machine. There are many SSH client programs that you can choose from. The following are possible choices:</p>
+
+<ul>
+  <li>If you are using a computer that is running a Windows operating system, you might want to use an SSH client such as PuTTY. For more information, see the <a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/download.html">PuTTY Download Page</a>.</li>
+  <li>If you are using a computer that is running a Linux operating system, you might want to use an SSH client such as OpenSSH. For more information, see <a href="https://www.openssh.org/">OpenSSH</a>.</li>
+</ul>
+
+<p>This procedure shows you how to use the PuTTY program to access the virtual machine.</p>
+
+<ol>
+  <li>Find the <strong>Host Name</strong> and <strong>Port information</strong> from the <a href="https://manage.windowsazure.com/">Management Portal</a>. You can find the information that you need from the dashboard of the virtual machine. Click the virtual machine name and look for the <strong>SSH Details</strong> in the <strong>Quick Glance</strong> section of the dashboard.</li>
+  <li>Open the PuTTY program.</li>
+  <li>Enter the Host Name and the Port information that you collected from the dashboard, and then click <strong>Open</strong>.</li>
+  <li>Log on to the virtual machine using the account that you specified when the machine was created.</li>
+</ol>
+
+<h2 id="configuration--prerequisites">Configuration + Prerequisites</h2>
+
+<p>If your coming from a non-unix background some of the following commands might be new to you.</p>
+
+<ol>
+  <li>
+    <p>Setup your new <code class="language-plaintext highlighter-rouge">root</code> password</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">sudo </span>passwd root
+ <span class="c"># Changing password for user root.</span>
+ <span class="c"># New password:</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Change to the root account, enter the password you created for the <code class="language-plaintext highlighter-rouge">root</code> account previously</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> su -
+ <span class="c"># Password:</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Update installed packages</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> yum <span class="nt">-y</span> update
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Install development packages</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> yum <span class="nb">install </span>kernel-headers <span class="nt">--disableexcludes</span><span class="o">=</span>all
+ yum <span class="nb">install </span>gcc
+ yum <span class="nb">install </span>gcc-c++
+ yum <span class="nt">-y</span> groupinstall <span class="s2">"Development Tools"</span>
+</code></pre></div>    </div>
+
+    <p>Trying to install <code class="language-plaintext highlighter-rouge">gcc</code> or the <code class="language-plaintext highlighter-rouge">development tools</code> without installing the kernel-headers package will result in the helpful <code class="language-plaintext highlighter-rouge">gcc (updates) Requires: kernel-headers</code> error. Note the <code class="language-plaintext highlighter-rouge">development tools</code> command produced a single error for me, but everything else still worked.</p>
+  </li>
+  <li>
+    <p>Install OpenSSL</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> yum install openssl-devel
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Download and extract NodeJS</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">cd</span> /usr/src
+ wget https://nodejs.org/dist/node-latest.tar.gz
+ <span class="nb">tar </span>zxvf node-latest.tar.gz
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Change working directory into the extracted folder:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> cd node-v0.10.3
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Install NodeJS</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ./configure
+ make
+ make <span class="nb">install</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Verify installation</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> node <span class="nt">-v</span>
+ npm <span class="nt">-v</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h2 id="setup-git">Setup Git</h2>
+
+<ol>
+  <li>
+    <p>Install git. Unfortunately the version of git accessible by <code class="language-plaintext highlighter-rouge">yum</code> is out of date. So you can’t do:</p>
+
+    <strike>yum install git</strike>
+
+    <p>Its ok though, we can just build it from source. I’ve tried few methods, most of them from this <a href="https://stackoverflow.com/questions/3779274/how-can-git-be-installed-on-centos-5-5">SO question</a> but most of them failed on my CentOs, either because of the wrong repos or missing files.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> yum <span class="nt">-y</span> <span class="nb">install </span>zlib-devel openssl-devel cpio expat-devel gettext-devel
+ wget https://git-core.googlecode.com/files/git-1.8.4.tar.gz
+ <span class="nb">tar</span> <span class="nt">-xzvf</span> ./git-1.8.4.tar.gz
+ <span class="nb">cd</span> ./git-1.8.4
+ ./configure
+ make
+ make <span class="nb">install</span>
+</code></pre></div>    </div>
+
+    <p>You may want to download a different version from here: <a href="http://code.google.com/p/git-core/downloads/list">https://code.google.com/p/git-core/downloads/list</a></p>
+  </li>
+</ol>
+
+<h2 id="setup-github-ssh-key">Setup Github SSH Key</h2>
+<p>The following instructions were taken from the <a href="https://help.github.com/articles/generating-ssh-keys">Generating SSH Keys</a> page on Github</p>
+
+<ol>
+  <li>
+    <p>Check for existing SSH keys</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nb">cd</span> ~/.ssh
+ <span class="nb">ls</span>
+ <span class="c"># Lists the files in your .ssh directory</span>
+</code></pre></div>    </div>
+
+    <p>Check the directory listing to see if you have a file named either <code class="language-plaintext highlighter-rouge">id_rsa.pub</code> or <code class="language-plaintext highlighter-rouge">id_dsa.pub</code>. If you don’t have either of those files go to <strong>step 2</strong>. Otherwise, you already have an existing keypair, and you can skip to <strong>step 3</strong>.</p>
+  </li>
+  <li>
+    <p>Generate a new SSH key</p>
+
+    <p>To generate a new SSH key, enter the code below. We want the default settings so when asked to enter a file in which to save the key, just press enter.</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ssh-keygen <span class="nt">-t</span> rsa <span class="nt">-C</span> <span class="s2">"your_email@example.com"</span>
+ // Creates a new ssh key, using the provided email as a label
+ <span class="c"># Generating public/private rsa key pair.</span>
+ <span class="c"># Enter file in which to save the key (/c/Users/you/.ssh/id_rsa): [Press enter]</span>
+ ssh-add id_rsa
+</code></pre></div>    </div>
+
+    <p>Now you need to enter a passphrase.</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> # Enter passphrase (empty for no passphrase): [Type a passphrase]
+ # Enter same passphrase again: [Type passphrase again]
+</code></pre></div>    </div>
+
+    <p>Which should give you something like this:</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> # Your identification has been saved in /c/Users/you/.ssh/id_rsa.
+ # Your public key has been saved in /c/Users/you/.ssh/id_rsa.pub.
+ # The key fingerprint is:
+ # 01:0f:f4:3b:ca:85:d6:17:a1:7d:f0:68:9d:f0:a2:db your_email@example.com
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Add your SSH key to GitHub</p>
+
+    <p>Run the following code to view your public key.</p>
+
+    <p><!-- code[bash] --></p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> cat ~/.ssh/id_rsa.pub
+</code></pre></div>    </div>
+
+    <p>Copy and paste the output of the cat command into the <a href="https://github.com/settings/ssh">Add SSH Key</a> window.</p>
+  </li>
+  <li>
+    <p>Test your key on Github</p>
+
+    <p><!-- code[bash] --></p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ssh -T git@github.com
+ // Attempts to ssh to github
+ # The authenticity of host 'github.com (207.97.227.239)' can't be established.
+ # RSA key fingerprint is 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48.
+ # Are you sure you want to continue connecting (yes/no)?
+ # yes
+ # Hi AnalogJ! You've successfully authenticated, but GitHub does not provide shell access.
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h2 id="clone-your-github-repo">Clone your Git(Hub) Repo</h2>
+<p>Create your (web) application directory and clone project</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cd /srv
+mkdir www
+cd www
+git clone git@github.com:AnalogJ/docker-node-hello.git hello
+cd hello
+make install
+make run
+</code></pre></div></div>
+
+<h2 id="open-up-firewall">Open up Firewall</h2>
+
+<p>Firewalled ports can only be opened by configuring them in the management console in Azure.
+You can click find the full guide on <a href="http://www.windowsazure.com/en-us/manage/windows/how-to-guides/setup-endpoints/">setting up your azure endpoints</a></p>
+
+<ol>
+  <li>
+    <p>If you have not already done so, sign in to the Windows Azure Management Portal.</p>
+  </li>
+  <li>
+    <p>Click <strong>Virtual Machines</strong>, and then select the virtual machine that you want to configure.</p>
+  </li>
+  <li>
+    <p>Click <strong>Endpoints</strong>. The Endpoints page lists all endpoints for the virtual machine.</p>
+  </li>
+  <li>
+    <p>Click <strong>Add</strong>.</p>
+  </li>
+</ol>
+
+<p>The Add Endpoint dialog box appears. Choose whether to add the endpoint to a load-balanced set and then click the arrow to continue.</p>
+
+<ol>
+  <li>
+    <p>In <strong>Name</strong>, type a name for the endpoint.</p>
+  </li>
+  <li>
+    <p>In protocol, specify either <strong>TCP</strong> or <strong>UDP</strong>.</p>
+  </li>
+  <li>
+    <p>In <strong>Public Port</strong> and <strong>Private Port</strong>, type port numbers that you want to use. These port numbers can be different. The public port is the entry point for communication from outside of Windows Azure and is used by the Windows Azure load balancer. You can use the private port and firewall rules on the virtual machine to redirect traffic in a way that is appropriate for your application.</p>
+  </li>
+  <li>
+    <p>Click <strong>Create a load-balancing set</strong> if this endpoint will be the first one in a load-balanced set. Then, on the <strong>Configure the load-balanced set</strong> page, specify a name, protocol, and probe details. Load-balanced sets require a probe so the health of the set can be monitored. For more information, see <a href="http://www.windowsazure.com/en-us/manage/windows/common-tasks/how-to-load-balance-virtual-machines/">Load Balancing Virtual Machines</a>.</p>
+  </li>
+  <li>
+    <p>Click the check mark to create the endpoint.</p>
+  </li>
+</ol>
+
+<p>You will now see the endpoint listed on the Endpoints page.</p>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=NodeJS on the Windows Azure Cloud, Start to Finish&amp;url=https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/nodejs-on-the-windows-azure-cloud-start-to-finish" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/nodejs-on-the-windows-azure-cloud-start-to-finish'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'NodeJS on the Windows Azure Cloud, Start to Finish';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_jenkins.jpg)" href="/how-to-setup-a-free-continuous-integration-server">
+            <section class="post">
+                <h2>How to setup a Free Continuous Integration Server Using Cloudbees + Private Github</h2>
+                <p>### Better Integration Between Jenkins and GitHub (with the GitHub Jenkins Plugin) The following steps...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_code.jpg)" href="/api-design-best-practices">
+            <section class="post">
+                <h2>API Design Best Practices</h2>
+                <p>Or how to stop third party developers from hating you. As web developers most of...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

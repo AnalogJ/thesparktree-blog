@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Custom Domains for AWS Lambda/API Gateway using Letsencrypt</title>
+	  <link>/custom-domains-for-aws-lambdaapi-gateway-using</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-11-08T14:41:19-06:00</pubDate>
+	  <guid>/custom-domains-for-aws-lambdaapi-gateway-using</guid>
+	  <description><![CDATA[
+	     <blockquote>
+  <p>AWS Lambda lets you run code without provisioning or managing servers. You pay only for the compute time you consume - there is no charge when your code is not running.</p>
+</blockquote>
+
+<p>In general Lambda is well designed and the platform is pretty developer friendly, especially if you use a framework like <a href="https://github.com/serverless/serverless">serverless</a> or <a href="https://github.com/apex/apex">apex</a>. However as someone who creates new services on Lambda all the time, there is one thing that consistently annoys me.</p>
+
+<p><strong>Configuring a custom domain for use with Lambda is stupidly complex for such a common feature.</strong></p>
+
+<p>Here’s the AWS documentation to <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html">use a custom domain with API Gateway</a>. Take a look, I’ll wait.</p>
+
+<p>At first glance the instructions seem somewhat reasonable. For security reasons API Gateway requires SSL for all requests, which means that to use a custom domain, you first need an SSL certificate.</p>
+
+<p>Unfortunately this becomes a problem when you realize that
+Letsencrypt HTTP-01 doesn’t work because of the catch-22 requiring you to prove that you own the custom domain before generating certificates. Even worse, AWS’s built-in free certificate service (Certificate Manger) <a href="https://stackoverflow.com/questions/36497896/can-i-use-aws-certificate-manager-certificates-for-api-gateway-with-custom-domai">doesn’t yet support API Gateway</a>.</p>
+
+<p>So what’s the solution?</p>
+
+<hr />
+
+<p>I was able to create a nice little script using python which invokes the <a href="https://aws.amazon.com/cli/">aws-cli</a>, <a href="https://github.com/lukas2511/dehydrated">dehydrated</a> letsencrypt client &amp; <a href="https://github.com/AnalogJ/lexicon">lexicon</a> and does all the steps necessary to add a custom domain to an API Gateway, automatically.</p>
+
+<p>Here’s what it does:</p>
+
+<ul>
+  <li>validates that all the correct credentials &amp; environmental variables are set</li>
+  <li>validates that the specified AWS API Gateway exists</li>
+  <li>generate a new set of letsencrypt certificates for the specified custom domain using the DNS-01 challenge &amp; lexicon</li>
+  <li>register custom domain name with AWS (which creates a distribution domain name on cloudfront)</li>
+  <li>adds a CNAME dns record mapping your custom domain to the AWS distribution domain</li>
+  <li>maps the custom domain to your selected API Gateway</li>
+</ul>
+
+<p>The code is all open source and lives here: <a href="https://github.com/AnalogJ/aws-api-gateway-letsencrypt/blob/master/api-gateway-custom-domain.py">Analogj/aws-api-gateway-letsencrypt</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/aws-api-gateway-letsencrypt"></div>
+
+<p>I’ve also created a simple <a href="https://github.com/AnalogJ/aws-api-gateway-letsencrypt/blob/master/Dockerfile">Docker image</a> which you can use if you don’t want to install anything:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span><span class="k">***</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span><span class="k">***</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="k">***</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="k">***</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DOMAIN</span><span class="o">=</span>api.quietthyme.com <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">API_GATEWAY_NAME</span><span class="o">=</span>dev-quietthyme-api <span class="se">\</span>
+<span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/certs:/srv/certs <span class="se">\</span>
+analogj/aws-api-gateway-letsencrypt
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Generating Intranet and Private Network SSL Certificates using LetsEncrypt</title>
+	  <link>/generating-intranet-and-private-network-ssl</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-02-09T15:19:33-06:00</pubDate>
+	  <guid>/generating-intranet-and-private-network-ssl</guid>
+	  <description><![CDATA[
+	     <p>This post is a follow up to my previous one <a href="https://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx">Automating SSL Certificates using Nginx &amp; LetsEncrypt</a>. This time we’ll be generating SSL certificates for intranet and non-public networks.</p>
+
+<h2 id="requirements">Requirements</h2>
+<p>Before we get started, you’ll want to make sure that the following items are true.</p>
+
+<ul>
+  <li>You must use a real/purchased domain. <a href="https://en.wikipedia.org/wiki/Top-level_domain#Reserved_domains">Reserved domains/TLD’s</a> like <code class="language-plaintext highlighter-rouge">*.example</code>, <code class="language-plaintext highlighter-rouge">*.test</code>, <code class="language-plaintext highlighter-rouge">*.local</code> will never work.</li>
+  <li>You must have an external DNS provider that has an API.
+    <ul>
+      <li>If your DNS provider doesn’t have an API, you can use <a href="https://www.cloudflare.com">cloud flare.com</a> for free.</li>
+    </ul>
+  </li>
+  <li>You must have python 2.6+ installed</li>
+</ul>
+
+<h2 id="install-dehydrated">Install Dehydrated</h2>
+
+<div class="github-widget" data-repo="lukas2511/dehydrated"></div>
+
+<p>The first step is to install a Letsencrypt client. The <a href="https://github.com/letsencrypt/letsencrypt">official client</a> is a bit bloated and complicated to setup. I prefer to use the <a href="https://github.com/lukas2511/dehydrated">dehydrated client</a> instead as its code is easier to understand, has few dependencies and its incredibly simple to automate.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># install dehydrated dependencies (most should already be installed)</span>
+apt-get <span class="nb">install</span> <span class="nt">-y</span> openssl curl <span class="nb">sed grep mktemp </span>git
+
+<span class="c"># install dehydrated into /srv/dehydrated</span>
+git clone https://github.com/lukas2511/dehydrated.git /srv/dehydrated
+</code></pre></div></div>
+
+<h2 id="configure-dehydrated">Configure Dehydrated</h2>
+<p>Dehydrated requires some configuration, but not much, the defaults work out of the box. That means that all you need to do is</p>
+
+<ul>
+  <li>create a domains.txt file with the url(s) of the site(s) you’re generating ssl certificates for</li>
+</ul>
+
+<p>Here’s how we can do that.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># First we need to make the client executable</span>
+<span class="nb">chmod</span> +x /srv/dehydrated/dehydrated
+<span class="c"># Then we need to specify the intranet/private domain</span>
+<span class="nb">echo</span> <span class="s2">"test.intranet.example.com"</span> <span class="o">&gt;</span> /srv/dehydrated/domains.txt
+</code></pre></div></div>
+
+<h2 id="install-lexicon">Install Lexicon</h2>
+
+<div class="github-widget" data-repo="AnalogJ/lexicon"></div>
+
+<p>Next we’re going to install the <a href="https://github.com/AnalogJ/lexicon">Lexicon</a> library. Lexicon provides a way to manipulate DNS records on multiple DNS providers in a standardized way.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#  install python requests library dependencies</span>
+apt-get <span class="nb">install</span> <span class="nt">-y</span> build-essential python-dev curl libffi-dev libssl-dev
+pip <span class="nb">install </span>requests[security]
+pip <span class="nb">install </span>dns-lexicon
+</code></pre></div></div>
+
+<h2 id="configure-lexicon">Configure Lexicon</h2>
+<p>The Lexicon library lets you automatically configure your DNS provider using Letsencrypt DNS challenges without having to deal with creating API calls yourself. Its perfect for generating internal/intranet SSL certs.</p>
+
+<p>Dehydrated requires a hook file to complete <code class="language-plaintext highlighter-rouge">dns-01</code> challenges. The Lexicon repo has an example one that wires up the <code class="language-plaintext highlighter-rouge">deploy_challenge</code> and <code class="language-plaintext highlighter-rouge">clean_challenge</code> calls to Lexicon commands.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-O</span> https://raw.githubusercontent.com/AnalogJ/lexicon/master/examples/dehydrated.default.sh /srv/dehydrated
+<span class="nb">chmod</span> +x /srv/dehydrated/dehydrated.default.sh
+</code></pre></div></div>
+
+<p>The only information that Lexicon requires is:</p>
+
+<ul>
+  <li>authentication information such as username/password or token.
+    <ul>
+      <li>In general your API token should be availble in your DNS provider’s account settings page.</li>
+    </ul>
+  </li>
+  <li>provider name</li>
+</ul>
+
+<p>We can pass all that information to Lexicon by setting a handful of environmental variables. If don’t want to do that, you can modify the hook file and add the <code class="language-plaintext highlighter-rouge">--auth-username</code> and <code class="language-plaintext highlighter-rouge">--auth-password</code> parameters to all <code class="language-plaintext highlighter-rouge">lexicon</code> commands.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#If our DNS provider is cloudflare</span>
+<span class="nb">export </span><span class="nv">PROVIDER</span><span class="o">=</span>cloudflare
+<span class="nb">export </span><span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span>username@example.com
+<span class="nb">export </span><span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span>234dcef90c3d9aa0eb6798e16bdc1e4b
+</code></pre></div></div>
+
+<h2 id="generate-certificates">Generate Certificates</h2>
+<p>Now that we’ve finished configuring everything, it’s time to generate the certificates. Its as simple as:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Lets generate the Letsencrypt SSL certificates</span>
+/srv/dehydrated/dehydrated <span class="nt">--cron</span> <span class="nt">--hook</span> /srv/dehydrated/dehydrated.default.sh <span class="nt">--challenge</span> dns-01
+</code></pre></div></div>
+
+<p>Our certificates will be available in the following folder:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/srv/dehydrated/certs/
+</code></pre></div></div>
+
+<h2 id="fin">Fin</h2>
+<p>At this point we have working Letsencrypt SSL certificates for an internal/intranet domain that’s not accessible on the public internet.</p>
+
+<p>I’ve written an example <a href="https://github.com/AnalogJ/lexicon/blob/master/Dockerfile">Dockerfile</a> that you can reference if you’re curious. Just make sure to use <code class="language-plaintext highlighter-rouge">docker run -e "PROVIDER=cloudflare" -e ..</code> to set the environmental variables that you need.</p>
+
+<p>If you’re wondering how to automate this whole process, check out my previous post: <a href="https://blog.thesparktree.com/post/138452017979/automating-ssl-certificates-using-nginx">Automating SSL Certificates using Nginx &amp; LetsEncrypt</a></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Repairing Kubernetes PersistentVolumeClaim - CrashLoopBackOff Errors</title>
+	  <link>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2021-03-28T04:19:33-05:00</pubDate>
+	  <guid>/repairing-kubernetes-persistentvolumeclaim-crashloopbackoff</guid>
+	  <description><![CDATA[
+	     <p>Kubernetes is an exceptionally durable piece of software, it’s designed to handle failures and self-heal in most cases. However,
+even them most robust software can run into issues. Which brings us to the <code class="language-plaintext highlighter-rouge">CrashLoopBackOff</code> error. A CrashloopBackOff
+means that you have a pod starting, crashing, starting again, and then crashing again.</p>
+
+<p>Crash loops can happen for a variety of reasons, but (in my opinion) the most difficult to fix are  CrashloopBackOff errors
+associated with a corrupted PersistentVolumeClaim. In this post we’ll discuss a technique you can use to safely detach
+and repair a PersistentVolumeClaim, to fix a CrashloopBackOff error.</p>
+
+<h1 id="detach-the-volume">Detach the Volume</h1>
+
+<p>The first step is to scale our failing deployment to 0. This is because by default PVC’s have a <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes"><code class="language-plaintext highlighter-rouge">ReadWriteOnce</code> AccessMode</a>,
+meaning the volume can be mounted as read-write by a single node. If the failing pod is binding to the corrupted volume in <code class="language-plaintext highlighter-rouge">write</code> mode, then our
+debugging container can’t make any changes to it. Even if your PVC is <code class="language-plaintext highlighter-rouge">ReadWriteMany</code>, it’s safer to ensure nothing else is writing to the volume while
+wee make our repairs.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl scale deployment failed-deployment <span class="nt">--replicas</span><span class="o">=</span>0
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre></div></div>
+
+<h1 id="debugging-pod">Debugging Pod</h1>
+
+<p>Next we’ll need to inspect the deployment config to find the PVC identifier to repair.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl get deployment <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">"{.spec.template.spec.volumes[*].persistentVolumeClaim.claimName}"</span> failed-deployment
+my-pvc-claim
+</code></pre></div></div>
+
+<p>Now that we know the identifier for the failing PVC, we need to create a debugging pod spec which mounts the PVC.
+In this example we’ll use <code class="language-plaintext highlighter-rouge">busybox</code>, but you could use any debugging tools image here.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># my-pvc-debugger.yaml</span>
+
+<span class="nn">---</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">volume-debugger</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+      <span class="na">persistentVolumeClaim</span><span class="pi">:</span>
+       <span class="na">claimName</span><span class="pi">:</span> <span class="s">&lt;CLAIM_IDENTIFIER_HERE&gt;</span>
+  <span class="na">containers</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">debugger</span>
+      <span class="na">image</span><span class="pi">:</span> <span class="s">busybox</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">sleep'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">3600'</span><span class="pi">]</span>
+      <span class="na">volumeMounts</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/data"</span>
+          <span class="na">name</span><span class="pi">:</span> <span class="s">volume-to-debug</span>
+</code></pre></div></div>
+
+<p>Next, lets create a new pod and run a shell inside it.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl create <span class="nt">-f</span> /path/to/my-pvc-debugger.yaml
+pod <span class="s2">"volume-debugger"</span> created
+<span class="nv">$ </span>kubectl <span class="nb">exec</span> <span class="nt">-it</span> volume-debugger sh
+/ <span class="c">#</span>
+</code></pre></div></div>
+
+<p>Now that we’re inside the container we can explore the volume which is mounted at <code class="language-plaintext highlighter-rouge">/data</code> and fix the issue.</p>
+
+<h1 id="restore-pod">Restore Pod</h1>
+
+<p>Once we’ve repaired the PVC volume, we can exit the shell within the container and delete the debugger pod.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/ <span class="c"># logout</span>
+<span class="nv">$ </span>kubectl delete <span class="nt">-f</span> /path/to/my-pvc-debugger.yaml
+</code></pre></div></div>
+
+<p>Next, we’ll scale our deployment back up.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>kubectl scale deployment failed-deployment <span class="nt">--replicas</span><span class="o">=</span>1
+deployment.extensions <span class="s2">"failed-deployment"</span> scaled
+</code></pre></div></div>
+
+<h1 id="fin">Fin</h1>
+
+<p>In a perfect world we should never have to get hands on with our volumes, but occasionally bugs cause if to have to go
+and clean things up. This example shows a quick way to hop into a volume for a container which does not have any user environment.</p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://itnext.io/debugging-kubernetes-pvcs-a150f5efbe95
+    <ul>
+      <li>The guide above is a slightly modified version of Jacob Tomlinson’s work. Copied for ease of reference.</li>
+    </ul>
+  </li>
+</ul>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>You Don't Know Jenkins - Part 4 - Kubernetes Slaves</title>
+	  <link>/you-dont-know-jenkins-part-4</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2020-04-29T00:37:09-05:00</pubDate>
+	  <guid>/you-dont-know-jenkins-part-4</guid>
+	  <description><![CDATA[
+	     <p>Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
+source code management systems and tools via plugins maintained by its active community.</p>
+
+<p>As your application and deployed infrastructure becomes more complex, you’ll need to re-assess your CI/CD tool chain to keep up.
+Natively, Jenkins supports the concept of slave machines to distribute your testing and automation, leaving the Jenkins master
+as the orchestrator for your jobs.</p>
+
+<p>This works great in theory, however now there’s an additional management overhead keeping the slave nodes up-to-date with
+the software required for your jobs. Under/over utilization also becomes a problem. Your peak job load may differ significantly
+from your baseline, meaning that lots of resources are wasted, or your slaves just can’t keep up with the number of jobs
+in the queue, delaying your builds &amp; tests.</p>
+
+<p>Adding Docker &amp; Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.</p>
+
+<p>This post is part of a series that is all about solving common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></strong></li>
+</ul>
+
+<hr />
+
+<h2 id="requirements">Requirements</h2>
+
+<p>I’m assuming that you already have a working (and accessible):</p>
+
+<ul>
+  <li>Kubernetes cluster
+    <ul>
+      <li>A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.</li>
+      <li><code class="language-plaintext highlighter-rouge">master</code> nodes/API needs to be accessible via Jenkins</li>
+      <li><code class="language-plaintext highlighter-rouge">kubectl</code> should be configured to communicate with your cluster</li>
+    </ul>
+  </li>
+  <li>Jenkins server (v2.199+)
+    <ul>
+      <li>You’ll also need to install the <a href="https://plugins.jenkins.io/kubernetes/">Kubernetes Plugin for Jenkins</a> (v1.24.0+)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>If you want to follow along at home, but you don’t have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
+environment by following the documentation on the following repo.</p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves"></div>
+
+<p>Once you’ve completed the steps in that README, just come back here and follow along.</p>
+
+<h2 id="configure-your-kubernetes-cluster">Configure your Kubernetes Cluster</h2>
+
+<p>Before we start configuring Jenkins, we’ll need to ensure that our Kubernetes cluster has some basic configuration.</p>
+
+<h3 id="jenkins-namespace">Jenkins Namespace</h3>
+
+<p>We should create a Jenkins specific namespace on our Kubernetes cluster, so we can isolate pods created from our Jenkins
+server from other workloads running on our cluster.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ kubectl create namespace jenkins-kube-slaves
+
+namespace/jenkins-kube-slaves created
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: If you’re planning on sharing this Kubernetes cluster with different Jenkins servers, you should probably use a unique namespace for each.</p>
+</blockquote>
+
+<h3 id="optional---docker-registry-authentication">Optional - Docker Registry Authentication</h3>
+
+<blockquote>
+  <p>This section is optional, and only required if you use a private registry, or have private images on Docker hub</p>
+</blockquote>
+
+<p>If your team uses a private Docker registry to store your images, you’ll need to tell Kubernetes how to authenticate against it. This is done using a Kubernetes secret.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  kubectl create secret docker-registry docker-registry-auth-jenkins <span class="se">\</span>
+  <span class="nt">--namespace</span><span class="o">=</span><span class="s2">"jenkins-kube-slaves"</span> <span class="se">\</span>
+  <span class="nt">--docker-server</span><span class="o">=</span>https://index.private-registry-hostname.com <span class="se">\</span>
+  <span class="nt">--docker-username</span><span class="o">=</span>myusername <span class="se">\</span>
+  <span class="nt">--docker-password</span><span class="o">=</span>mypassworrd <span class="se">\</span>
+  <span class="nt">--docker-email</span><span class="o">=</span>myemail@corp.example.com
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: you can use <a href="https://index.docker.io/v1/">https://index.docker.io/v1/</a> if you use Docker Hub with private images.</p>
+</blockquote>
+
+<p>You’ll want to deploy a pod to the <code class="language-plaintext highlighter-rouge">jenkins-kube-slaves</code> namespace manually to ensure that the credentials are valid.</p>
+
+<h3 id="convert-kubernetes-client-config-to-pfx">Convert Kubernetes Client Config to PFX</h3>
+
+<p>The Kubernetes Plugin for Jenkins requires a <code class="language-plaintext highlighter-rouge">*.pkf</code> formatted certificate authenticating against the Kubernetes API,
+rather than the standard <code class="language-plaintext highlighter-rouge">kubectl</code> config file format (<code class="language-plaintext highlighter-rouge">~/.kube/config</code>).</p>
+
+<p>You can generate a <code class="language-plaintext highlighter-rouge">*.pkf</code> file by running the following commands</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> <span class="nt">-p</span> /tmp/kube-certs
+<span class="nv">$ </span><span class="nb">cd</span> /tmp/kube-certs
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'client-certificate-data'</span> ~/.kube/config | <span class="nb">head</span> <span class="nt">-n</span> 1 | <span class="nb">awk</span> <span class="s1">'{print $2}'</span> | <span class="nb">base64</span> <span class="nt">-d</span> <span class="o">&gt;&gt;</span> client.crt
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'client-key-data'</span> ~/.kube/config | <span class="nb">head</span> <span class="nt">-n</span> 1 | <span class="nb">awk</span> <span class="s1">'{print $2}'</span> | <span class="nb">base64</span> <span class="nt">-d</span> <span class="o">&gt;&gt;</span> client.key
+
+<span class="c"># generate pfx file</span>
+<span class="nv">$ </span>openssl pkcs12 <span class="nt">-export</span> <span class="nt">-clcerts</span> <span class="nt">-inkey</span> client.key <span class="nt">-in</span> client.crt <span class="nt">-out</span> client.pfx <span class="nt">-name</span> <span class="s2">"kubernetes-client"</span> <span class="nt">-passout</span> pass:SECRET_PASSPHRASE
+
+<span class="c"># you should now have 3 files in your /tmp/kube-certs directory</span>
+<span class="nv">$ </span><span class="nb">ls
+</span>client.crt    client.key    client.pfx
+</code></pre></div></div>
+
+<p>You can validate that your generated <code class="language-plaintext highlighter-rouge">*.pfx</code> file worked by querying the kubernetes cluster API with it.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c"># first we'll verify that the cert and key were extracted correctly</span>
+curl <span class="nt">--insecure</span> <span class="nt">--cert</span> client.crt <span class="nt">--key</span> client.key  https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+
+<span class="c"># next we'll validate that the generated .pfx file that Jenkins will use is correctly encoded.</span>
+curl <span class="nt">--insecure</span> <span class="nt">--cert-type</span> P12 <span class="nt">--cert</span> client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: the <code class="language-plaintext highlighter-rouge">SECRET_PASSPHRASE</code> value above should be replaced and treated as a password. The <code class="language-plaintext highlighter-rouge">*.pfx</code> passphrase is used
+to encrypt the <code class="language-plaintext highlighter-rouge">*.pfx</code> file contents before storing them on disk.</p>
+</blockquote>
+
+<p>Now that we’ve configured our Kubernetes cluster, its time to setup Jenkins</p>
+
+<h2 id="configure-kubernetes-jenkins-plugin">Configure Kubernetes Jenkins Plugin</h2>
+
+<p>The Kubernetes plugin is fairly complicated at first glance. There’s a handful of settings that must be set for everything
+to work correctly. If you’re following along, you’ll want to pay close attention to the screenshots below.</p>
+
+<h3 id="add-jenkins-certificate-credential">Add Jenkins Certificate Credential</h3>
+
+<p>The first thing we’re going to need to do is add store our generated <code class="language-plaintext highlighter-rouge">client.pfx</code> file as a Jenkins Certificate Credential,
+so we can reference it in the Kubernetes plugin configuration.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-certificate-credential.png" alt="certificate credential" style="max-height: 500px;" /></p>
+
+<blockquote>
+  <p>Note: You must specify the same <code class="language-plaintext highlighter-rouge">SECRET_PASSPHRASE</code> you used when generating your <code class="language-plaintext highlighter-rouge">*.pfx</code> file above.</p>
+</blockquote>
+
+<h3 id="add-kubernetes-cloud">Add Kubernetes Cloud</h3>
+
+<p>Now we can finally start configuring our Jenkins server to communicate with our Kubernetes cluster.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="kubernetes configure" style="max-height: 900px;" /></p>
+
+<blockquote>
+  <p>Note: in the screenshot above, I’ve disabled the “https certificate check” for testing. You’ll want to make sure that’s
+enabled in production. When you do so, you’ll need to specify your Kubernetes server CA Certificate key in the box above.</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: if you’re using my <a href="https://github.com/AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves">AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves</a> repo,
+you will need to set the Jenkins Url to “http://localhost:8080” (not https://)</p>
+</blockquote>
+
+<h3 id="testing">Testing</h3>
+
+<p>A this point we have finished configuring the Kubernetes plugin, and we can test it out by creating a simple Jenkins Pipeline job, with the following script.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+<span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+        <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>This method allows you to define your pod and containers on demand, <strong>however it does not work with older Jenkins Freestyle jobs.</strong></p>
+
+<h2 id="global-template-configuration">Global Template Configuration</h2>
+
+<p>Before discuss how to get the Jenkins Kubernetes plugin working with Freestyle jobs, we should first recap how the Jenkins slave agents work.</p>
+
+<h3 id="jenkins-agent-recap">Jenkins Agent Recap</h3>
+
+<p>Jenkins communicates with its slaves using a Jenkins agent (using a protocol called <code class="language-plaintext highlighter-rouge">jnlp</code>). The logic for this agent is packaged into a jar and
+automatically installed on your Jenkins slave node when you register the slave with the Jenkins master.</p>
+
+<p>This agent software is also required for the dynamic Kubernetes slaves, however in this case it’s baked into the docker
+image that is automatically included in every pod you run.</p>
+
+<p>The default agent (based on the <a href="https://hub.docker.com/r/jenkins/inbound-agent">jenkins/inbound-agent</a> image) can be
+customized by adding it to the template:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'jnlp'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'jenkins/inbound-agent:3.35-5-alpine'</span><span class="o">,</span> <span class="nl">args:</span> <span class="s1">'${computer.jnlpmac} ${computer.name}'</span><span class="o">),</span>
+</code></pre></div></div>
+
+<p>This default agent image is based on Debian, but Alpine and Windows Nanoserver flavors exist as well.</p>
+
+<h3 id="the-problem">The Problem</h3>
+
+<p>While Pipeline jobs are flexible and have a syntax to configure the Kubernetes pod used in the job, there’s no equivalent
+in for Freestyle jobs. The naiive solution would be to use the a global Pod Template, and reference it via a job “label”</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job-label.png" alt="freestyle job configuration label" style="max-height: 500px;" /></p>
+
+<p><strong>However this is not usable for most Freestyle jobs.</strong></p>
+
+<p>When used with a Freestyle job, the Kubernetes plugin will <strong>run the job steps in the default Pod container, the <code class="language-plaintext highlighter-rouge">jnlp</code>
+slave agent container.</strong> Which is where we run into the main issue: <strong>The jnlp slave agent container is based on a minimal
+image with no language runtimes.</strong></p>
+
+<h3 id="the-solution">The Solution</h3>
+
+<h4 id="custom-agent-images">Custom Agent Images</h4>
+
+<p>The solution is to customize the <code class="language-plaintext highlighter-rouge">jnlp</code> slave image container with the custom software your jobs require – language
+runtimes, tools, packages, fonts, etc.</p>
+
+<p>Since <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> is just a standard Docker image, you can customize it like you would any other Docker image.</p>
+
+<p>Here’s an example <code class="language-plaintext highlighter-rouge">Dockerfile</code> adding the Go language runtime to the <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> image, so you can use <code class="language-plaintext highlighter-rouge">go build</code>
+in your Jenkins jobs</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> jenkins/inbound-agent</span>
+
+<span class="c"># the jenkins/inbound-agent is configured to run as the `jenkins` user. To install new software &amp; packages, we'll need to change back to `root`</span>
+<span class="k">USER</span><span class="s"> root</span>
+
+
+<span class="c"># lets download &amp; install the latest Go language runtime and tools.# since this is a debian machine, we can also install standard packages using `apt-get`</span>
+<span class="k">RUN </span>curl <span class="nt">-O</span> <span class="nt">--silent</span> <span class="nt">--location</span> https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    <span class="nb">mkdir</span> <span class="nt">-p</span> /usr/local/go <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    tar <span class="nt">-xvf</span> go1.13.10.linux-amd64.tar.gz <span class="nt">-C</span> /usr/local/go <span class="nt">--strip</span> 1 <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    rm <span class="nt">-f</span> go1.13.10.linux-amd64.tar.gz
+    
+# lets setup some Go specific environmental variables
+<span class="k">ENV</span><span class="s"> GOROOT="/usr/local/go" \</span>
+    GOPATH="/home/jenkins/go"
+    
+# next, we'll customize the PATH env variable to add the `go` binary, and ensure that binaries on the GOROOT and GOPATH are also available.
+<span class="k">ENV</span><span class="s"> PATH="$PATH:/usr/local/go/bin:$GOROOT/bin:$GOPATH/bin"</span>
+
+<span class="c"># now that we've finished customizing our Jenkins image, we should drop back to the `jenkins` user.</span>
+<span class="k">USER</span><span class="s"> jenkins</span>
+
+<span class="c"># finally, we'll setup the `go` cache directory (GOPATH), and test that the go binary is installed correctly.</span>
+<span class="k">RUN </span><span class="nb">mkdir</span> /home/jenkins/go <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    go version 
+</code></pre></div></div>
+
+<p>Once you push this up to your Docker registry, you we can reference it in a global Pod Template, with a label like <code class="language-plaintext highlighter-rouge">kube-slave-go</code> or maybe <code class="language-plaintext highlighter-rouge">kube-slave-go1.13</code> if you care about the specific version of the language runtime.</p>
+
+<p>While you could go off and build custom Docker images for all the languages you use, I’ve already created <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> based Docker images for most popular languages (go, ruby, node, python). Feel free to use them if you’d like.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-jenkins-inbound-agent-runtimes"></div>
+
+<h4 id="configure-global-pod-templates">Configure Global Pod Templates</h4>
+
+<p>To use our customized <code class="language-plaintext highlighter-rouge">jnlp</code> slave images with Freestyle jobs, we’ll configure a handful of global Pod Templates, to look like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-ruby.png" alt="pod template configuration" style="max-height: 500px;" /></p>
+
+<p>The fields to pay attention to are the following</p>
+
+<ul>
+  <li><strong>Namespace</strong>  - this determines the namespace that Jenkins uses when it creates slaves on demand.</li>
+  <li><strong>Label</strong> - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We’ll call ours <code class="language-plaintext highlighter-rouge">kube-slave-ruby</code>.</li>
+  <li><strong>Container Template - Name</strong> - this must be <code class="language-plaintext highlighter-rouge">jnlp</code> to tell Jenkins to override the default <em>minimal</em> slave agent image.</li>
+  <li><strong>Docker Image</strong> - as mentioned above, <code class="language-plaintext highlighter-rouge">analogj/jenkins-inbound-agent-runtimes:latest-ruby2.7</code> is customized version of the <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> image with Ruby installed. Replace with your customized image with the tools you need.</li>
+  <li>
+    <p>Optional - <strong>ImagePullSecrets</strong> - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the <strong>Docker Registry Authentication</strong> section above.</p>
+
+    <p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="pod template secret" style="max-height: 500px;" /></p>
+  </li>
+</ul>
+
+<h3 id="configure-jobs">Configure Jobs</h3>
+
+<p>Now that we have our Kubernetes plugin fully configured, its time to start running our Jenkins jobs on our cluster.</p>
+
+<p>Though Jenkins has a multitude of different job types, they’re all fundamentally based on one of the two core job types:</p>
+
+<ul>
+  <li>Freestyle jobs</li>
+  <li>Pipeline jobs</li>
+</ul>
+
+<h4 id="freestyle-jobs">Freestyle Jobs</h4>
+
+<p>Lets look at freestyle jobs first. They’ve been around the longest, and most other job types can be configured in the same way.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<p>As mentioned above, with Freestyle Jobs (and other legacy job types) you cannot configure your Kubernetes pod per job. You’re limited to the global pod templates you’ve pre-configured.</p>
+
+<h4 id="pipeline-jobs">Pipeline Jobs</h4>
+
+<p>Similar to Freestyle jobs, running your job on the Kubernetes cluster is as simple as specifying it in the <code class="language-plaintext highlighter-rouge">node{}</code> code block</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node('kube-slave-java') {
+    # the following commands will execute in the specified docker container on your kubernetes cluster,
+    sh 'echo "hello world"'
+}
+</code></pre></div></div>
+
+<p>However, Pipeline jobs provide additional flexibility, allowing you to define the Pod template in the job itself, allowing for much more flexibility
+(including running multiple containers in a pod)</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">),</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'golang'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'golang:1.8.0'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+  <span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Golang project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="nl">url:</span> <span class="s1">'https://github.com/hashicorp/terraform.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'golang'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Go project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s2">"""
+                    mkdir -p /go/src/github.com/hashicorp
+                    ln -s `pwd` /go/src/github.com/hashicorp/terraform
+                    cd /go/src/github.com/hashicorp/terraform &amp;&amp; make core-dev
+                    """</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>For a full list of options for the <code class="language-plaintext highlighter-rouge">podTemplate</code> and <code class="language-plaintext highlighter-rouge">containerTemplate</code> functions, see the Jenkins Kubernetes Plugin <a href="https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration">README.md</a></p>
+
+<hr />
+
+<h2 id="fin">Fin.</h2>
+
+<p>That’s it. You should now have a working Jenkins server that dynamically creates slaves on demand. Jenkins Kubernetes slaves
+can be configured with all the same software you would need on a regular slave, with the added benefit of following
+configuration-as-code best practices.</p>
+
+<p>In addition, it’s generally easier to automate scaling up your Kubernetes cluster, than it is to scale up Jenkins nodes.</p>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Jenkins Dockerized Slave Cluster - Premise</title>
+	  <link>/jenkins-dockerized-slave-cluster</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2018-03-25T04:19:33-05:00</pubDate>
+	  <guid>/jenkins-dockerized-slave-cluster</guid>
+	  <description><![CDATA[
+	     <p>Here’s the premise, we have one or more Jenkins masters running our various jobs, and the server is bottlenecking: the UI is sluggish, and builds are taking longer than normal. The obvious answer is to add slaves. But multiple Jenkins masters, each with their own dedicated slaves is a lot of compute power, which may be idle most of the time, meaning a lot of wasted money and resources.</p>
+
+<p>Wouldn’t it be nice if we could share slave nodes between the masters? Create a cluster of slave nodes and have the various Jenkins masters run their jobs without needing to worry about scheduling or the underlying utilization of the hardware?</p>
+
+<p>Enter buzzword heaven. In the next few posts I’ll be going through all the steps required to build a Dockerized Jenkins slave cluster.</p>
+
+<ul>
+  <li>Part 1 - Our cloud provider will be OpenStack, however we’ll be using Terraform for provisioning, so you could easily migrate my tutorial onto Azure/AWS/GCE or Bare Metal. Our foundation will be a half-dozen vanilla CoreOS machines, which you can resize to your needs.</li>
+  <li>Part 2 - On top of that we’ll use kubeadm to bootstrap a best-practice Kubernetes cluster in an easy, reasonably secure and extensible way. No complex configuration-management required.</li>
+  <li>Part 3 - Finally, we’ll configure our Jenkins masters to communicate with a single Kubernetes cluster. The Jenkins masters will run jobs in a “cloud” that will transparently spin up Docker containers on demand. Once the job finishes the container is destroyed automatically, freeing up those resources for other masters and their jobs.</li>
+</ul>
+
+<p>My goal with these posts are to:</p>
+
+<ol>
+  <li>Aggregate all the steps in one place. There’s alot of smart people out there who’ve written various guides doing each of these things individually. I want to aggregate all the steps into one, easy to follow along tutorial</li>
+  <li>Break each stage up into comprehendible chunks, and clearly explain how they interact with each other. This allows you to modify my tutorial to suit your needs, while still being able to follow along.</li>
+  <li>Provide a real code repository, not just snippets out of context. Sometimes the “obvious” glue code isn’t so obvious. A repo you can grep can save a lot of time.</li>
+  <li>Write a continiously updated/evergreen guide following modern best practices. Like code, content also rots – especially quick in the devops &amp; docker world. I’ll be keeping this guide as up-to-date as possible. In addition it’s hosted on Github, so you can submit edits to make each post better.</li>
+</ol>
+
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

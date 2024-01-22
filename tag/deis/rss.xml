@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>How to setup a Deis (Heroku-like PAAS) on Microsoft Azure using CoreOS</title>
+	  <link>/how-to-setup-a-deis-heroku-like-paas-on</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-11-22T02:04:00-06:00</pubDate>
+	  <guid>/how-to-setup-a-deis-heroku-like-paas-on</guid>
+	  <description><![CDATA[
+	     <h1 id="prerequisites">Prerequisites</h1>
+
+<h2 id="install-and-configure-the-azure-cli">Install and Configure the Azure CLI</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># If Node.js is installed on your system, use the following command to install the xplat-cli:</span>
+<span class="nb">sudo </span>npm <span class="nb">install </span>azure-cli <span class="nt">-g</span>
+
+<span class="c">#To download the publish settings for your account, use the following command:</span>
+azure account download
+
+<span class="c">#This will open your default browser and prompt you to sign in to the Azure Management Portal. After signing in, a .publishsettings file will be downloaded. Make note of where this file is saved.</span>
+
+<span class="c">#Next, import the .publishsettings file by running the following command, replacing [path to .publishsettings file] with the path to your .publishsettings file:</span>
+azure account import <span class="o">[</span>path to .publishsettings file]
+</code></pre></div></div>
+
+<h2 id="azure-configuration">Azure Configuration</h2>
+<p>Ok, we’re ready to provision our cluster. We’ll first need to create an affinity group for this cluster so the hosts selected for the CoreOS VMs are close to each other:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>azure account affinity-group create myapp-affinity -l "East US" -e "MyApp Affinity Group"
+</code></pre></div></div>
+
+<p>Next, create a cloud service for this cluster. We are going to assign containers to each of the hosts in this cluster to serve web traffic so we want to load balance incoming requests across them using a cloud service. This cloud service name needs to be unique across all of Azure, so choose a unique one:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>azure service create --affinity-group myapp-affinity myapp-cloud-service-name
+</code></pre></div></div>
+
+<p>Finally, we will create a virtual private network for our cluster to live inside.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#TODO: this isnt working
+azure network vnet create --affinity-group myapp-affinity myapp-network
+</code></pre></div></div>
+
+<h2 id="configure-coreos-cloud-configyml-file">Configure CoreOS cloud-config.yml file</h2>
+
+<p>The first thing we need to do is get a discovery token for etcd. ‘etcd’ is a distributed key-value store built on the Raft protocol and acts as a store for configuration information for CoreOS. Fleet, another part of the CoreOS puzzle, is a low-level init system built on ‘etcd’ that provides the functionality of Systemd over a distributed cluster.</p>
+
+<p>This discovery token is configured in the cloud-init file called cloud-config.yml. This configures the CoreOS image once it is provisioned by Azure and, in particular, it injects the etcd discovery token into the virtual machine so that it knows which CoreOS cluster it belongs to. Its important to have a new and unique value for this, otherwise your cluster could fail to initialize correctly.</p>
+
+<p>Let’s provision a new one for our cluster:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://discovery.etcd.io/new
+</code></pre></div></div>
+
+<p>This will fetch a discovery URL that looks something like https://discovery.etcd.io/e6a84781d11952da545316cb90c9e9ab. Copy this and edit the <a href="https://raw.githubusercontent.com/deis/deis/master/contrib/coreos/user-data.example">cloud-config.yml</a> file and paste this discovery token into it.</p>
+
+<p><a href="https://raw.githubusercontent.com/deis/deis/master/contrib/coreos/user-data.example">Dies Cloud-Config Example File</a></p>
+
+<h2 id="create-azure-coreos-vm-cluster">Create Azure CoreOS VM Cluster</h2>
+
+<p>Run the folllowing commands to create your Azure VMs. Feel free to configure the size and ports, but be sure to create atleast 3 vms. Deis provisions 3 router services by default, and will hang if only less than 3 servers are present. (https://github.com/deis/deis/issues/2469)</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>azure vm create <span class="se">\</span>
+<span class="nt">--custom-data</span><span class="o">=</span>cloud-config.yml <span class="se">\</span>
+<span class="nt">--vm-size</span><span class="o">=</span>Basic_A1 <span class="se">\</span>
+<span class="nt">--ssh</span><span class="o">=</span>22 <span class="se">\</span>
+<span class="nt">--ssh-cert</span><span class="o">=</span>../path/to/cert <span class="se">\</span>
+<span class="nt">--no-ssh-password</span> <span class="se">\</span>
+<span class="nt">--vm-name</span><span class="o">=</span>coreos1 <span class="se">\</span>
+<span class="nt">--virtual-network-name</span><span class="o">=</span>myapp-network <span class="se">\</span>
+<span class="nt">--affinity-group</span><span class="o">=</span>myapp-affinity <span class="se">\</span>
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+
+azure vm create <span class="se">\</span>
+<span class="nt">--custom-data</span><span class="o">=</span>cloud-config.yml <span class="se">\</span>
+<span class="nt">--vm-size</span><span class="o">=</span>Basic_A1 <span class="se">\</span>
+<span class="nt">--ssh</span><span class="o">=</span>2222 <span class="se">\</span>
+<span class="nt">--ssh-cert</span><span class="o">=</span>../path/to/cert <span class="se">\</span>
+<span class="nt">--no-ssh-password</span> <span class="se">\</span>
+<span class="nt">--vm-name</span><span class="o">=</span>coreos2 <span class="se">\</span>
+<span class="nt">--virtual-network-name</span><span class="o">=</span>myapp-network <span class="se">\</span>
+<span class="nt">--affinity-group</span><span class="o">=</span>myapp-affinity <span class="se">\</span>
+<span class="nt">--connect</span>
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+
+azure vm create <span class="se">\</span>
+<span class="nt">--custom-data</span><span class="o">=</span>cloud-config.yml <span class="se">\</span>
+<span class="nt">--vm-size</span><span class="o">=</span>Basic_A1 <span class="se">\</span>
+<span class="nt">--ssh</span><span class="o">=</span>2223 <span class="se">\</span>
+<span class="nt">--ssh-cert</span><span class="o">=</span>../path/to/cert <span class="se">\</span>
+<span class="nt">--no-ssh-password</span> <span class="se">\</span>
+<span class="nt">--vm-name</span><span class="o">=</span>coreos3 <span class="se">\</span>
+<span class="nt">--virtual-network-name</span><span class="o">=</span>myapp-network <span class="se">\</span>
+<span class="nt">--affinity-group</span><span class="o">=</span>myapp-affinity <span class="se">\</span>
+<span class="nt">--connect</span>
+myapp-cloud-service-name <span class="se">\</span>
+2b171e93f07c4903bcad35bda10acf22__CoreOS-Beta-494.0.0 <span class="se">\</span>
+core
+</code></pre></div></div>
+
+<p>Use the following command to find alternative/newer versions of CoreOS</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>azure vm image list | grep  "CoreOS"
+</code></pre></div></div>
+
+<p>Let’s quickly ssh into the first machine in the cluster and check to make sure everything looks ok:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh core@myapp-cloud-service-name.cloudapp.net -p 22 -i ../path/to/cert
+</code></pre></div></div>
+
+<p>Let’s first make sure etcd is up and running:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo etcdctl ls --recursive
+# /coreos.com
+# /coreos.com/updateengine
+# /coreos.com/updateengine/rebootlock
+# /coreos.com/updateengine/rebootlock/semaphore
+</code></pre></div></div>
+
+<p>And that fleetctl knows about all of the members of the cluster:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo fleetctl list-machines
+# MACHINE     IP      METADATA
+# 36a636af... 10.0.0.4    region=us-east
+# 40078616... 10.0.0.5    region=us-east
+# f6ebd7d1... 10.0.2.4    region=us-east
+</code></pre></div></div>
+
+<p>Finally lets exit from the CoreOS cluster and install the local management tools</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>exit
+</code></pre></div></div>
+
+<h2 id="install-deis-control-utility">Install Deis Control Utility</h2>
+<p>The Deis Control Utility, or <code class="language-plaintext highlighter-rouge">deisctl</code> for short, is a command-line client used to configure and manage the Deis Platform.</p>
+
+<h3 id="building-from-installer">Building from Installer</h3>
+
+<p>To install the latest version of deisctl, change to the directory where you would like to install the binary. Then, install the Deis Control Utility by downloading and running the install script with the following command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir /tmp/deisctl
+cd /tmp/deisctl
+curl -sSL https://deis.io/deisctl/install.sh | sh -s 1.0.1
+</code></pre></div></div>
+
+<p>This installs deisctl to the current directory, and refreshes the Deis systemd unit files used to schedule the components. Link it to /usr/local/bin, so it will be in your PATH:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cp /tmp/deisctl/deisctl /usr/local/bin/deisctl
+</code></pre></div></div>
+
+<p>Always use a version of deisctl that matches the Deis release. Verify this with <code class="language-plaintext highlighter-rouge">deisctl --version</code>.</p>
+
+<h2 id="install-the-deis-platform">Install the Deis Platform</h2>
+
+<p>Ensure your SSH agent is running and select the private key that corresponds to the SSH key added to your CoreOS nodes:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">eval</span> <span class="sb">`</span>ssh-agent <span class="nt">-s</span><span class="sb">`</span>
+ssh-add ~/.ssh/deis
+</code></pre></div></div>
+
+<p>Export it to the DEISCTL_TUNNEL environment variable (substituting your own cloud app service name):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export DEISCTL_TUNNEL="myapp-cloud-service-name.cloudapp.net"
+</code></pre></div></div>
+
+<p>This is the IP address where deisctl will attempt to communicate with the cluster. You can test that it is working properly by running deisctl list. If you see a single line of output, the control utility is communicating with the nodes.</p>
+
+<p>Before provisioning the platform, we’ll need to add the SSH key to Deis so it can connect to remote hosts during deis run:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deisctl config platform set sshPrivateKey=~/.ssh/deis
+</code></pre></div></div>
+
+<p>We’ll also need to tell the controller which domain name we are deploying applications under:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deisctl config platform set domain=example.com
+</code></pre></div></div>
+
+<p>Once finished, run this command to provision the Deis platform:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deisctl install platform
+</code></pre></div></div>
+
+<p>You will see output like the following, which indicates that the units required to run Deis have been loaded on the CoreOS cluster:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>● ▴ ■
+■ ● ▴ Installing Deis...
+▴ ■ ●
+
+Scheduling data containers...
+...
+Deis installed.
+Please run `deisctl start platform` to boot up Deis.
+</code></pre></div></div>
+
+<p>Run this command to start the Deis platform:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deisctl start platform
+</code></pre></div></div>
+
+<p>Once you see “Deis started.”, your Deis platform is running on a cluster! You may verify that all of the Deis units are loaded and active by running the following command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deisctl list
+</code></pre></div></div>
+
+<p>All of the units should be active.</p>
+
+<p>Now that you’ve finished provisioning a cluster, we can get started using the platform.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li>https://azure.microsoft.com/en-us/documentation/articles/xplat-cli/</li>
+  <li>https://coreos.com/docs/launching-containers/launching/fleet-using-the-client/</li>
+  <li>https://coreos.com/docs/running-coreos/cloud-providers/azure/</li>
+  <li>https://github.com/timfpark/coreos-azure</li>
+  <li>https://docs.deis.io/en/latest/installing_deis/install-deisctl/</li>
+  <li>https://docs.deis.io/en/latest/installing_deis/install-platform/</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

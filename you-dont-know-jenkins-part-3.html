@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>You Don't Know Jenkins - Part 3</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - You Don't Know Jenkins - Part 3" />
+    <meta name="twitter:description" content="With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly because Pipeline jobs are now the..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-3" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - You Don't Know Jenkins - Part 3" />
+    <meta property="og:description" content="With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly because Pipeline jobs are now the..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-3" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/you-dont-know-jenkins-part-3",
+        "image": "https://blog.thesparktree.com/assets/images/cover_jenkins.jpg",
+        "description": "With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly because Pipeline jobs are now the..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_jenkins.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">You Don't Know Jenkins - Part 3</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2017-11-13">13 Nov 2017</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/jenkins'>Jenkins</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/groovy'>Groovy</a>,
+                    
+                
+                    
+                       <a href='/tag/chef'>Chef</a>,
+                    
+                
+                    
+                       <a href='/tag/dsl'>Dsl</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important for multiple reasons, but mostly
+because Pipeline jobs are now the defacto standard for creating complex jobs, custom deployment workflows without
+additional plugins. The best part is that pipelines are basically just Groovy scripts with some Jenkins specific
+additions.</p>
+
+<p>While Pipeline jobs can be used to build artifacts just like a regular Freestyle job, their true power is only apparent when you
+start using the Pipeline for orchestration.</p>
+
+<p>Before Pipelines were released you had to make use of post build triggers and artifact archiving to create a useful 
+orchestration workflow. With Pipelines, this concept is now a first class citizen. You can clone multiple repositories, 
+trigger down stream  jobs, run stages in parallel, make decisions about what stages to run based on parameters. You 
+have the power to build a Pipeline that suites your needs.</p>
+
+<p>This post is part of a series that is all about solving common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></strong></li>
+  <li>Part 4 - Advanced DSL &amp; Pipeline Techniques <em>(Coming soon)</em></li>
+</ul>
+
+<p>This is <strong>Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</strong>. If you haven’t read <a href="http://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1</a>, you might want to start there.</p>
+
+<hr />
+
+<h2 id="declarative-vs-scripted-pipeline">Declarative vs Scripted Pipeline</h2>
+
+<p>The first thing you need to know is that there’s actually 2 significantly different types of pipelines.</p>
+
+<p>The first type is called a <code class="language-plaintext highlighter-rouge">Declarative Pipeline</code>. If you’re familiar with a <code class="language-plaintext highlighter-rouge">Jenkinsfile</code>, then you’re already with the 
+Declarative Pipeline syntax. Its simple and structured, making it easy to understand.</p>
+
+<p>The second type is called a <code class="language-plaintext highlighter-rouge">Scripted Pipeline</code>. It is a fully featured programming environment, offering a tremendous 
+amount of flexibility and extensibility to Jenkins users.</p>
+
+<p>The two are both fundamentally the same Pipeline sub-system underneath. They are both durable implementations of “Pipeline as code.” 
+They are both able to use steps built into Pipeline or provided by plugins. Both are able utilize Shared Libraries 
+(a topic we’ll dive into in a future ost).</p>
+
+<p>Where they differ however is in syntax and flexibility. Declarative limits what is available to the user with a more 
+strict and pre-defined structure, making it an ideal choice for simpler continuous delivery pipelines. Scripted provides 
+very few limits; the only limits on structure and syntax tend to be defined by Groovy itself, rather than any Pipeline-specific 
+systems, making it an ideal choice for power-users and those with more complex requirements.</p>
+
+<p>For the most part the issues and solutions I talk about in the following sections are relevant to both types of Jenkins 
+Pipeline, however some only apply to Scripted.</p>
+
+<hr />
+
+<h2 id="serialization-woes">Serialization woes</h2>
+
+<p>If you’ve worked with Jenkins Pipelines for anything more than simple/toy examples, you’ll have run into <code class="language-plaintext highlighter-rouge">java.io.NotSerializableException</code> exceptions.</p>
+
+<p>These exceptions are confusing, until you begin to understand the truth about Pipelines &amp; Jenkinsfiles: You’re not writing 
+a groovy script, you’re writing a list of groovy scripts.</p>
+
+<p>I could dive deep into Abstract Syntax Tree (AST), the <code class="language-plaintext highlighter-rouge">Groovy-CPS</code> engine and continuation-passing style transformation, 
+but as a developer writing Jenkinsfiles and pipeline scripts you probably just want to get your script working.</p>
+
+<p>Here’s what you need to know: after each pipeline <code class="language-plaintext highlighter-rouge">step</code> Jenkins will take a snapshot of the current execution state.</p>
+
+<p>This is because Jenkins pipelines are supposed to be robust against restarts (they can continue where they left off, 
+rather than requiring your pipeline to start over from the beginning). While this sounds great, the way Jenkins does 
+this is by serializing the current pipeline state. If you’re using classes that do not serialize nicely 
+(using <code class="language-plaintext highlighter-rouge">implements Serializable</code>) then Jenkins will throw an error.</p>
+
+<h3 id="solutions">Solutions</h3>
+
+<p>There’s a couple of solutions for this:</p>
+
+<ul>
+  <li>
+    <p><code class="language-plaintext highlighter-rouge">@NonCPS</code> decorated methods may safely use non-<code class="language-plaintext highlighter-rouge">Serializable</code> objects as local variables, though they should not accept 
+non-serializable parameters or return or store non-serializable values.</p>
+
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nd">@NonCPS</span>
+  <span class="kt">def</span> <span class="nf">version</span><span class="o">(</span><span class="n">text</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">def</span> <span class="n">matcher</span> <span class="o">=</span> <span class="n">text</span> <span class="o">=~</span> <span class="s1">'&lt;version&gt;(.+)&lt;/version&gt;'</span>
+    <span class="n">matcher</span> <span class="o">?</span> <span class="n">matcher</span><span class="o">[</span><span class="mi">0</span><span class="o">][</span><span class="mi">1</span><span class="o">]</span> <span class="o">:</span> <span class="kc">null</span>
+  <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>All non-serializable variables should be <code class="language-plaintext highlighter-rouge">Null</code>ed before the next Jenkins pipeline step is called.</p>
+
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kt">def</span> <span class="n">matcher</span> <span class="o">=</span> <span class="n">readFile</span><span class="o">(</span><span class="s1">'pom.xml'</span><span class="o">)</span> <span class="o">=~</span> <span class="s1">'&lt;version&gt;(.+)&lt;/version&gt;'</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">matcher</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">echo</span> <span class="s2">"Building version ${matcher[0][1]}"</span>
+  <span class="o">}</span>
+  <span class="n">matcher</span> <span class="o">=</span> <span class="kc">null</span>
+  <span class="n">sh</span> <span class="s2">"${mvnHome}/bin/mvn -B -Dmaven.test.failure.ignore verify"</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Use <code class="language-plaintext highlighter-rouge">implements Serializable</code> for any classes that you define yourself. Only really applicable in Shared Libraries 
+(detailed in a future post)</p>
+
+    <div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kd">class</span> <span class="nc">Utilities</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+    <span class="kt">def</span> <span class="n">steps</span>
+    <span class="nf">Utilities</span><span class="o">(</span><span class="n">steps</span><span class="o">)</span> <span class="o">{</span><span class="k">this</span><span class="o">.</span><span class="na">steps</span> <span class="o">=</span> <span class="n">steps</span><span class="o">}</span>
+    <span class="kt">def</span> <span class="nf">mvn</span><span class="o">(</span><span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">steps</span><span class="o">.</span><span class="na">sh</span> <span class="s2">"${steps.tool 'Maven'}/bin/mvn -o ${args}"</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="script-approval--groovy-sandbox">Script Approval &amp; Groovy Sandbox</h2>
+<p>Pipelines also introduce another annoyingly common exception <code class="language-plaintext highlighter-rouge">org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException</code>.</p>
+
+<p>Like the <code class="language-plaintext highlighter-rouge">Serialization</code> error above, this related to the magic that makes Jenkins Pipeline Groovy different than regular 
+Groovy scripts. Since Groovy is a full programming language, with all the functionality and potential destructiveness that 
+entails, the Jenkins developers decided to mitigate that potential for harm by only allowing certain whitelisted methods 
+to be used in Pipeline scripts.</p>
+
+<p>Unfortunately a large number of common legitimate Groovy methods are not whitelisted by default, which can make Pipeline 
+development frustrating.
+Even more frustrating is the fact that the <code class="language-plaintext highlighter-rouge">RejectedAccessException</code>’s are only thrown at Runtime, potentially 2 hours 
+into a 3 hour pipeline script. Yeah, not fun.</p>
+
+<h3 id="solutions-1">Solutions</h3>
+
+<p>There’s a couple ways to mitigate these issues:</p>
+<ul>
+  <li>Disable the Jenkins Pipeline sandbox. While this may be ok while developing a new script, this shouldn’t be your default 
+for finished scripts. The Pipeline Groovy runtime has access to all the Jenkins internals, meaning you can retrieve encrypted 
+credentials, trigger deployments, delete build artifacts and cause havoc in any number of ways.</li>
+  <li>Whitelist each and every method that you use. If you make heavy use of Groovy shortcut methods in <code class="language-plaintext highlighter-rouge">DefaultGroovyMethods</code> 
+(like <code class="language-plaintext highlighter-rouge">.any</code> <code class="language-plaintext highlighter-rouge">.each</code>, <code class="language-plaintext highlighter-rouge">.find</code>) you’ll want to take a look at my <a href="https://github.com/AnalogJ/you-dont-know-jenkins-init/blob/master/5000.script-approval.groovy#L15-L23">Jenkins init.d script</a> 
+that automatically whitelists them all.</li>
+  <li>Global Shared Libraries. I’ll talk about this more in a future post, but Global Pipeline Libraries are assumed
+to be trusted, and as such any methods (no matter how dangerous) are not subject to the Jenkins security sandbox.</li>
+</ul>
+
+<hr />
+
+<h2 id="documentation">Documentation</h2>
+
+<p>There’s a lot of documentation about Pipelines, however they are spread out between various Github repos, the Jenkins Blog 
+and the official documentation. I’m going to list links and sources here that you’ll find useful for various topics.</p>
+
+<h3 id="steps">Steps</h3>
+
+<p>Documentation can be a bit hard to find, especially if you want an updated list of all the available pipeline steps.</p>
+
+<p>You’re best bet is to check the master list: <a href="https://jenkins.io/doc/pipeline/steps/">Pipeline Steps Reference</a>. It 
+contains documentation for all the known pipeline steps provided by plugins.</p>
+
+<p>If however you’re only interested in the steps that are actually usable on your Jenkins server, you’ll want to go to 
+<code class="language-plaintext highlighter-rouge">http:///pipeline-syntax/html</code>. While that website is fully featured, the documentation can be a bit 
+terse, so you’ll also want to check out the Snippet Generator: <code class="language-plaintext highlighter-rouge">http:///pipeline-syntax</code></p>
+
+<h3 id="pipeline">Pipeline</h3>
+
+<p>While you might already be familiar with Pipelines, sometimes looking at actual code is more useful than reading about 
+an abstract concept.</p>
+
+<p>The Jenkins team has a <a href="https://github.com/jenkinsci/pipeline-examples">jenkinsci/pipeline-examples</a> with working code 
+for Pipelines, Jenkinsfiles and Shared Libraries. You should definitely check it out.</p>
+
+<p>If you’ve already written a couple Pipeline scripts and you’re starting to get comfortable, then it may be time to start 
+reading about the <a href="https://github.com/jenkinsci/pipeline-examples/blob/master/docs/BEST_PRACTICES.md">Best Practices</a></p>
+
+<hr />
+
+<h2 id="loading-external-jars-and-shared-libraries">Loading External Jars and Shared Libraries</h2>
+
+<p>Pipelines are powerful, but to really see them shine, you’ll want to start importing third party jars and reusing code.</p>
+
+<p>Importing Jars from the public maven repo is as easy as including <code class="language-plaintext highlighter-rouge">@Grab</code> at the top of your Pipeline script.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Grab</span><span class="o">(</span><span class="s1">'org.yaml:snakeyaml:1.17'</span><span class="o">)</span>
+<span class="kn">import</span> <span class="nn">org.yaml.snakeyaml.Yaml</span>
+</code></pre></div></div>
+
+<p>Reusing Pipelines functions is easy too, just move your code into a Shared Library, configure it as a Library in the 
+Jenkins Manage page, and then import it in your Pipeline script</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Library</span><span class="o">(</span><span class="s1">'somelib'</span><span class="o">)</span>
+<span class="kn">import</span> <span class="nn">com.mycorp.pipeline.somelib.UsefulClass</span>
+</code></pre></div></div>
+<p>I’ll be talking about Shared Pipelines more in a future post of this series, with much more detail.</p>
+
+<hr />
+
+<h2 id="string-interpolation--multiline-strings">String Interpolation &amp; Multiline Strings</h2>
+
+<p>While this is mostly just about Groovy syntax, and not really Jenkins Pipeline specific, I’ve found that there are a 
+lot of questions around <code class="language-plaintext highlighter-rouge">String</code> manipulation and multiline strings.</p>
+
+<p>String interpolation is pretty easy. All you need to know is that single quotes (<code class="language-plaintext highlighter-rouge">'</code>) are literal strings, while double 
+quoted strings support interpolation and escape characters.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">def</span> <span class="n">myString</span> <span class="o">=</span> <span class="s1">'hello'</span>
+<span class="k">assert</span> <span class="s1">'${myString} world'</span> <span class="o">==</span> <span class="s1">'${hello} world'</span>
+<span class="k">assert</span> <span class="s2">"${myString} world"</span> <span class="o">==</span> <span class="s1">'hello world'</span>
+</code></pre></div></div>
+
+<p>Multiline strings are easy to create as well, just create use three single or double quotes to open and close the string. 
+As before, single quotes are literal multi-line strings, while double quotes are used for interpolated multi-line strings</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">def</span> <span class="n">myString</span> <span class="o">=</span> <span class="s1">'hello'</span>
+
+<span class="k">assert</span> <span class="s1">'''\
+${myString} world
+foo bar
+'''</span> <span class="o">==</span> <span class="s2">"\\\n${myString} world\nfoo bar\n"</span>
+
+<span class="k">assert</span> <span class="s2">"""\
+	${myString} world
+	foo bar
+"""</span><span class="o">.</span><span class="na">stripIndent</span><span class="o">()</span> <span class="o">==</span> <span class="s2">"hello world\nfoo bar\n"</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="shell-output-parsing">Shell Output Parsing</h2>
+
+<p>A little known but incredibly useful feature of the pipeline shell <code class="language-plaintext highlighter-rouge">sh</code> step, is that you can redirect the STDOUT into a groovy variable.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">def</span> <span class="n">gitCommit</span> <span class="o">=</span> <span class="n">sh</span><span class="o">(</span><span class="nl">returnStdout:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">script:</span> <span class="s1">'git rev-parse HEAD'</span><span class="o">).</span><span class="na">trim</span><span class="o">()</span>
+<span class="n">echo</span> <span class="s2">"Git commit sha: ${gitCommit}"</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="build-name--description">Build Name &amp; Description</h2>
+
+<p>Occasionally you’ll wish that you could include more contextual data in your build history, instead of having to identify a specific build by build number.</p>
+
+<p>Pipeline’s have you covered:</p>
+
+<p><img src="https://static1.tothenew.com/blog/wp-content/uploads/2016/05/Jenkins_failed.png" alt="failed jenkins image" /></p>
+
+<p>At any point in your pipeline script you can add/update the job name (build ID) &amp; description using the global variable <code class="language-plaintext highlighter-rouge">currentBuild</code>.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//this will replace the build number in the Jenkins UI.</span>
+<span class="n">currentBuild</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="s2">"short string"</span>
+
+<span class="c1">//this will show up as a grey text block below the build number</span>
+<span class="n">currentBuild</span><span class="o">.</span><span class="na">description</span> <span class="o">=</span> <span class="s2">"my new description"</span>
+
+</code></pre></div></div>
+
+<hr />
+
+<h1 id="fin">Fin.</h1>
+
+<p>Pipelines are completely customizable and extensible, making it hard to give you a out-of-the-box solution, like I’ve done in previous guides.</p>
+
+<p>Instead the goal here was to answer the common questions I’ve seen about Pipelines and throw in some links and resources 
+so you can build a Pipeline that works for you.</p>
+
+<p>Having said that, Pipeline scripts are only one half of the solution.</p>
+
+<p><strong>Part X - Advanced Techniques - Pipeline Testing, Shared Libraries</strong> <em>(Coming soon)</em></p>
+
+<p>In a future post we’ll talk about how you can actually start testing your Pipeline scripts. As you start writing more orchestration
+code you’ll find that, unlike application code, orchestration code is incredibly difficult to write and test effectively.</p>
+
+<p>In addition, any discussion about Pipelines wouldn’t be complete without mentioning Shared Libraries. I’ve touched on them 
+a couple times in this guide, but in a future post, I’ll be writing a complex &amp; testable Shared Library, step by step so you can follow along.</p>
+
+<h3 id="additional-references">Additional References</h3>
+<ul>
+  <li>https://jenkins.io/solutions/pipeline/</li>
+  <li>https://jenkins.io/doc/book/managing/script-approval/</li>
+  <li>https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md</li>
+  <li>https://jenkins.io/doc/book/pipeline/shared-libraries/</li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=You Don't Know Jenkins - Part 3&amp;url=https://blog.thesparktree.com/you-dont-know-jenkins-part-3"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/you-dont-know-jenkins-part-3"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/you-dont-know-jenkins-part-3"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/you-dont-know-jenkins-part-3" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/you-dont-know-jenkins-part-3'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'You Don&#39;t Know Jenkins - Part 3';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_kubernetes.jpg)" href="/jenkins-dockerized-slave-cluster">
+            <section class="post">
+                <h2>Jenkins Dockerized Slave Cluster - Premise</h2>
+                <p>Here's the premise, we have one or more Jenkins masters running our various jobs, and...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_devops3.png)" href="/devops-for-startups">
+            <section class="post">
+                <h2>Devops for Startups & Small Teams</h2>
+                <p>When you’re working on a side-project or at a startup as part of a small...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

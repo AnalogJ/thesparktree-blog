@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Step-By-Step Shipyard 2 Docker Cluster</title>
+	  <link>/step-by-step-shipyard-2-docker-cluster</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2015-07-16T23:11:15-05:00</pubDate>
+	  <guid>/step-by-step-shipyard-2-docker-cluster</guid>
+	  <description><![CDATA[
+	     <h1 id="step-by-step-shipyard-2-docker-cluster">Step-By-Step Shipyard 2 Docker Cluster</h1>
+
+<p>Since <a href="https://github.com/shipyard/shipyard/pull/455">Shipyard 3</a> (with its built in support for <a href="https://github.com/docker/swarm">Docker Swarm</a>) is not quite ready, I thought I would create a step-by-step guide for getting a Shipyard 2 cluster going with 3 nodes (engines).</p>
+
+<p>I’ve seen a few other guides written, but they are either dated or missing very important instructions.</p>
+
+<h1 id="requirements">Requirements</h1>
+
+<p>This guide makes a few assumtions about your setup. Since we’re going to be creating a cluster, you’ll need more than 2 servers available to run as nodes. This guide will have <strong>3 servers running as nodes, and 1 dedicated master server</strong>. You should also have the latest version of <a href="https://docs.docker.com/installation/">docker installed on all your servers</a> (master and nodes) as of right now, that is <strong>Docker 1.7</strong>. This guide is written to be used with Ubuntu 14.04 but should work on any linux system with little to no changes.</p>
+
+<h1 id="definitions">Definitions</h1>
+
+<p>In the following guide, I’ll make use of the following variables. If you see them in any instruction you should replace it with the applicable value</p>
+
+<ul>
+  <li><strong>$MASTER_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard master server</li>
+  <li><strong>$NODE1_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node1 server</li>
+  <li><strong>$NODE2_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node2 server</li>
+  <li><strong>$NODE3_HOSTNAME</strong> - the DNS name/IP Addresss of your Shipyard node3 server</li>
+</ul>
+
+<h1 id="security-configuration">Security Configuration</h1>
+
+<p>As recommended by the <a href="https://docs.docker.com/articles/security/">Docker Security Guide</a> we’re going to want to <a href="https://docs.docker.com/articles/https/">Protect the Docker daemon socket</a> as Shipyard will need to remotely access the Docker daemon on each node. Don’t worry about blindly following those instructions. All the relavent steps are included below with descriptions and a few tweaks to get everything working for a Shipyard cluster.</p>
+
+<blockquote>
+  <p>By default, Docker runs via a non-networked Unix socket. It can also optionally communicate using a HTTP socket.
+If you need Docker to be reachable via the network in a safe manner, you can enable TLS by specifying the tlsverify flag and pointing Docker’s tlscacert flag to a trusted CA certificate.</p>
+</blockquote>
+
+<p>At the end of this section we’ll have protected the Docker daemon on each of our servers such that it will only allow connections from clients authenticated by a certificate signed by that CA. We can then provide Shipyard with the connection information and associated client certificates so that Shipyard can securely communicate with the Docker daemons on the nodes.</p>
+
+<p>Here’s a quick rundown of what we’re going to be doing:</p>
+
+<ul>
+  <li>Create a minimal openssl.cnf file with required settings</li>
+  <li>Create a Certificate Authority keypair</li>
+  <li>Use the CA to create a keypair for each of your Nodes</li>
+  <li>Transfer the keys to the correct nodes</li>
+  <li>Configure the Docker daemon on the Nodes to use TLS by default</li>
+  <li>Setup IPTables firewall rules</li>
+</ul>
+
+<h2 id="create-a-minimal-opensslcnf-file-on-master">Create a minimal openssl.cnf file on Master</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ssh root@$MASTER_HOSTNAME
+$ nano /etc/docker/openssl.cnf
+
+[ req ]
+default_bits	= 4096
+default_keyfile = privkey.pem
+distinguished_name	= req_distinguished_name
+x509_extensions	= v3_ca
+default_md = sha1
+string_mask = nombstr
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+countryName = US
+stateOrProvinceName = CA
+localityName = San Francisco
+organizationName = SparkTree Inc
+organizationalUnitName	= Shipyard
+emailAddress = jason@thesparktree.com
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth,serverAuth
+subjectKeyIdentifier = hash
+
+[ v3_ca ]
+subjectKeyIdentifier	= hash
+authorityKeyIdentifier	= keyid:always,issuer:always
+basicConstraints = CA:true
+
+[ crl_ext ]
+authorityKeyIdentifier=keyid:always
+</code></pre></div></div>
+
+<h2 id="create-a-certificate-authority-keypair-on-master">Create a Certificate Authority keypair on Master</h2>
+
+<p>First generate CA private and public keys:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> /etc/docker/
+<span class="nv">$ </span>openssl genrsa <span class="nt">-aes256</span> <span class="nt">-out</span> ca-key.pem 2048
+<span class="nv">$ </span>openssl req <span class="nt">-config</span> openssl.cnf <span class="nt">-new</span> <span class="nt">-x509</span> <span class="nt">-days</span> 3650 <span class="nt">-key</span> ca-key.pem <span class="nt">-sha256</span> <span class="nt">-out</span> ca.pem
+</code></pre></div></div>
+
+<p>In order to protect your keys from accidental damage, you will want to remove their write permissions.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">chmod</span> <span class="nt">-v</span> 0400 ca-key.pem
+<span class="nv">$ </span><span class="nb">chmod</span> <span class="nt">-v</span> 0444 ca.pem
+</code></pre></div></div>
+
+<h2 id="use-the-ca-to-create-a-keypair-for-your-nodes-on-master">Use the CA to create a keypair for your Nodes on Master</h2>
+
+<p>Now that we have a CA, you can create a server key and certificate signing request (CSR) for each Node. We’ll create individual folders to contain the server and client key pairs for each Node</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> /etc/docker/node1
+<span class="nv">$ </span><span class="nb">mkdir</span> /etc/docker/node2
+<span class="nv">$ </span><span class="nb">mkdir</span> /etc/docker/node3
+</code></pre></div></div>
+
+<p>Make sure that “Common Name” (i.e., server FQDN or YOUR name) matches the hostname you will use to connect to your <strong>Node1</strong>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> /etc/docker/node1
+<span class="nv">$ </span>openssl genrsa <span class="nt">-out</span> server-key.pem 2048
+<span class="nv">$ </span>openssl req <span class="nt">-subj</span> <span class="s2">"/CN=</span><span class="nv">$NODE1_HOSTNAME</span><span class="s2">"</span> <span class="nt">-new</span> <span class="nt">-key</span> server-key.pem <span class="se">\</span>
+<span class="nt">-out</span> server.csr
+</code></pre></div></div>
+
+<p>Next, we’re going to sign the <strong>Node1</strong> public key with our CA:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openssl x509 <span class="nt">-req</span> <span class="nt">-days</span> 3650 <span class="nt">-in</span> server.csr <span class="nt">-CA</span> /etc/docker/ca.pem <span class="nt">-CAkey</span> /etc/docker/ca-key.pem <span class="se">\</span>
+<span class="nt">-CAcreateserial</span> <span class="nt">-out</span> server-cert.pem <span class="nt">-extensions</span> v3_req <span class="nt">-extfile</span> /etc/docker/openssl.cnf
+</code></pre></div></div>
+
+<p>For the Shipyard master to communicate with <strong>Node1</strong> using client authentication we’ll need to create a client key and certificate signing request:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openssl genrsa <span class="nt">-out</span> key.pem 2048
+<span class="nv">$ </span>openssl req <span class="nt">-subj</span> <span class="s1">'/CN=node1_client'</span> <span class="nt">-new</span> <span class="nt">-key</span> key.pem <span class="nt">-out</span> client.csr
+</code></pre></div></div>
+
+<p>Then sign the <strong>Node1</strong> client key as we did the server key.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openssl x509 <span class="nt">-req</span> <span class="nt">-days</span> 3650 <span class="nt">-in</span> client.csr <span class="nt">-CA</span> /etc/docker/ca.pem <span class="nt">-CAkey</span> /etc/docker/ca-key.pem <span class="se">\</span>
+<span class="nt">-CAcreateserial</span> <span class="nt">-out</span> cert.pem <span class="nt">-extensions</span> v3_req <span class="nt">-extfile</span> /etc/docker/openssl.cnf
+</code></pre></div></div>
+
+<p>After generating cert.pem and server-cert.pem for <strong>Node1</strong> you can safely remove the two certificate signing requests:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ rm -v client.csr server.csr
+</code></pre></div></div>
+
+<p>In order to protect your keys from accidental damage, you will want to remove their write permissions. To make them only readable by you, change file modes as follows:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ chmod -v 0400 key.pem server-key.pem
+</code></pre></div></div>
+
+<p>Now that we have a server and client key pair for <strong>Node1</strong> we have to follow the above instructions 2 more times, for <strong>Node2</strong> and <strong>Node3</strong> inside their respective folders.</p>
+
+<h2 id="transfer-the-keys-to-the-correct-nodes">Transfer the keys to the correct nodes</h2>
+
+<p>Now that we have all the key pairs that we need for each Node, we need to move them to the correct servers.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> /etc/docker/node1 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE1_HOSTNAME</span>:/etc/docker/
+
+<span class="nv">$ </span><span class="nb">cd</span> /etc/docker/node2 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE2_HOSTNAME</span>:/etc/docker/
+
+<span class="nv">$ </span><span class="nb">cd</span> /etc/docker/node3 <span class="o">&amp;&amp;</span> <span class="se">\</span>
+scp /etc/docker/ca.pem server-cert.pem server-key.pem root@<span class="nv">$NODE3_HOSTNAME</span>:/etc/docker/
+</code></pre></div></div>
+
+<h2 id="configure-the-docker-daemon-on-the-nodes-to-use-tls-by-default">Configure the Docker daemon on the Nodes to use TLS by default</h2>
+
+<p>Now that the server key pairs have been copied to the Nodes, we need to configure Docker to use them. First lets stop the Docker daemon on the Node.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh root@<span class="nv">$NODE1_HOSTNAME</span>
+<span class="nv">$ </span>service docker stop
+</code></pre></div></div>
+
+<p>Update your Docker daemon settings to use TLS. I’m using Ubuntu so my file is at <code class="language-plaintext highlighter-rouge">/etc/default/docker</code>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ nano /etc/default/docker
+</code></pre></div></div>
+
+<p>And add the following line to the bottom of the file.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DOCKER_OPTS="--tlsverify -H=unix:///var/run/docker.sock -H=$NODE1_HOSTNAME:2376 --tlscacert=/etc/docker/ca.pem --tlscert=/etc/docker/server-cert.pem --tlskey=/etc/docker/server-key.pem --label name=node1"
+</code></pre></div></div>
+
+<p>Now we can restart the Docker daemon on the Node</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ service docker start
+</code></pre></div></div>
+
+<p>Now follow the above instructions for <strong>Node2</strong> and <strong>Node3</strong> by replacing all instances of <code class="language-plaintext highlighter-rouge">node1</code> and <code class="language-plaintext highlighter-rouge">$NODE1_HOSTNAME</code> with the appropriate Node variables.</p>
+
+<h2 id="setup-iptables-firewall-rules">Setup IPTables firewall rules</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TODO
+</code></pre></div></div>
+
+<h1 id="shipyard-configuration">Shipyard Configuration</h1>
+
+<p>Now that the Nodes are all correctly configured, its time to <a href="http://shipyard-project.com/docs/quickstart/">deploy Shipyard on the Master</a>. There is a very small Docker image that will deploy and manage an entire Shipyard stack called Deploy.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh root@<span class="nv">$MASTER_HOSTNAME</span>
+<span class="nv">$ </span>docker run <span class="nt">--rm</span> <span class="nt">-v</span> /var/run/docker.sock:/var/run/docker.sock <span class="se">\</span>
+shipyard/deploy start
+</code></pre></div></div>
+
+<p>Once that’s complete lets also deploy the Shipyard CLI container</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ docker run -it --rm shipyard/shipyard-cli shipyard help
+</code></pre></div></div>
+
+<p>You should now be able to access your Shipyard web UI by visiting  <code class="language-plaintext highlighter-rouge">http://$MASTER_HOSTNAME:8080</code> and logging in with:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>username: admin
+password: shipyard
+</code></pre></div></div>
+
+<h2 id="register-nodes-as-shipyard-engines">Register Nodes as Shipyard Engines</h2>
+
+<p>Now that we have a working Shipyard container, lets register our Nodes as Shipyard Engines, after logging into the Shipyard CLI.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ docker run -it -v /etc/docker/:/home/  shipyard/shipyard-cli
+shipyard cli&gt; shipyard login
+URL:http://$MASTER_HOSTNAME:8080
+Username: admin
+Password: shipyard
+</code></pre></div></div>
+
+<p>Before we do anything lets change the insecure default Shipyard Admin account password</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shipyard cli&gt; shipyard change-password
+Password: &lt;enter a new password&gt;
+Confirm: &lt;re-enter a new password&gt;
+</code></pre></div></div>
+
+<p>Now lets register our Nodes</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shipyard cli&gt; shipyard add-engine --id node1 \
+--addr https://$NODE1_HOSTNAME:2376 \
+--label node1 \
+--ssl-cert /home/node1/cert.pem \
+--ssl-key /home/node1/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+
+shipyard cli&gt; shipyard add-engine --id node2 \
+--addr https://$NODE2_HOSTNAME:2376 \
+--label node2 \
+--ssl-cert /home/node2/cert.pem \
+--ssl-key /home/node2/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+
+shipyard cli&gt; shipyard add-engine --id node3 \
+--addr https://$NODE3_HOSTNAME:2376 \
+--label node3 \
+--ssl-cert /home/node3/cert.pem \
+--ssl-key /home/node3/key.pem \
+--ca-cert /home/ca.pem \
+--cpus 4.0 \
+--memory 2048
+</code></pre></div></div>
+
+<p>Once the operation is complete, use ctrl+d to exit the CLI.</p>
+
+<h1 id="fin">Fin</h1>
+
+<p>At this point you should have a working Shipyard Cluster. You should now be able to view and manage all containers deployed on your various Nodes under the Containers tab:</p>
+
+<p><img src="https://www.ovh.com/us/images/guides/1762/img_2614.jpg" alt="Containers" /></p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li>https://docs.docker.com/installation/</li>
+  <li>https://docs.docker.com/articles/security/</li>
+  <li>https://docs.docker.com/articles/https/</li>
+  <li>http://www.blackfinsecurity.com/docker-swarm-with-tls-authentication/</li>
+  <li>https://askubuntu.com/questions/147241/execute-sudo-without-password</li>
+  <li>http://sheerun.net/2014/05/17/remote-access-to-docker-with-tls/</li>
+  <li>https://www.ovh.com/us/g1762.orchestrating_a_cluster_of_docker_servers_with_shipyard &lt;/re-enter&gt;&lt;/enter&gt;</li>
+</ul>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

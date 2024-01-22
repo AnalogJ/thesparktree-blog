@@ -1,0 +1,657 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Reusing SailsJS + Waterline Models in Background Tasks</title>
+	  <link>/reusing-sailsjs-waterline-models-in-background</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-12-09T17:09:00-06:00</pubDate>
+	  <guid>/reusing-sailsjs-waterline-models-in-background</guid>
+	  <description><![CDATA[
+	     <p>Its been a while since I first attempted to design a background tasks/workers pattern for my SailsJS app that would let me reuse my well defined models. After posting my first attempt:<a href="http://blog.thesparktree.com/post/92465942639/ducktyping-sailsjs-core-for-background-tasks-via">Ducktyping SailsJS Core for Background Tasks via Kue</a>, I was introduced to a under-documented but more idiomatic feature that I could use to do the same thing: Sails Hooks.</p>
+
+<h1 id="background-tasks-requirements">Background Tasks Requirements</h1>
+
+<p>Before diving into the code, let me list some of the requirements I had for my background tasks engine:</p>
+
+<ul>
+  <li>Long running tasks - support for task that may take a significant amount of time to execute.</li>
+  <li>Background tasks - can’t block the current request/response and wait for the task to finish.</li>
+  <li>Easily Generated - tasks must be simple to generate manually (via a CLI, script or the node REPL)</li>
+  <li>Simple Integration - task engine shouldn’t require any low-level customization of the SailsJS engine</li>
+  <li>Leverage SailsJS Models + PubSub - should allow me to reuse all the models, services and features as needed Sails (such as PubSub)</li>
+</ul>
+
+<p>The last two requirements are the most important and most difficult. I wanted to leverage all the power of SailsJS models, while still removing the bloat of a webserver that my background tasks didn’t need, and still making sure that I could easily upgrade my SailsJS version.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I decided to build my background tasks on top of the incredible Kue library. Kue is a simple priority job queue backed by redis. A basic background processor might look like this:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nf">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nf">process</span><span class="p">(</span><span class="dl">"</span><span class="s2">MyBackgroundTaskName</span><span class="dl">"</span><span class="p">,</span><span class="nf">function </span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running background task goes here.</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nf">once</span><span class="p">(</span><span class="dl">'</span><span class="s1">SIGTERM</span><span class="dl">'</span><span class="p">,</span> <span class="nf">function </span><span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nf">shutdown</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Kue is shut down.</span><span class="dl">'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="dl">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>I like Kue because its simple and lets me reuse my Redis server (which I use for SailsJS Sessions + PubSub). The background task system I built isn’t tied to Kue in any way, you could use any other messaging queue, ActiveMQ, RabbitMQ or whatever.</p>
+
+<h1 id="sails-hooks">Sails Hooks</h1>
+
+<p>The Sails.org website has very little to say about the hooks system, but after doing a little digging in the Github project we find this little nugget:</p>
+
+<blockquote>
+  <p>Sails uses hooks to provide most of it’s core functionality. Sails has a hook for it’s http server, pubsub functionality, interfacing with an ORM (waterline by default), managing Grunt tasks, etc. Sails even uses a hook for loading your custom hooks. It’s called userhooks and it runs after the http server but before the logger. It’s one of the last things that happens as you lift your app.</p>
+</blockquote>
+
+<p>And even a bit of documentation on how to design your own <a href="https://github.com/balderdashy/sails-docs/blob/8fc2694a795bc753277f9b970b835dbb384ebfbe/concepts/extending-sails/Hooks/customhooks.md">custom SailsJS Hook</a></p>
+
+<p>There’s also a bit of additional documentation about the <a href="https://github.com/balderdashy/sails-docs/blob/master/concepts/extending-sails/Hooks/Hooks.md">Hook API purpose</a></p>
+
+<p>As of Dec 2014, here’s what we need if we want to run a minimal SailsJS server, without all those webserver features.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">sails</span><span class="dl">'</span><span class="p">).</span><span class="nf">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nf">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>Heres a full list of all the <a href="https://github.com/balderdashy/sails/blob/master/lib/app/configuration/defaultHooks.js">default hooks</a> that can be enabled/disabled in this manner. Note that hooks have dependencies, so you may have to look in the code to figure out exactly whats going on.</p>
+
+<h1 id="pubsub">PubSub</h1>
+
+<p>At this point we have a minimal working application. However one of the greatest things about Sails is its built in support for websockets, making adding realtime/”comet” features a breeze. Unfortunately the default <a href="https://github.com/balderdashy/sails/blob/master/lib/hooks/pubsub">pubsub hook</a> depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/sockets">sockets hook</a>, which depends on the <a href="https://github.com/balderdashy/sails/tree/master/lib/hooks/http">http hook</a> which starts up the webserver.</p>
+
+<p>I want my background tasks to work exactly as they would in my Sails apps, and that includes the realtime notification features. Luckily SailsJS is opensource and hooks can be overridden. Long story short, I wrote a modified version of the pubsub hook that can push pubsub notifications to a redis queue, just as the standard pubsub hook does. <a href="https://github.com/AnalogJ/pubsub-emitter">AnalogJ/pubsub-emitter on Github</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/pubsub-emitter"></div>
+
+<p>Now our simple looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">sails</span><span class="dl">'</span><span class="p">).</span><span class="nf">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//orm: leave default hook</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">pubsub-emitter</span><span class="dl">'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="c1">//services: leave default hook,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">){</span>
+	<span class="c1">//The SailsJS app is ready</span>
+
+	<span class="c1">//You can access all your SailsJS Models and Services here</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nf">findOne</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">user</span><span class="p">){</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+	<span class="p">})</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<h1 id="integrate-kue-with-minimal-sailsjs-app">Integrate Kue with Minimal SailsJS App</h1>
+
+<p>At this point we have a minimal SailsJS environment and a Kue script, all we have left to do is integrate them together.</p>
+
+<p>I like to create my job definitions in a subfolder and dynamically load them into Kue, this way the only thing I need to do to add a new job is create a new file. Theres no hard coded filenames.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// jobs/testJob.js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nf">function </span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//long running job code here.</span>
+	<span class="c1">//SailsJS Models and Services are also available here.</span>
+
+	<span class="nx">User</span><span class="p">.</span><span class="nf">findOne</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">})</span>
+	<span class="p">.</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+		<span class="c1">//do some processing.</span>
+
+		<span class="c1">//call done() when complete (look at the kue docs for more infomation)</span>
+	<span class="p">})</span>
+	<span class="p">.</span><span class="nf">then</span><span class="p">(</span><span class="nx">done</span><span class="p">,</span><span class="nx">done</span><span class="p">)</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Lets create a simple config file so that our web and worker apps always share the same kue configuration.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// config/kue.js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nf">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="dl">'</span><span class="s1">REDIS_CONNECTION:PORT</span><span class="dl">'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="dl">'</span><span class="s1">REDIS_CONNECTION:HOST</span><span class="dl">'</span><span class="p">,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="dl">'</span><span class="s1">REDIS_CONNECTION:AUTH</span><span class="dl">'</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nf">once</span><span class="p">(</span><span class="dl">'</span><span class="s1">SIGTERM</span><span class="dl">'</span><span class="p">,</span> <span class="nf">function </span><span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">shutdown</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Kue is shut down.</span><span class="dl">'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="dl">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">kue</span> <span class="o">=</span> <span class="nx">kue_engine</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>To load the Job definition files dynamically we just need to add a small snippet of code after the SailsJS app is ready</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// worker.js</span>
+
+<span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">lodash</span><span class="dl">'</span><span class="p">),</span>
+<span class="nx">kue</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">),</span>
+<span class="nx">q</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">q</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">sails</span><span class="dl">'</span><span class="p">).</span><span class="nf">load</span><span class="p">({</span>
+	<span class="na">hooks</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">blueprints</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">controllers</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">cors</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">csrf</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">grunt</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">http</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">i18n</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">logger</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">policies</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">pubsub</span><span class="p">:</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">pubsub-emitter</span><span class="dl">'</span><span class="p">),</span>
+		<span class="na">request</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">responses</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">session</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">sockets</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+		<span class="na">views</span><span class="p">:</span> <span class="kc">false</span>
+	<span class="p">}</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Starting kue</span><span class="dl">"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">kue</span><span class="p">;</span>
+
+	<span class="c1">//register kue.</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Registering jobs</span><span class="dl">"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">include-all</span><span class="dl">'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="dl">'</span><span class="s1">/jobs</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Registering kue handler: </span><span class="dl">"</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">job complete</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Removing completed job: </span><span class="dl">"</span><span class="o">+</span><span class="nx">id</span><span class="p">);</span>
+		<span class="nx">kue</span><span class="p">.</span><span class="nx">Job</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">job</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">job</span><span class="p">.</span><span class="nf">remove</span><span class="p">();</span>
+		<span class="p">});</span>
+	<span class="p">});</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nf">once</span><span class="p">(</span><span class="dl">'</span><span class="s1">SIGTERM</span><span class="dl">'</span><span class="p">,</span> <span class="nf">function </span><span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">shutdown</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Kue is shut down.</span><span class="dl">'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="dl">''</span><span class="p">);</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>And thats all it takes. With these three files we now have a working Background Tasks system that lets us reuse our SailsJS Models/Services, works with PubSub and doesn’t require any changes to core SailsJS code.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Ducktyping SailsJS Core for Background Tasks via Kue</title>
+	  <link>/ducktyping-sailsjs-core-for-background-tasks-via</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-07-21T19:32:00-05:00</pubDate>
+	  <guid>/ducktyping-sailsjs-core-for-background-tasks-via</guid>
+	  <description><![CDATA[
+	     <h1 id="update">Update</h1>
+<p>After this post was written I was introduced to Sails Hooks, which is a built-in but under-documented feature of SailsJS, which allows you to configure the SailsJS engine. I’ve written a new post about how to create background tasks in Sails which you can find here:</p>
+
+<p><a href="https://blog.thesparktree.com/post/104779353989/reusing-sailsjs-waterline-models-in-background">Reusing SailsJS + Waterline Models in Background Tasks</a></p>
+
+<p>I recently found myself with a common problem: my application needed to do some long running tasks, and I didn’t to block the current request/response and wait for them to finish. My application is built ontop of the SailsJS library which meant that I could use one of the many express.js libraries that add support for background tasks.</p>
+
+<h1 id="kue">Kue</h1>
+
+<p>I was able to add support for the incredibly useful <a href="https://github.com/learnboost/kue">Kue</a> library by adding 2 simple files to the config folder.</p>
+
+<h2 id="kue-job-definitions">Kue Job Definitions</h2>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">kue</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="kd">var</span> <span class="nx">kue</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">)</span>
+	<span class="p">,</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nf">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">..,</span>
+			<span class="na">auth</span><span class="p">:</span> <span class="p">..</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+<span class="nx">jobs</span><span class="p">.</span><span class="nf">process</span><span class="p">(</span><span class="dl">"</span><span class="s2">MyBackgroundTaskName</span><span class="dl">"</span><span class="p">,</span><span class="nf">function </span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">User</span><span class="p">.</span><span class="nf">findOne</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">user_id</span><span class="p">)</span>
+		<span class="p">.</span><span class="nf">then</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nf">long_running_background_task</span><span class="p">()</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nf">then</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">processed</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">finished job!</span><span class="dl">"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="nx">processed</span><span class="p">);</span>
+			<span class="nf">done</span><span class="p">();</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nf">fail</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">error in job!</span><span class="dl">"</span><span class="p">);</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+			<span class="nf">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+		<span class="p">})</span>
+		<span class="p">.</span><span class="nf">done</span><span class="p">();</span>
+<span class="p">})</span>
+
+
+<span class="nx">process</span><span class="p">.</span><span class="nf">once</span><span class="p">(</span><span class="dl">'</span><span class="s1">SIGTERM</span><span class="dl">'</span><span class="p">,</span> <span class="nf">function </span><span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">jobs</span><span class="p">.</span><span class="nf">shutdown</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">'</span><span class="s1">Kue is shut down.</span><span class="dl">'</span><span class="p">,</span> <span class="nx">err</span> <span class="o">||</span> <span class="dl">''</span><span class="p">);</span>
+		<span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+	<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">jobs</span> <span class="o">=</span> <span class="nx">jobs</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>##ExpressJS Middleware</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">/</span><span class="nx">app</span><span class="o">/</span><span class="nx">config</span><span class="o">/</span><span class="nx">express</span><span class="p">.</span><span class="nx">js</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">express</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">customMiddleware</span><span class="p">:</span> <span class="nf">function </span><span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c1">// This should be password protected on your app.</span>
+
+		<span class="nx">app</span><span class="p">.</span><span class="nf">use</span><span class="p">(</span><span class="dl">'</span><span class="s1">/tools/queue</span><span class="dl">'</span><span class="p">,</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">).</span><span class="nx">app</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>And with those two additions, everything worked great, for a time.</p>
+
+<h1 id="component-based-architecture">Component based architecture</h1>
+
+<p>The problem I had with my application, and more importantly with Sails, is that the background jobs are tied very closely with the way that Sails worked under the hood. Sails uses a convention based system, similar to Rails, to load up the Models, Controllers, Services and Views. Any changes to my background jobs, which heavily used instance methods in my Models, would require a redeploy of the full application. My log files and error messages were all intertwined as well. My dream of running my background jobs in CoreOS/docker style containers, scalable on demand seemed almost impossible with Sails’s convention based magic.</p>
+
+<p>I started looking into the way that Sails worked under the covers, and I realized that I could duck-type the Sails environment for a standalone application, allowing me to reuse all my Models and Services, without having to run a full Sails web server for my background tasks.</p>
+
+<p>Note: As always, the full working code can be accessed on a gist <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a></p>
+
+<h2 id="global-sails-object-and-required-configuration">Global <code class="language-plaintext highlighter-rouge">sails</code> object and required configuration</h2>
+
+<p>As this is a simple prototype I just used the <code class="language-plaintext highlighter-rouge">global</code> object to define <code class="language-plaintext highlighter-rouge">sails</code>.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// SAILS ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">//resolve the required sails config files.</span>
+<span class="kd">var</span> <span class="nx">config_path</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="dl">'</span><span class="s1">../..</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">config/</span><span class="dl">'</span><span class="p">)</span>
+<span class="nb">global</span><span class="p">.</span><span class="nx">sails</span> <span class="o">=</span> <span class="p">{</span>
+	<span class="na">config</span><span class="p">:</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="c1">//custom configuration file I use</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">constants</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="dl">'</span><span class="s1">/constants.js</span><span class="dl">'</span><span class="p">).</span><span class="nx">constants</span><span class="p">;</span>
+<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="nx">config_path</span><span class="o">+</span><span class="dl">'</span><span class="s1">/log.js</span><span class="dl">'</span><span class="p">).</span><span class="nx">log</span><span class="p">.</span><span class="nx">custom</span>
+</code></pre></div></div>
+
+<h2 id="registering-services">Registering Services</h2>
+
+<p>Registering the services was simple. I just needed to require and attach them to the global object</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE SERVICES</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="dl">'</span><span class="s1">../..</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">api/</span><span class="dl">'</span><span class="p">)</span>
+
+<span class="c1">// load services</span>
+<span class="kd">var</span> <span class="nx">services</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">include-all</span><span class="dl">'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="dl">'</span><span class="s1">/services</span><span class="dl">'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">services</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">service</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Loading service: </span><span class="dl">"</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nb">global</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">service</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="sailsmodels-and-waterline">sails.models and Waterline</h2>
+
+<p>Reusing the models incredibly simple as well. I just used Waterline which Sails uses under the covers. My application uses the PostgreSQL Waterline adapter, but you can use any that Waterline supports –MongoDB, Redis, MySQL, …</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">orm</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Waterline</span><span class="p">();</span>
+<span class="c1">// Require any waterline adapters here</span>
+<span class="kd">var</span> <span class="nx">postgresqlAdapter</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">sails-postgresql</span><span class="dl">'</span><span class="p">);</span>
+
+
+<span class="c1">// Build A Config Object</span>
+<span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+
+	<span class="c1">// Setup Adapters</span>
+	<span class="c1">// Creates named adapters that have have been required in models</span>
+	<span class="na">adapters</span><span class="p">:</span> <span class="p">{</span>
+		<span class="dl">'</span><span class="s1">sails-postgresql</span><span class="dl">'</span><span class="p">:</span> <span class="nx">postgresqlAdapter</span>
+	<span class="p">},</span>
+
+	<span class="c1">// Build Connections Config</span>
+	<span class="c1">// Setup connections using the named adapter configs</span>
+	<span class="na">connections</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">qtPostgresqlServer</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">adapter</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sails-postgresql</span><span class="dl">'</span><span class="p">,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">user</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">password</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">database</span><span class="p">:</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">path</span><span class="p">.</span><span class="nf">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">},</span>
+
+	<span class="na">defaults</span><span class="p">:</span> <span class="p">{</span>
+		<span class="na">migrate</span><span class="p">:</span> <span class="dl">'</span><span class="s1">alter</span><span class="dl">'</span>
+	<span class="p">}</span>
+
+<span class="p">};</span>
+
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE MODELS</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">var</span> <span class="nx">api_dir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="dl">'</span><span class="s1">../..</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">api/</span><span class="dl">'</span><span class="p">)</span>
+
+<span class="c1">// load models</span>
+<span class="kd">var</span> <span class="nx">models</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">include-all</span><span class="dl">'</span><span class="p">)({</span>
+	<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">api_dir</span> <span class="o">+</span><span class="dl">'</span><span class="s1">/models</span><span class="dl">'</span><span class="p">,</span>
+	<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+	<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+	<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+<span class="p">});</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Register model: </span><span class="dl">"</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nf">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">qtPostgresqlServer</span><span class="dl">'</span><span class="p">;</span>
+
+	<span class="p">..</span><span class="nx">snip</span><span class="p">..</span> <span class="c1">// additional socket publish methods go here. Check the Sails sockets section for more info.</span>
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nf">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nf">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// WATERLINE INIT</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="kd">function</span> <span class="nf">init_waterline</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nf">defer</span><span class="p">();</span>
+	<span class="c1">// Start Waterline passing adapters in</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nf">initialize</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nf">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+		<span class="p">}</span>
+		<span class="k">else</span><span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Waterline ready</span><span class="dl">"</span><span class="p">)</span>
+
+			<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="nx">models</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// STANDALONE APP IN SAILS-LIKE ENV</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+
+<span class="nf">init_waterline</span><span class="p">().</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">waterline_models</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+		<span class="c1">//register Waterline Models globally by name ie, User.findOne, Item.where()</span>
+		<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+			<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nf">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nf">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nf">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+			<span class="nb">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+		<span class="p">})</span>
+
+		<span class="c1">//test function</span>
+		<span class="nx">User</span><span class="p">.</span><span class="nf">find</span><span class="p">().</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">users</span><span class="p">){</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">SUCCESS!</span><span class="dl">"</span><span class="p">,</span> <span class="nx">users</span><span class="p">);</span>
+			<span class="p">})</span>
+
+	<span class="p">})</span>
+</code></pre></div></div>
+
+<h2 id="sails-sockets-advanced">Sails Sockets (Advanced)</h2>
+
+<p>At this point we have a working sails-like app. My configuration is loaded, my models are accessible via Waterline and they have access to the Sails object and my services.</p>
+
+<p>But wait, what about the Sails pub-sub functionality? One of the greatest features of Sails is its simple and easy to use socket system. Out of the box it can simply update the front-end when a Model event occurs (update, create, delete, etc). Now that we’re doing the model processing outside of Sails, how do we notify Sails and the front-end of model events?</p>
+
+<p>Sails is a production-focused framework, with out of the box support for horizontal scaling via Redis. As long as we publish events to Redis in the same format as Sails does, our socket functionality will be completely transparent.</p>
+
+<p>I initially attempted to do this part via the <a href="https://github.com/Automattic/socket.io-emitter/">socket.io-emitter</a> library, but I wasn’t able to successfully publish Sails compatible events.</p>
+
+<p>Going down to the raw Redis library was the solution.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">///////////////////////////////////////////////////</span>
+<span class="c1">// REDIS CONFIG</span>
+<span class="c1">///////////////////////////////////////////////////</span>
+<span class="nb">global</span><span class="p">.</span><span class="nx">redis_client</span> <span class="o">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nf">createClient</span><span class="p">(,</span> <span class="p">);</span>
+
+<span class="kd">function</span> <span class="nf">init_redis</span><span class="p">(){</span>
+	<span class="kd">var</span> <span class="nx">deferred</span> <span class="o">=</span> <span class="nx">q</span><span class="p">.</span><span class="nf">defer</span><span class="p">();</span>
+	<span class="nx">redis_client</span><span class="p">.</span><span class="nf">on</span><span class="p">(</span><span class="dl">"</span><span class="s2">ready</span><span class="dl">"</span><span class="p">,</span> <span class="nf">function </span><span class="p">()</span> <span class="p">{</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Redis ready</span><span class="dl">"</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nf">resolve</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">);</span>
+	<span class="p">});</span>
+
+	<span class="k">return</span> <span class="nx">deferred</span><span class="p">.</span><span class="nx">promise</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nf">generate_model_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span><span class="nx">data</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="dl">"</span><span class="s2">args</span><span class="dl">"</span><span class="p">:[{</span>
+			<span class="dl">"</span><span class="s2">verb</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+			<span class="dl">"</span><span class="s2">data</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">data</span><span class="p">.</span><span class="nf">toJSON</span><span class="p">(),</span>
+			<span class="dl">"</span><span class="s2">id</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">model_id</span>
+		<span class="p">}]</span>
+	<span class="p">};</span>
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="dl">"</span><span class="s2">/sails_model_</span><span class="dl">"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">:</span><span class="dl">"</span><span class="o">+</span><span class="nx">action</span><span class="p">,</span>
+			<span class="dl">"</span><span class="s2">5:::</span><span class="dl">"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nf">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nf">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kd">function</span> <span class="nf">generate_association_message</span><span class="p">(</span><span class="nx">model_name</span><span class="p">,</span><span class="nx">model_id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">id_associated</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">verb</span><span class="p">,</span> <span class="nx">verbId</span><span class="p">){</span>
+	<span class="kd">var</span> <span class="nx">item</span> <span class="o">=</span><span class="p">{</span>
+		<span class="dl">"</span><span class="s2">verb</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">verb</span><span class="p">,</span>
+		<span class="dl">"</span><span class="s2">attribute</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">attribute</span><span class="p">,</span>
+		<span class="dl">"</span><span class="s2">id</span><span class="dl">"</span> <span class="p">:</span> <span class="nx">model_id</span>
+	<span class="p">}</span>
+	<span class="nx">item</span><span class="p">[</span><span class="nx">verbId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">id_associated</span><span class="p">;</span>
+
+
+	<span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span><span class="nx">model_name</span><span class="p">,</span>
+		<span class="dl">"</span><span class="s2">args</span><span class="dl">"</span><span class="p">:[</span><span class="nx">item</span><span class="p">]</span>
+	<span class="p">};</span>
+
+	<span class="kd">var</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">nodeId</span> <span class="o">=</span> <span class="mi">648745922</span><span class="p">;</span> <span class="c1">//this could be randomly chosen if we cant determine the client id.</span>
+	<span class="nx">wrapper</span><span class="p">.</span><span class="nx">args</span> <span class="o">=</span> <span class="p">[</span>
+			<span class="dl">"</span><span class="s2">/sails_model_</span><span class="dl">"</span><span class="o">+</span><span class="nx">model_name</span><span class="o">+</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="o">+</span><span class="nx">model_id</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">:</span><span class="dl">"</span><span class="o">+</span><span class="nx">action</span><span class="o">+</span><span class="dl">"</span><span class="s2">:</span><span class="dl">"</span><span class="o">+</span><span class="nx">attribute</span><span class="p">,</span>
+			<span class="dl">"</span><span class="s2">5:::</span><span class="dl">"</span><span class="o">+</span><span class="nx">JSON</span><span class="p">.</span><span class="nf">stringify</span><span class="p">(</span><span class="nx">message</span><span class="p">),</span>
+		<span class="kc">null</span><span class="p">,</span>
+		<span class="p">[]</span>
+	<span class="p">]</span>
+	<span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nf">stringify</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The two generate methods above help help us create socket Redis messages in a format that Sails understands. They are prototype methods right now, and may require some additional tweaking over time to fully mimic the Sails socket message structure.</p>
+
+<p>I then had to add the missing <code class="language-plaintext highlighter-rouge">publishCreate</code>, <code class="language-plaintext highlighter-rouge">publishRemove</code>, <code class="language-plaintext highlighter-rouge">publishAdd</code>, <code class="language-plaintext highlighter-rouge">publishUpdate</code> socket helpers to the Waterline models.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span><span class="nx">key</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Register model: </span><span class="dl">"</span><span class="o">+</span><span class="nx">key</span><span class="p">)</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">identity</span> <span class="o">=</span> <span class="nx">key</span><span class="p">.</span><span class="nf">toLowerCase</span><span class="p">();</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">qtPostgresqlServer</span><span class="dl">'</span><span class="p">;</span>
+
+	<span class="c1">//add publish methods</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishCreate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nf">publish</span><span class="p">(</span><span class="dl">"</span><span class="s2">dispatch</span><span class="dl">"</span><span class="p">,</span> <span class="nf">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="dl">"</span><span class="s2">update</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">updated</span><span class="dl">"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishUpdate</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nf">publish</span><span class="p">(</span><span class="dl">"</span><span class="s2">dispatch</span><span class="dl">"</span><span class="p">,</span> <span class="nf">generate_model_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="dl">"</span><span class="s2">create</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">created</span><span class="dl">"</span><span class="p">,</span><span class="nx">data</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishAdd</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nf">publish</span><span class="p">(</span><span class="dl">"</span><span class="s2">dispatch</span><span class="dl">"</span><span class="p">,</span> <span class="nf">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idAdded</span><span class="p">,</span> <span class="dl">"</span><span class="s2">add</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">addedTo</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">addedId</span><span class="dl">"</span><span class="p">))</span>
+	<span class="p">};</span>
+	<span class="nx">model</span><span class="p">.</span><span class="nx">publishRemove</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">){</span>
+		<span class="nx">redis_client</span><span class="p">.</span><span class="nf">publish</span><span class="p">(</span><span class="dl">"</span><span class="s2">dispatch</span><span class="dl">"</span><span class="p">,</span> <span class="nf">generate_association_message</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">identity</span><span class="p">,</span><span class="nx">id</span><span class="p">,</span><span class="nx">attribute</span><span class="p">,</span> <span class="nx">idRemoved</span><span class="p">,</span> <span class="dl">"</span><span class="s2">remove</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">removedFrom</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">removedId</span><span class="dl">"</span><span class="p">))</span>
+	<span class="p">};</span>
+
+	<span class="p">..</span><span class="nx">etc</span><span class="p">..</span>
+
+
+	<span class="kd">var</span> <span class="nx">waterline_model</span> <span class="o">=</span> <span class="nx">Waterline</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nf">extend</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+	<span class="nx">orm</span><span class="p">.</span><span class="nf">loadCollection</span><span class="p">(</span><span class="nx">waterline_model</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p>Now when we call the publish* methods in our background tasks/standalone application, it will publish socket messages just as Sails would.</p>
+
+<h2 id="kue-engine">Kue Engine</h2>
+<p>The whole reason I started this was to process background tasks outside of Sails, so lets add Kue into our app.
+The main runloop now looks like:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">q</span><span class="p">.</span><span class="nf">spread</span><span class="p">([</span><span class="nf">init_redis</span><span class="p">(),</span><span class="nf">init_waterline</span><span class="p">()],</span><span class="kd">function</span><span class="p">(</span><span class="nx">redis_client</span><span class="p">,</span><span class="nx">waterline_models</span><span class="p">){</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">models</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">collections</span><span class="p">;</span>
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="nx">waterline_models</span><span class="p">.</span><span class="nx">connections</span><span class="p">;</span>
+
+	<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">sails</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">.</span><span class="nf">charAt</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nf">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">name</span><span class="p">.</span><span class="nf">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+		<span class="nb">global</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">model</span><span class="p">;</span>
+	<span class="p">})</span>
+
+	<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Starting kue</span><span class="dl">"</span><span class="p">)</span>
+	<span class="kd">var</span> <span class="nx">kue_engine</span> <span class="o">=</span> <span class="nx">kue</span><span class="p">.</span><span class="nf">createQueue</span><span class="p">({</span>
+		<span class="na">prefix</span><span class="p">:</span> <span class="dl">'</span><span class="s1">kue</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">redis</span><span class="p">:</span> <span class="p">{</span>
+			<span class="na">port</span><span class="p">:</span> <span class="p">...,</span>
+			<span class="na">host</span><span class="p">:</span> <span class="p">...</span>
+		<span class="p">}</span>
+	<span class="p">});</span>
+
+	<span class="c1">//register jobs (located in seperate files)</span>
+	<span class="kd">var</span> <span class="nx">jobs</span> <span class="o">=</span> <span class="nf">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">include-all</span><span class="dl">'</span><span class="p">)({</span>
+		<span class="na">dirname</span>     <span class="p">:</span>  <span class="nx">__dirname</span> <span class="o">+</span><span class="dl">'</span><span class="s1">/jobs</span><span class="dl">'</span><span class="p">,</span>
+		<span class="na">filter</span>      <span class="p">:</span>  <span class="sr">/</span><span class="se">(</span><span class="sr">.+</span><span class="se">)\.</span><span class="sr">js$/</span><span class="p">,</span>
+		<span class="na">excludeDirs</span> <span class="p">:</span>  <span class="sr">/^</span><span class="se">\.(</span><span class="sr">git|svn</span><span class="se">)</span><span class="sr">$/</span><span class="p">,</span>
+		<span class="na">optional</span>    <span class="p">:</span>  <span class="kc">true</span>
+	<span class="p">});</span>
+	<span class="nx">_</span><span class="p">.</span><span class="nf">forEach</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">job</span><span class="p">,</span> <span class="nx">name</span><span class="p">){</span>
+		<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">info</span><span class="p">(</span><span class="dl">"</span><span class="s2">Registering kue handler: </span><span class="dl">"</span><span class="o">+</span><span class="nx">name</span><span class="p">)</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">process</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">job</span><span class="p">);</span>
+	<span class="p">})</span>
+
+	<span class="nx">process</span><span class="p">.</span><span class="nf">once</span><span class="p">(</span><span class="dl">'</span><span class="s1">SIGTERM</span><span class="dl">'</span><span class="p">,</span> <span class="nf">function </span><span class="p">(</span><span class="nx">sig</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">kue_engine</span><span class="p">.</span><span class="nf">shutdown</span><span class="p">(</span><span class="nf">function </span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">sails</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">Shutting down kue</span><span class="dl">"</span><span class="p">)</span>
+			<span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+		<span class="p">},</span> <span class="mi">5000</span><span class="p">);</span>
+	<span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h1 id="fin">Fin</h1>
+
+<p>Now you should be able to run your application completely outside of Sails, as long as you have the required models, services and config files. You can even mount it into a docker container, like I do.
+As I said, the final gist can be found <a href="https://gist.github.com/AnalogJ/bbec266c6d85dc2d215f#file-sails_ducktyping_for_background_tasks-js">here</a>. The code is MIT licensed so feel free to hack it apart.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

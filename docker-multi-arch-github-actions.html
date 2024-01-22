@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Building Multi-Arch Docker Images via Github Actions</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Building Multi-Arch Docker Images via Github Actions" />
+    <meta name="twitter:description" content="I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image. While its well known..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/docker-multi-arch-github-actions" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_arm_docker_github.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Building Multi-Arch Docker Images via Github Actions" />
+    <meta property="og:description" content="I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image. While its well known..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/docker-multi-arch-github-actions" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_arm_docker_github.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/docker-multi-arch-github-actions",
+        "image": "https://blog.thesparktree.com/assets/images/cover_arm_docker_github.png",
+        "description": "I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image. While its well known..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_arm_docker_github.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Building Multi-Arch Docker Images via Github Actions</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2022-06-11">11 Jun 2022</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/github'>Github</a>,
+                    
+                
+                    
+                       <a href='/tag/arm'>Arm</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+            <h4 class="toc"><i class="fa fa-file-text"></i> </h4>
+            <ul class="toc__menu">
+  <li><a href="#what-is-a-multi-arch-docker-image">What is a Multi-Arch Docker Image?</a></li>
+  <li><a href="#basic-docker-build-via-github-actions">Basic Docker Build via Github Actions</a></li>
+  <li><a href="#migrate-to-buildx">Migrate to Buildx</a></li>
+  <li><a href="#qemu-support">QEMU Support</a></li>
+  <li><a href="#architecture-specific-dockerfile-instructions">Architecture Specific Dockerfile Instructions</a></li>
+  <li><a href="#troubleshooting">Troubleshooting</a>
+    <ul>
+      <li><a href="#q-i-enabled-multi-arch-builds-and-my-builds-take-1h-what-gives">Q: I enabled Multi-arch builds and my builds take 1h+, what gives?</a></li>
+    </ul>
+  </li>
+</ul>
+            
+
+            <p>I recently found myself needing to generate a multi-arch Docker image for one of my projects - specifically an ARM64 compatible image.
+While its well known that Docker’s <code class="language-plaintext highlighter-rouge">buildx</code> tooling supports multi-arch builds, it can be complicated getting it working correctly
+via Github Actions.</p>
+
+<h2 id="what-is-a-multi-arch-docker-image">What is a Multi-Arch Docker Image?</h2>
+
+<p>Before we go any further, we should discuss how Docker Images (&amp; Multi-Arch Docker Images) actually work.</p>
+
+<blockquote>
+  <p>Each Docker image is represented by a manifest. A manifest is a JSON file containing all the information about a Docker 
+image. This includes references to each of its layers, their corresponding sizes, the hash of the image, its size and 
+also the platform it’s supposed to work on. This manifest can then be referenced by a tag so that it’s easy to find.</p>
+</blockquote>
+
+<p>A multi-arch image is actually just a manifest that contains multiple entries, 1 for each platform.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-multi-arch-manifest.png" alt="docker multi-arch manifest" style="max-height: 500px;" /></p>
+
+<p>To learn more, see this <a href="https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/">Docker blog post</a></p>
+
+<h2 id="basic-docker-build-via-github-actions">Basic Docker Build via Github Actions</h2>
+
+<p>Now that we know what a multi-arch docker image looks like under the hood, lets get started with a simple Github Action
+to build a Docker image.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Docker</span>
+<span class="na">on</span><span class="pi">:</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">branches</span><span class="pi">:</span> <span class="pi">[</span><span class="s1">'</span><span class="s">main'</span><span class="pi">]</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">docker</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Checkout repository</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Login to DockerHub</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/login-action@v2</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">username</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_USERNAME }}</span>
+          <span class="na">password</span><span class="pi">:</span> <span class="s">${{ secrets.DOCKERHUB_TOKEN }}</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build and push</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">docker/build-push-action@v3</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="na">push</span><span class="pi">:</span> <span class="kc">true</span>
+          <span class="na">tags</span><span class="pi">:</span> <span class="s">user/app:latest</span>
+</code></pre></div></div>
+
+<h2 id="migrate-to-buildx">Migrate to Buildx</h2>
+
+<p>The first thing we need to do is add the <code class="language-plaintext highlighter-rouge">setup-buildx-action</code> step.</p>
+
+<blockquote>
+  <p>Docker Buildx is a CLI plugin that extends the docker command with the full support 
+of the features provided by Moby BuildKit builder toolkit. It provides the same 
+user experience as docker build with many new features like creating scoped 
+builder instances and building against multiple nodes concurrently.</p>
+</blockquote>
+
+<p>Unfortunately Buildx is not enabled by default, so even though <code class="language-plaintext highlighter-rouge">docker</code> is available in our Github Action VM, we’ll need to enable <code class="language-plaintext highlighter-rouge">buildx</code> mode.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:09:34.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:10:12.000000000 -0700
+</span><span class="p">@@ -1,20 +1,22 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up Docker Buildx
++        uses: docker/setup-buildx-action@v2
+</span>       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<h2 id="qemu-support">QEMU Support</h2>
+<p>After enabling <code class="language-plaintext highlighter-rouge">buildx</code>, the next change we need to make is to enable <code class="language-plaintext highlighter-rouge">QEMU</code>.</p>
+
+<blockquote>
+  <p>QEMU is a free and open-source emulator. It can interoperate with Kernel-based 
+Virtual Machine (KVM) to run virtual machines at near-native speed. QEMU can also 
+do emulation for user-level processes, allowing applications compiled for one 
+architecture to run on another</p>
+</blockquote>
+
+<p>GitHub Actions only provides a small set of host system types: <a href="https://github.com/actions/virtual-environments"><code class="language-plaintext highlighter-rouge">windows</code>, <code class="language-plaintext highlighter-rouge">macos</code> &amp; <code class="language-plaintext highlighter-rouge">ubuntu</code></a> – all running on <code class="language-plaintext highlighter-rouge">x86_64</code> architecture. 
+If you need to compile binaries/Docker images for other OS’s or architectures, you can use the <code class="language-plaintext highlighter-rouge">QEMU</code> Github Action.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- workflow.yaml       2022-06-12 08:32:32.000000000 -0700
+</span><span class="gi">+++ workflow-updated.yaml       2022-06-12 08:32:56.000000000 -0700
+</span><span class="p">@@ -1,22 +1,26 @@</span>
+ name: Docker
+ on:
+   push:
+     branches: ['main']
+ jobs:
+   docker:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
+<span class="gi">+      - name: Set up QEMU
++        uses: docker/setup-qemu-action@v2
++        with:
++          platforms: 'arm64,arm'
+</span>       - name: Set up Docker Buildx
+         uses: docker/setup-buildx-action@v2
+       - name: Login to DockerHub
+         uses: docker/login-action@v2
+         with:
+           username: ${{ secrets.DOCKERHUB_USERNAME }}
+           password: ${{ secrets.DOCKERHUB_TOKEN }}
+       - name: Build and push
+         uses: docker/build-push-action@v3
+         with:
+           push: true
+           tags: user/app:latest
+\ No newline at end of file
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: you must add the <code class="language-plaintext highlighter-rouge">QEMU</code> step before the <code class="language-plaintext highlighter-rouge">buildx</code> step. 
+By default <code class="language-plaintext highlighter-rouge">QEMU</code> will create almost a dozen vm’s. You’ll want to limit it to just the architectures you care about.</p>
+</blockquote>
+
+<h2 id="architecture-specific-dockerfile-instructions">Architecture Specific Dockerfile Instructions</h2>
+
+<p>Depending on the content of your Dockerfile, at this point you may be done. 
+The <code class="language-plaintext highlighter-rouge">setup-qemu-action</code> will create 2 (or more) VMs, and the <code class="language-plaintext highlighter-rouge">build-push-action</code> will 
+compile your Dockerfile for various architectures, and push them to <code class="language-plaintext highlighter-rouge">Docker Hub</code> (within the same manifest).</p>
+
+<p>However, if you need to conditionalize your Dockerfile instructions depending on which architecture you’re building,
+you’ll need to make some additional changes.</p>
+
+<p>Under the hood, the <code class="language-plaintext highlighter-rouge">build-push-action</code> will provide the <code class="language-plaintext highlighter-rouge">--platform</code> flag to <code class="language-plaintext highlighter-rouge">docker buildx</code>. 
+This will <a href="https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope">automatically set</a> the following build <code class="language-plaintext highlighter-rouge">ARG</code>s:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code> - platform of the build result. Eg <code class="language-plaintext highlighter-rouge">linux/amd64</code>, <code class="language-plaintext highlighter-rouge">linux/arm/v7</code>, <code class="language-plaintext highlighter-rouge">windows/amd64</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETOS</code> - OS component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">TARGETVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">TARGETPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code> - platform of the node performing the build.</li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDOS</code> - OS component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDARCH</code> - architecture component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+  <li><code class="language-plaintext highlighter-rouge">BUILDVARIANT</code> - variant component of <code class="language-plaintext highlighter-rouge">BUILDPLATFORM</code></li>
+</ul>
+
+<p>To use these variables to conditionally download arch specific dependencies, you can modify your Dockerfile like so:</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> debian:bullseye-slim</span>
+<span class="k">ARG</span><span class="s"> TARGETARCH</span>
+
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get <span class="nb">install</span> <span class="nt">-y</span> curl <span class="se">\
+</span>    <span class="o">&amp;&amp;</span>  <span class="k">case</span> <span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span> <span class="k">in</span> <span class="se">\
+</span>            <span class="s2">"amd64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>amd64  <span class="p">;;</span> <span class="se">\
+</span>            <span class="s2">"arm64"</span><span class="p">)</span>  <span class="nv">S6_ARCH</span><span class="o">=</span>aarch64  <span class="p">;;</span> <span class="se">\
+</span>        <span class="k">esac</span> <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="nt">-L</span> <span class="nt">-s</span> <span class="nt">--output</span> /tmp/s6-overlay-<span class="k">${</span><span class="nv">S6_ARCH</span><span class="k">}</span>.tar.gz <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> curl <span class="nt">-L</span> https://dl.influxdata.com/influxdb/releases/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="nt">--output</span> /tmp/influxdb2-2.2.0-<span class="k">${</span><span class="nv">TARGETARCH</span><span class="k">}</span>.deb <span class="se">\
+</span>    <span class="o">&amp;&amp;</span> ....
+</code></pre></div></div>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="q-i-enabled-multi-arch-builds-and-my-builds-take-1h-what-gives">Q: I enabled Multi-arch builds and my builds take 1h+, what gives?</h3>
+<p><strong>A:</strong> This seems to be a <a href="https://github.com/docker/setup-qemu-action/issues/22">known issue with <code class="language-plaintext highlighter-rouge">QEMU</code></a>.
+I’ve also run into this with NPM installs and TypeScript compilation. 
+My workaround was to move non-architecture specific compilation before the Docker build &amp; QEMU steps.
+This means the steps are running outside the VMs and my build time dropped down to ~15 minutes, which is much more reasonable.</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>https://docs.docker.com/desktop/multi-arch/</li>
+  <li>https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/</li>
+  <li>https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope</li>
+  <li>https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/</li>
+  <li>https://github.com/BretFisher/multi-platform-docker-build</li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Building Multi-Arch Docker Images via Github Actions&amp;url=https://blog.thesparktree.com/docker-multi-arch-github-actions"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/docker-multi-arch-github-actions"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/docker-multi-arch-github-actions"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/docker-multi-arch-github-actions" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/docker-multi-arch-github-actions'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Building Multi-Arch Docker Images via Github Actions';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_newrelic.png)" href="/go-serverless-framework-newrelic">
+            <section class="post">
+                <h2>Go - Serverless Framework - Newrelic</h2>
+                <p>Because I seem to be a glutton for punishment, I decided to build an API...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_gmail.jpg)" href="/hatchet">
+            <section class="post">
+                <h2>Hatchet - Cut down spam in your Gmail Inbox</h2>
+                <p>I got frustrated with the amount of daily spam in my Gmail “Promotions” tab –...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

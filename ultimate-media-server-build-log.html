@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Ultimate Media Server Build - Part 2 - Build Log</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Ultimate Media Server Build - Part 2 - Build Log" />
+    <meta name="twitter:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/ultimate-media-server-build-log" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Ultimate Media Server Build - Part 2 - Build Log" />
+    <meta property="og:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/ultimate-media-server-build-log" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/ultimate-media-server-build-log",
+        "image": "https://blog.thesparktree.com/assets/images/cover_plex.jpg",
+        "description": "I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_plex.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Ultimate Media Server Build - Part 2 - Build Log</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2019-01-25">25 Jan 2019</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/plex'>Plex</a>,
+                    
+                
+                    
+                       <a href='/tag/hardware'>Hardware</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/supermicro'>Supermicro</a>,
+                    
+                
+                    
+                       <a href='/tag/nas'>Nas</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></li>
+  <li><strong><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></strong></li>
+  <li><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 2</strong>, where I’ll be showing photos from the actual build, and pointing out issues (and solutions) working with
+such a small case.</p>
+
+<hr />
+
+<p>Before starting my new build, I needed to pull some hardware from my old server. I also wanted to clean and box up the remaining parts
+as I was hoping to re-sell them to make up some of the cost of my new server.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/old_server_1.jpg" alt="old server" style="max-height: 500px;" /></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/old_server_2.jpg" alt="old server" style="max-height: 500px;" /></p>
+
+<p>After that I started by unboxing the U-NAS NSC-810A box</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_1.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_2.jpg" alt="new server" style="max-height: 500px;" /></p>
+
+<p>The footprint of the new server vs the old was very similar, with the NSC-810A being almost unnoticeably larger, while supporting
+micro-ATX motherboards.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/800vs810A.jpg" alt="800 vs 810A" style="max-height: 500px;" />
+<small>credit to <a href="https://forums.servethehome.com/index.php?members/nev_neo.1731/">nev_neo</a> from <a href="https://forums.servethehome.com/index.php?threads/u-nas-nsc-810a-matx-chassis.12897/page-6#post-147716">serve the home</a></small></p>
+
+<p>Now that I had the NSC-810A out, it was time to tear it down. I wanted to replace the stock 120mm case fans with some
+quieter cooling fans, and replace the provided thin SATA cables with my SAS-SATA breakout cables.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_1.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_2.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_3.jpg" alt="new server" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/new_server_teardown_4.jpg" alt="new server" style="max-height: 500px;" /></p>
+
+<p>After the case teardown, I got to work unboxing my Supermicro X11SSL-CF motherboard, Xeon E3-1275 and 64GB of DDR4 ECC RAM.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard.jpg" alt="motherbaord" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/ram.jpg" alt="ram" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/cpu.jpg" alt="cpu" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_ram_slot_order.png" alt="ram" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_mounted.jpg" alt="mounted" style="max-height: 500px;" /></p>
+
+<p>This is actually where I noticed that the SAS port was not what I was expecting.
+The Supermicro X11SSL-CF has a mini-SAS HD port (SFF-8644) rather than a mini-SAS port (SFF-8088), something not mentioned on
+the Supermicro spec website.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_minisas_hd.jpg" alt="minisas hd" style="max-height: 500px;" /></p>
+
+<p>Pre-case-install, I wanted to test out the hardware, so I wired up the power supply to the motheboard, and attached a linux live-USB.</p>
+
+<p>During this process, I noticed the next oddity with my hardware, the 8-pin power supply.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_8pin.jpg" alt="8pin" style="max-height: 500px;" /></p>
+
+<p>Unfortunately my Seasonic SS-350M1U does not have an 8pin motherboard power supply cable, only a 4pin.
+After taking a look at the Supermicro documentation however, it seems that I may be in the clear. In the X11SSL-CF manual,
+the secondary power supply pin-diagram states that 4 of the 8 pins are set to ground, and are unnecessary, saving me from
+purchasing a molex-4pin power supply adapter.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/motherboard_8pin_manual.png" alt="manual" style="max-height: 500px;" /></p>
+
+<p>After verifying that the CPU/Motherboard/RAM combo was working, it was time to wire up the case.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_1.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_2.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_3.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_4.jpg" alt="wiring" style="max-height: 500px;" />
+<img src="https://blog.thesparktree.com/assets/images/nas-build/wiring_5.jpg" alt="wiring" style="max-height: 500px;" /></p>
+
+<p>As you can see above, my Nvidia Quadro P2000 was uncomfortably close to the top of the case, and I was concerned that it may
+short against the top of the case. The NSC-810A comes with a handy plastic shield, which I ended up cutting and placing on the
+video card as added protection.</p>
+
+<p>Finally, I started loading in my hard drives</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/harddrive.jpg" alt="harddrive" style="max-height: 500px;" /></p>
+
+<p>Here’s the final product.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas-build/complete.jpg" alt="harddrive" style="max-height: 500px;" /></p>
+
+<h2 id="ipmi-configuration">IPMI Configuration</h2>
+
+<p>After closing up the case and placing the server in its final location, I began noticing the case fans (and CPU fans) were pulsating.
+I did some quick reading and determined that this was due to the fan speed thresholds set on my Supermicro motherboard. Basically
+the Noctua (and Cougar) fans are very quiet, and run at low RPM. This low RPM is below the standard threshold speed set in the motherboard config.
+The motherboard then thinks that the fan has failed, and to compensate it will rev up the remaining fans, at which point the Noctua or Cougar fan
+will speed up as well, and the motherboard will sense it and notify the fans to begin normal operations. Rinse &amp; repeat.</p>
+
+<p>Here’s how I fixed this issue.</p>
+
+<p>First I needed to get the IPMI tools installed on my OS. Since I’m running CoreOS, that’s a bit more work than normal</p>
+
+<h3 id="setup-ipmitool-on-coreos">Setup ipmitool on CoreOS</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`$ sudo modprobe ipmi_si ipmi_devintf # make sure that ipmi kernel modules are loaded.
+$ toolbox --bind=/dev/ipmi0 # start the CoreOS toolbox container
+$ dnf install ipmitool # install  ipmitool
+$ ipmitool -I open channel info 1 # verify that ipmitool is working
+</code></pre></div></div>
+
+<h3 id="set-fan-thresholds">Set fan thresholds</h3>
+
+<p>Now that we have the IPMI tools installed, lets update the fan thresholds:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+# Noctua - https://noctua.at/en/nh-l9i/specification
+ipmitool sensor thresh FAN3 lower 300 400 500
+
+# Cougar FAN1
+ipmitool sensor thresh FAN1 lower 400 500 600
+
+#Cougar FAN4
+ipmitool sensor thresh FAN4 lower 400 500 600
+
+</code></pre></div></div>
+
+<h3 id="reboot-bmc">Reboot BMC</h3>
+
+<p>Next try to reboot BMC by going to IPMI web interface » Maintenance » Unit Reset.</p>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Ultimate Media Server Build - Part 2 - Build Log&amp;url=https://blog.thesparktree.com/ultimate-media-server-build-log"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/ultimate-media-server-build-log"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/ultimate-media-server-build-log"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/ultimate-media-server-build-log" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/ultimate-media-server-build-log'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Ultimate Media Server Build - Part 2 - Build Log';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-mediadepot">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 3 - MediaDepot/CoreOS Configuration</h2>
+                <p>I've referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-hardware">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 1 - Hardware</h2>
+                <p>I’ve referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>AngularJS Interceptors - Globally handle 401 and other Error Messages</title>
+	  <link>/angularjs-interceptors-globally-handle-401-and</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-02-07T22:50:53-06:00</pubDate>
+	  <guid>/angularjs-interceptors-globally-handle-401-and</guid>
+	  <description><![CDATA[
+	     <p>If you’ve built your slick new app using AngluarJS you’re probably using the common pattern of using AngluarJS as your dynamic client side MVVM framework and delegating your server side code to act as a API for the most part.</p>
+
+<p>Traditional server side web frameworks had it easy. If you detected that your user is unauthenticated and is attempting to access a restricted resource your framework would easily handle that by automatically redirecting the user to a login page.</p>
+
+<p>Unfortunately this pattern doesn’t hold up well when building a Single-Page-Application (SPA) using a client side framework and leaving the server side as a simple json API. Since client side frameworks can’t authenticate the user directly for security reasons, there may be times where a user attempts to access an API without knowing that they are unauthorized, or that their session has expired.</p>
+
+<p>In the following guide I’ll explain how to configure an AngularJS Single Page Application to handle <code class="language-plaintext highlighter-rouge">401 Unauthorized</code> and Authenticated requests in a standard way.</p>
+
+<h1 id="technology-stack">Technology Stack</h1>
+
+<p>Before getting started you should note that this guide was written and tested with a NodeJS server API, however that does not mean it won’t work with your configuration. YMMV.</p>
+
+<ul>
+  <li>AngularJS <code class="language-plaintext highlighter-rouge">v1.2.x</code></li>
+  <li>NodeJS <code class="language-plaintext highlighter-rouge">v0.10.x</code></li>
+  <li>ExpressJS <code class="language-plaintext highlighter-rouge">v3.x</code></li>
+  <li>Passport <code class="language-plaintext highlighter-rouge">v0.2.0</code></li>
+</ul>
+
+<h1 id="nodejs-api--passport-authentication">NodeJS API + Passport Authentication</h1>
+
+<p>Protecting API endpoints with Passport is easy. All we need to do is specify a middleware function to handle any endpoints that need to be protected.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">app</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="dl">'</span><span class="s1">/api/member/:member_id</span><span class="dl">'</span><span class="p">,</span><span class="nx">requiresAuth</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+	<span class="c1">//do authenticated magic here.</span>
+	<span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nf">json</span><span class="p">({</span><span class="na">member</span><span class="p">:</span> <span class="nx">member_data</span><span class="p">});</span>
+<span class="p">})</span>
+
+<span class="kd">function</span> <span class="nf">requiresAuth</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">if </span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nf">isAuthenticated</span><span class="p">())</span> <span class="k">return</span> <span class="nf">next</span><span class="p">();</span>
+	<span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
+	<span class="kd">var</span> <span class="nx">json_resp</span> <span class="o">=</span> <span class="p">{};</span>
+	<span class="k">if </span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">==</span> <span class="dl">'</span><span class="s1">GET</span><span class="dl">'</span><span class="p">)</span> <span class="nx">json_resp</span><span class="p">.</span><span class="nx">returnTo</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">originalUrl</span>
+	<span class="nx">res</span><span class="p">.</span><span class="nf">json</span><span class="p">(</span><span class="nx">json_resp</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">requiresAuth</code> function returns a 401 error code if the user is not authenticated, which we can then handle in AngularJS via an Interceptor.</p>
+
+<h1 id="angularjs-interceptor">AngularJS Interceptor</h1>
+
+<p>The following AngularJS Interceptor can be used to globally handle any 401 error, and handle them by redirecting the user to the <code class="language-plaintext highlighter-rouge">/login</code> page.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">angular</span><span class="p">.</span><span class="nf">module</span><span class="p">(</span><span class="dl">'</span><span class="s1">myApp</span><span class="dl">'</span><span class="p">,</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ngRoute</span><span class="dl">'</span><span class="p">]).</span>
+<span class="nf">config</span><span class="p">([</span><span class="dl">'</span><span class="s1">$routeProvider</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">$locationProvider</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">$routeProvider</span><span class="p">,</span><span class="nx">$locationProvider</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nf">when</span><span class="p">(</span><span class="dl">'</span><span class="s1">/</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/angular/public/index</span><span class="dl">'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="dl">'</span><span class="s1">indexCtrl</span><span class="dl">'</span><span class="p">});</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nf">when</span><span class="p">(</span><span class="dl">'</span><span class="s1">/login</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/angular/public/login</span><span class="dl">'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="dl">'</span><span class="s1">loginCtrl</span><span class="dl">'</span><span class="p">});</span>
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nf">when</span><span class="p">(</span><span class="dl">'</span><span class="s1">/members</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">templateUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/angular/member/index</span><span class="dl">'</span><span class="p">,</span> <span class="na">controller</span><span class="p">:</span> <span class="dl">'</span><span class="s1">memberIndexCtrl</span><span class="dl">'</span><span class="p">});</span>
+	<span class="c1">//... snipped</span>
+
+
+	<span class="nx">$routeProvider</span><span class="p">.</span><span class="nf">otherwise</span><span class="p">({</span><span class="na">redirectTo</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/</span><span class="dl">'</span><span class="p">});</span>
+	<span class="nx">$locationProvider</span><span class="p">.</span><span class="nf">html5Mode</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+ <span class="p">}])</span>
+<span class="p">.</span><span class="nf">factory</span><span class="p">(</span><span class="dl">'</span><span class="s1">authHttpResponseInterceptor</span><span class="dl">'</span><span class="p">,[</span><span class="dl">'</span><span class="s1">$q</span><span class="dl">'</span><span class="p">,</span><span class="dl">'</span><span class="s1">$location</span><span class="dl">'</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">$q</span><span class="p">,</span><span class="nx">$location</span><span class="p">){</span>
+	<span class="k">return</span> <span class="p">{</span>
+		<span class="na">response</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">response</span><span class="p">){</span>
+			<span class="k">if </span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">401</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">Response 401</span><span class="dl">"</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">response</span> <span class="o">||</span> <span class="nx">$q</span><span class="p">.</span><span class="nf">when</span><span class="p">(</span><span class="nx">response</span><span class="p">);</span>
+		<span class="p">},</span>
+		<span class="na">responseError</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">rejection</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if </span><span class="p">(</span><span class="nx">rejection</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">401</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">console</span><span class="p">.</span><span class="nf">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">Response Error 401</span><span class="dl">"</span><span class="p">,</span><span class="nx">rejection</span><span class="p">);</span>
+				<span class="nx">$location</span><span class="p">.</span><span class="nf">path</span><span class="p">(</span><span class="dl">'</span><span class="s1">/login</span><span class="dl">'</span><span class="p">).</span><span class="nf">search</span><span class="p">(</span><span class="dl">'</span><span class="s1">returnTo</span><span class="dl">'</span><span class="p">,</span> <span class="nx">$location</span><span class="p">.</span><span class="nf">path</span><span class="p">());</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">$q</span><span class="p">.</span><span class="nf">reject</span><span class="p">(</span><span class="nx">rejection</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}])</span>
+<span class="p">.</span><span class="nf">config</span><span class="p">([</span><span class="dl">'</span><span class="s1">$httpProvider</span><span class="dl">'</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">$httpProvider</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">//Http Intercpetor to check auth failures for xhr requests</span>
+	<span class="nx">$httpProvider</span><span class="p">.</span><span class="nx">interceptors</span><span class="p">.</span><span class="nf">push</span><span class="p">(</span><span class="dl">'</span><span class="s1">authHttpResponseInterceptor</span><span class="dl">'</span><span class="p">);</span>
+<span class="p">}]);</span>
+</code></pre></div></div>
+
+<p>The previous snippet only handled the 401 error code but you could use the same premise to handle other 4xx and 5xx Error Codes.</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>AngularJS + Media Queries = matchmedia-ng</title>
+	  <link>/angularjs-media-queries-matchmedia-ng</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-01-09T15:05:05-06:00</pubDate>
+	  <guid>/angularjs-media-queries-matchmedia-ng</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> is a set of AngularJS bindings and helper functions for the matchMedia javascript api. With matchMedia, AngularJS and <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> you can automatically respond to the orientation, browser height, width and other properties supported by CSS Media Queries.</p>
+
+<p>Responsive design is very powerful, allowing you to change the design of your site to fit the device, without changing your content. However there are times where you will want to execute some arbitrary javascript code or change the content when your display window changes, that’s what <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a> is for.</p>
+
+<p>Check it out: <a href="https://github.com/AnalogJ/matchmedia-ng">matchmedia-ng</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/matchmedia-ng"></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>dropstore-ng: opensource AngularJS bindings for Dropbox Javascript API</title>
+	  <link>/dropstore-ng-opensource-angularjs-bindings-for</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2013-12-08T22:00:00-06:00</pubDate>
+	  <guid>/dropstore-ng-opensource-angularjs-bindings-for</guid>
+	  <description><![CDATA[
+	     <p>I created an github project called <a href="https://github.com/AnalogJ/dropstore-ng">dropstore-ng</a> that has angularjs bindings for the recently released Dropbox Datastore API as well as all the other related functions in the Javascript API.
+The service wraps most of the Dropbox Datastore callbacks in promises, contains subscription methods for Dropbox events and provides transparent aliases for untouched library methods.</p>
+
+<p>I also created a realtime todo sample app which you can try <a href="https://dropstore-ng.herokuapp.com/">here</a></p>
+
+<p>You can access the library here:
+<a href="https://github.com/AnalogJ/dropstore-ng">https://github.com/AnalogJ/dropstore-ng</a></p>
+
+<p>or through bower</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bower <span class="nb">install </span>dropstore-ng <span class="nt">--save</span>
+</code></pre></div></div>
+
+<div class="github-widget" data-repo="AnalogJ/dropstore-ng"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Hatchet - Cut down spam in your Gmail Inbox</title>
+	  <link>/hatchet</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2022-01-17T03:19:33-06:00</pubDate>
+	  <guid>/hatchet</guid>
+	  <description><![CDATA[
+	     <p>I got frustrated with the amount of daily spam in my Gmail “Promotions” tab – especially since it made searching for 
+email basically impossible. While there are services that will help me unsubscribe from all the mailing lists I’m signed 
+up to, they wanted unfettered access to my Google account, which I would never give.</p>
+
+<p>I wrote an open source tool called <a href="https://github.com/AnalogJ/hatchet">hatchet</a> which will access your Gmail account 
+using IMAP, find the latest unsubscribe link for each unique email sender, and write it all to a csv/spreadsheet file.</p>
+
+<p>It’s open source and doesn’t require any external service.</p>
+
+<div class="github-widget" data-repo="AnalogJ/hatchet"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

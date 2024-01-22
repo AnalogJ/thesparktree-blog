@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Home Server - Disk Management</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Home Server - Disk Management" />
+    <meta name="twitter:description" content="Adding a new disk to your homeserver Identify your new devices Take photos of your drives before inserting them. Specifically, you’ll want to track the serial..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/disk-management" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Home Server - Disk Management" />
+    <meta property="og:description" content="Adding a new disk to your homeserver Identify your new devices Take photos of your drives before inserting them. Specifically, you’ll want to track the serial..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/disk-management" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/disk-management",
+        "image": "https://blog.thesparktree.com/assets/images/cover_plex.jpg",
+        "description": "Adding a new disk to your homeserver Identify your new devices Take photos of your drives before inserting them. Specifically, you’ll want to track the serial..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_plex.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Home Server - Disk Management</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2020-11-20">20 Nov 2020</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/plex'>Plex</a>,
+                    
+                
+                    
+                       <a href='/tag/hardware'>Hardware</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/supermicro'>Supermicro</a>,
+                    
+                
+                    
+                       <a href='/tag/nas'>Nas</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <h1 id="adding-a-new-disk-to-your-homeserver">Adding a new disk to your homeserver</h1>
+
+<h2 id="identify-your-new-devices">Identify your new devices</h2>
+
+<ol>
+  <li>Take photos of your drives before inserting them. Specifically, you’ll want to track the serial number, manufacturer and model.
+This will make identifying the new drives in a large system much easier.</li>
+  <li>Install the drives and power on your server.</li>
+  <li>Get a list of your mounted drives using <code class="language-plaintext highlighter-rouge">cat /etc/mtab | grep /dev/</code>.
+If you use specific drive mounting folder structure, you can be fairly certain these devices do not correspond with your newly added drives.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/dev/sdg /mnt/drive4 ext4 rw,seclabel,relatime 0 0
+/dev/sdb /mnt/drive5 ext4 rw,seclabel,relatime 0 0
+/dev/sdf /mnt/drive1 ext4 rw,seclabel,relatime 0 0
+/dev/sdd /mnt/drive2 ext4 rw,seclabel,relatime 0 0
+</code></pre></div></div>
+
+<ol>
+  <li>List all device detected by your system, and ignore references to devices that you already recognize.
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ls -alt /dev/sd*
+brw-rw----. 1 root disk 8, 32 Nov 21 16:40 /dev/sdc
+brw-rw----. 1 root disk 8, 64 Nov 21 16:23 /dev/sde
+brw-rw----. 1 root disk 8,  1 Nov 21 16:01 /dev/sda1
+brw-rw----. 1 root disk 8,  2 Nov 21 16:01 /dev/sda2
+brw-rw----. 1 root disk 8,  0 Nov 21 16:01 /dev/sda
+brw-rw----. 1 root disk 8, 16 Nov 21 16:01 /dev/sdb
+brw-rw----. 1 root disk 8, 80 Nov 21 16:01 /dev/sdf
+brw-rw----. 1 root disk 8, 96 Nov 21 16:01 /dev/sdg
+brw-rw----. 1 root disk 8, 48 Nov 21 16:01 /dev/sdd
+</code></pre></div>    </div>
+    <p>In this case, all we care about are <code class="language-plaintext highlighter-rouge">/dev/sdc</code> and /dev/sde`</p>
+  </li>
+  <li>Get information about these unknown devices, to match against the Manufacturer, Model &amp; Serial number of the inserted drives.</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ fdisk -l
+
+...
+
+Disk /dev/sde: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+Disk /dev/sdc: 12.8 TiB, 14000519643136 bytes, 27344764928 sectors
+Disk model: WDC WD140EDFZ-11
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+</code></pre></div></div>
+
+<p>The models listed match our disk models, but lets get their serial numbers to be sure.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ udevadm info --query=all --name=/dev/sdc | grep SERIAL
+E: ID_SERIAL_SHORT=Y5HXXXXX
+
+$ udevadm info --query=all --name=/dev/sde | grep SERIAL
+E: ID_SERIAL_SHORT=9LGXXXXXX
+</code></pre></div></div>
+<p>Once we’ve confirmed these serial numbers match the devices we added, it’s time to format the devices.</p>
+
+<h2 id="format">Format</h2>
+
+<p>We’ll be using <a href="https://github.com/trapexit/backup-and-recovery-howtos">trapexit’s excellent backup &amp; recovery guide</a> as a reference here.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ mkfs.ext4 -m 0 -T largefile4 -L &lt;label&gt; /dev/&lt;device&gt;
+
+mke2fs 1.42.9 (4-Feb-2014)
+Discarding device blocks: done
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+16 inodes, 4096 blocks
+0 blocks (0.00%) reserved for the super user
+First data block=0
+1 block group
+32768 blocks per group, 32768 fragments per group
+16 inodes per group
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (1024 blocks): done
+Writing superblocks and filesystem accounting information: done
+</code></pre></div></div>
+
+<ul>
+  <li>-m <reserved-blocks-percentage>: Reserved blocks for super-user. We set it to zero because these drives aren't used in a way where that really matters.a</reserved-blocks-percentage></li>
+  <li>-T <usage-type>: Specifies how the filesystem is going to be used so optimal paramters can be chosen. Types are defined in `/etc/mke2fs.conf`. We set it to `largefile4` because we expect fewer, large files relative to typical usage. If you expect a large number of files or are unsure simply remove the option all together.</usage-type></li>
+  <li>-L <label>: Sets the label for the filesystem. A suggested format is: SIZE-MANUFACTURE-N. For example: <code class="language-plaintext highlighter-rouge">2.0TB-Seagate-0</code> for the first 2.0TB Seagate drive installed.</label></li>
+</ul>
+
+<p>It’s generally a good idea to format the raw device rather than creating partitions.</p>
+
+<ol>
+  <li>The partition is mostly useless to us since we plan on using the entire drive for storage.</li>
+  <li>We won’t need to worry about MBR vs GPT.</li>
+  <li>We won’t need to worry about block alignment which can effect performance if misaligned.</li>
+  <li>When a 512e/4k drive is moved between a native SATA controller and a USB SATA adaptor there won’t be partition block misalignment. Often USB adapters will report 4k/4k to the OS while the drive will report 512/4k causing the OS to fail to find the paritions or filesystems. This can be fixed but no tools exist to do the procedure automatically.</li>
+</ol>
+
+<h2 id="mount">Mount</h2>
+<p>Next we’ll need to mount the devices.</p>
+
+<p>Lets make the mount directories, following our folder naming structure.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir -p /mnt/drive3
+mkdir -p /mnt/drive6
+</code></pre></div></div>
+<p>Next we can actually mount the devices the new directories</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mount /dev/sde /mnt/drive3
+mount /dev/sdc /mnt/drive6
+</code></pre></div></div>
+
+<p>These mounts are just for testing, and are not persistent. Since we’re using Systemd, we can create mount config files
+and tell Systemd to automatically mount our drives and manage them.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl edit --force --full mnt-drive3.mount
+
+[Mount]
+What=/dev/disk/by-uuid/e1378723-7861-49b9-8e01-0bd063f0ecdd
+Where=/mnt/drive3
+Type=ext4
+
+[Install]
+WantedBy=local-fs.target
+</code></pre></div></div>
+
+<p>Finally  we need to “enable” the systemd service:</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl enable mnt-drive3.mount</code></p>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Home Server - Disk Management&amp;url=https://blog.thesparktree.com/disk-management"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/disk-management"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/disk-management"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/disk-management" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/disk-management'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Home Server - Disk Management';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_flatcar.png)" href="/customize-flatcar-kernel-part-3">
+            <section class="post">
+                <h2>Customize the FlatCar Kernel - Part 3 - Easy Kernel Modules using Forklift</h2>
+                <p>It's been a while since I discussed building kernel modules for CoreOS (in [Part 1](https://blog.thesparktree.com/customize-coreos-kernel-part-1)...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_traefik_docker.png)" href="/traefik-advanced-config">
+            <section class="post">
+                <h2>Traefik v2 - Advanced Configuration</h2>
+                <p>Traefik is the leading open source reverse proxy and load balancer for HTTP and TCP-based...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

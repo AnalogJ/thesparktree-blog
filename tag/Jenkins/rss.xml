@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>You Don't Know Jenkins - Part 1</title>
+	  <link>/you-dont-know-jenkins-part-1</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2016-08-16T16:27:07-05:00</pubDate>
+	  <guid>/you-dont-know-jenkins-part-1</guid>
+	  <description><![CDATA[
+	     <p>Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
+It doesn’t matter if you’re team has 300 developers or 3, Jenkins can still make your life a lot easier.</p>
+
+<p>Having said all that, over time it can feel like the burdens out-weigh the benefits:</p>
+
+<ul>
+  <li>As your software grows you’ll find yourself cloning jobs to setup a new environments (test/stage/prod/etc), which quickly get out of sync with each other.</li>
+  <li>Refactoring a large number of jobs can be daunting using the config UI.</li>
+  <li>It’s easy for Jenkins (or any CI server) to become an untouchable <a href="https://martinfowler.com/bliki/SnowflakeServer.html">snowflake</a>.
+Its frightening to even contemplate upgrading your Jenkins version &amp; plugins, let alone building a new Jenkins installation.</li>
+  <li>Jenkins freestyle jobs work great for simple CI builds, but as you start using them for deployment &amp; orchestration, you’ll start to see their limits</li>
+</ul>
+
+<p>This series is all about solving these common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></strong></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></li>
+</ul>
+
+<h1 id="automated-jenkins-reinstall-using-chef">Automated Jenkins (Re)Install using Chef</h1>
+
+<p>You use configuration management (CM) systems to manage your production services, it only makes sense to do the same for other important internal systems.</p>
+
+<p>It doesn’t matter if you use Chef, Ansible, Puppet or Salt. Whichever CM system you choose should do the following:</p>
+
+<ul>
+  <li>Install Jenkins dependencies (like Java)</li>
+  <li>Configure server backups</li>
+  <li>Configure your Server firewall (eg. iptables)</li>
+  <li>Restrict SSH access &amp; other <a href="https://www.codelitt.com/blog/my-first-10-minutes-on-a-server-primer-for-securing-ubuntu/">“first 10 minute” tasks</a></li>
+  <li>Install Jenkins software</li>
+  <li>All company/third party tools required on the build server should be codified</li>
+  <li>Create a <strong>single</strong> automation administrator user on Jenkins</li>
+  <li>Install Jenkins plugins (and allow specific versions to be specified)</li>
+  <li>Credentials &amp; Secrets should be retrieved from a secure data source and configured in Jenkins.</li>
+  <li>Configure Jenkins (using xml files on the filesystem, or API calls)
+    <ul>
+      <li>security realm/authentication type (eg. LDAP)</li>
+      <li>execution nodes, slaves</li>
+      <li>installation directory</li>
+      <li>views</li>
+    </ul>
+  </li>
+  <li>Create a <strong>single</strong> bootstrap Jenkins DSL job that polls git for changes (we’ll talk about that below)</li>
+  <li>Completely disable <code class="language-plaintext highlighter-rouge">configure</code> access to the Jenkins server.</li>
+  <li>Configure your CM system to reconfigure the Jenkins server on a schedule (weekly/monthly you decide), which lets you continuously update to the latest stable release</li>
+</ul>
+
+<p>Here’s a few snippets of what this could look like in a Chef cookbook. If you’d like to jump straight to a fully working cookbook you can find it here: <a href="https://github.com/AnalogJ/you-dont-know-jenkins">AnalogJ/you-dont-know-jenkins</a>.
+Remember, none of this is unique to Chef, it can be re-implemented in any other CM system.</p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins"></div>
+
+<hr />
+
+<h2 id="cli-authentication">CLI Authentication</h2>
+
+<p>The first thing we need to do is specify our automation user credentials for the Jenkins server.
+This is a bit counter intuitive, as this is the first run and we haven’t created our automation user or turned on Authentication yet, but on subsequent Chef run this cookbook will fail if the automation user API credentials are not configured.
+Thankfully the Chef cookbook is smart enough to use the anonymous user first, and only use the specified credentials if required.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># TODO: this private key should be from secret databag</span>
+<span class="c1">#################################################</span>
+<span class="c1"># Install Jenkins</span>
+<span class="c1">#################################################</span>
+<span class="n">include_recipe</span> <span class="s1">'jenkins::master'</span>
+
+<span class="n">ruby_block</span> <span class="s1">'run as jenkins automation user'</span> <span class="k">do</span>
+  <span class="n">block</span> <span class="p">{</span>
+	<span class="n">key</span> <span class="o">=</span> <span class="no">OpenSSL</span><span class="o">::</span><span class="no">PKey</span><span class="o">::</span><span class="no">RSA</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">data_bag_item</span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">,</span> <span class="s1">'automation_user'</span><span class="p">)[</span><span class="s1">'cli_private_key'</span><span class="p">])</span>
+	<span class="n">node</span><span class="p">.</span><span class="nf">run_state</span><span class="p">[</span><span class="ss">:jenkins_private_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span><span class="p">.</span><span class="nf">to_pem</span>
+  <span class="p">}</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="plugin-management">Plugin Management</h2>
+
+<p>Before we can do anything on this Jenkins server, we need to make sure it has the proper plugins installed (as some of the following steps will throw exceptions otherwise).
+When configuring Jenkins for the first time it can be easy to overlook the importance of controlling your plugin versions. Many a Jenkins server has failed spectacularly after an innocent plugin update. Unfortunately Jenkins doesn’t make it easy to lock or install old versions of plugins using its API (<a href="http://stackoverflow.com/a/34778163/1157633"><code class="language-plaintext highlighter-rouge">installNecessaryPlugins</code> doesn’t work</a>).
+I naively thought about <a href="https://groups.google.com/forum/#!topic/jenkinsci-users/hSwFfLeOPZo">implementing a package management system for Jenkins plugins</a>, however after taking some time to reflect, it became clear that re-inventing the wheel was unnecessary.
+Jenkins has already solved this problem for <a href="https://github.com/jenkinsci/gradle-jpi-plugin">Plugin developers</a>, and we can just piggy-back on top of what they use.</p>
+
+<p>It’s as simple as creating a <code class="language-plaintext highlighter-rouge">build.gradle</code> file in <code class="language-plaintext highlighter-rouge">$JENKINS_HOME</code>:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">buildscript</span> <span class="o">{</span>
+  <span class="n">repositories</span> <span class="o">{</span>
+	<span class="n">mavenCentral</span><span class="o">()</span>
+	<span class="n">maven</span> <span class="o">{</span>
+	  <span class="n">url</span> <span class="s1">'http://repo.jenkins-ci.org/releases/'</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+  <span class="n">dependencies</span> <span class="o">{</span>
+	<span class="n">classpath</span> <span class="s1">'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.1'</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'java'</span>
+<span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'org.jenkins-ci.jpi'</span>
+<span class="n">repositories</span> <span class="o">{</span>
+  <span class="n">maven</span> <span class="o">{</span>
+	<span class="n">url</span> <span class="s1">'http://repo.jenkins-ci.org/releases/'</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">dependencies</span> <span class="o">{</span>
+	  <span class="n">jenkinsPlugins</span><span class="o">([</span>
+		<span class="nl">group:</span> <span class="s1">''</span><span class="o">,</span>
+		<span class="nl">name:</span> <span class="s1">''</span><span class="o">,</span>
+		<span class="nl">version:</span> <span class="s1">''</span>
+	  <span class="o">])</span>
+<span class="o">}</span>
+
+<span class="n">task</span> <span class="nf">clean</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Delete</span><span class="o">){</span>
+  <span class="n">delete</span> <span class="s1">'plugins'</span>
+<span class="o">}</span>
+
+<span class="n">task</span> <span class="nf">install</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Copy</span><span class="o">,</span> <span class="nl">dependsOn:</span> <span class="o">[</span><span class="n">clean</span><span class="o">]){</span>
+  <span class="n">from</span> <span class="n">configurations</span><span class="o">.</span><span class="na">runtime</span>
+  <span class="n">include</span> <span class="s1">'**/*.hpi'</span>
+  <span class="n">into</span> <span class="s1">'plugins'</span>
+<span class="o">}</span>
+
+<span class="c1">// should be run with `gradle update --refresh-dependencies`</span>
+<span class="n">task</span> <span class="nf">update</span><span class="o">(</span><span class="nl">dependsOn:</span> <span class="o">[</span><span class="n">clean</span><span class="o">,</span> <span class="n">install</span><span class="o">])</span>
+</code></pre></div></div>
+
+<p>And then executing <code class="language-plaintext highlighter-rouge">gradle install</code> as part of your cookbook run.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">template</span> <span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/build.gradle"</span> <span class="k">do</span>
+  <span class="n">source</span> <span class="s1">'jenkins_home_build_gradle.erb'</span>
+  <span class="n">variables</span><span class="p">(</span><span class="ss">:plugins</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'plugins'</span><span class="p">].</span><span class="nf">sort</span><span class="p">.</span><span class="nf">to_h</span><span class="p">)</span>
+  <span class="n">owner</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">mode</span> <span class="s1">'0640'</span>
+<span class="k">end</span>
+
+
+<span class="n">execute</span> <span class="s1">'install_plugins'</span> <span class="k">do</span>
+  <span class="n">command</span>  <span class="s1">'plugins.lock'</span>
+  <span class="no">EOH</span>
+  <span class="n">user</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">cwd</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Now you’ll have a <code class="language-plaintext highlighter-rouge">plugins.lock</code> file specifing all the plugins you used, and what version they’re at.
+Locking your plugins to specific versions is as easy as specifying the version in the <code class="language-plaintext highlighter-rouge">attributes.rb</code> file</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default['jenkins_wrapper_cookbook']['plugins']['job-dsl'] = {'version' =&gt; '1.48'}
+</code></pre></div></div>
+
+<p>You can even update your plugins to the latest version at any time by running <code class="language-plaintext highlighter-rouge">gradle --refresh-dependencies update &amp;&amp; gradle dependencies &gt; 'plugins.lock'</code> and then restarting Jenkins</p>
+
+<hr />
+
+<h2 id="automation-user">Automation User</h2>
+
+<p>Here’s where we create that automation user and populate its credentials.
+We’ll also set a flag on the filesystem so that we don’t continuously regenerate this Jenkins user.
+We only want to create a single Jenkins user via Chef, because all subsequent users will be defined in a config file, and won’t require a full Chef run to update.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Configure Jenkins automation user</span>
+<span class="c1">#################################################</span>
+<span class="c1"># TODO: this should be from an encrypted databag</span>
+<span class="c1"># make sure the plugins were installed before creating your first user because the mailer plugin is required</span>
+<span class="c1"># before we create any users https://github.com/chef-cookbooks/jenkins/issues/470</span>
+
+<span class="n">automation_user_public_key</span> <span class="o">=</span> <span class="no">OpenSSL</span><span class="o">::</span><span class="no">PKey</span><span class="o">::</span><span class="no">RSA</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">data_bag_item</span><span class="p">(</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">,</span> <span class="s1">'automation_user'</span><span class="p">)[</span><span class="s1">'cli_private_key'</span><span class="p">]).</span><span class="nf">public_key</span>
+<span class="n">automation_user_public_key_type</span> <span class="o">=</span> <span class="n">automation_user_public_key</span><span class="p">.</span><span class="nf">ssh_type</span>
+<span class="n">automation_user_public_key_data</span> <span class="o">=</span> <span class="p">[</span> <span class="n">automation_user_public_key</span><span class="p">.</span><span class="nf">to_blob</span> <span class="p">].</span><span class="nf">pack</span><span class="p">(</span><span class="s1">'m0'</span><span class="p">)</span>
+
+<span class="n">jenkins_user</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'automation_username'</span><span class="p">]</span> <span class="k">do</span>
+  <span class="n">full_name</span> <span class="s1">'Automation Account - used by chef to configure Jenkins &amp; create bootstrap job'</span>
+  <span class="n">public_keys</span> <span class="p">[</span><span class="s2">"</span><span class="si">#{</span><span class="n">automation_user_public_key_type</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">automation_user_public_key_data</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+  <span class="n">notifies</span> <span class="ss">:create</span><span class="p">,</span> <span class="s1">'file[flag_automation_user_created]'</span><span class="p">,</span> <span class="ss">:immediately</span>
+  <span class="n">not_if</span> <span class="p">{</span> <span class="o">::</span><span class="no">File</span><span class="p">.</span><span class="nf">exist?</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/.flags/automation_user_created"</span><span class="p">)}</span>
+<span class="k">end</span>
+
+<span class="n">file</span> <span class="s1">'flag_automation_user_created'</span> <span class="k">do</span>
+  <span class="n">path</span> <span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/.flags/automation_user_created"</span>
+  <span class="n">content</span> <span class="s1">''</span>
+  <span class="n">owner</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+  <span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+  <span class="n">mode</span> <span class="s1">'0644'</span>
+  <span class="n">action</span> <span class="ss">:nothing</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="dsl-bootstrap-job">DSL Bootstrap Job</h2>
+
+<p>Jenkins automation wouldn’t be complete without a way to define and manage Jenkins jobs as code. For that we’ll be looking at the
+<a href="https://github.com/jenkinsci/job-dsl-plugin">Job DSL Plugin</a>. The Job DSL lets you define any Jenkins job in a groovy DSL that’s
+easy to understand and well documented. You should store your DSL job definitions in a git repo so they are version controlled and
+easy to modify/update. Then all you need is a bootstrap job to pull down your DSL job definition repo and run it on your Jenkins server.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#################################################</span>
+<span class="err">#</span> <span class="n">Create</span> <span class="n">Bootstrap</span> <span class="n">job</span> <span class="n">using</span> <span class="n">script</span>
+<span class="err">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'dsl_bootstrap_job'</span> <span class="k">do</span>
+  <span class="n">command</span>  <span class="n">branchSpec</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.</span><span class="na">singletonList</span><span class="o">(</span><span class="k">new</span> <span class="n">BranchSpec</span><span class="o">(</span><span class="s2">"*/master"</span><span class="o">));</span>
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">submoduleconfig</span><span class="o">&gt;</span> <span class="n">submoduleConfig</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.&lt;</span><span class="n">submoduleconfig</span><span class="o">&gt;</span><span class="n">emptyList</span><span class="o">();</span>
+
+	<span class="c1">// If you're using a private git repo, you'll need to specify a credential id here:</span>
+	<span class="kt">def</span> <span class="n">credential_id</span> <span class="o">=</span> <span class="s1">''</span> <span class="c1">// maybe 'b2d9219b-30a2-41dd-9da1-79308aba3106'</span>
+
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">userremoteconfig</span><span class="o">&gt;</span> <span class="n">userRemoteConfig</span> <span class="o">=</span> <span class="n">Collections</span><span class="o">.</span><span class="na">singletonList</span><span class="o">(</span><span class="k">new</span> <span class="n">UserRemoteConfig</span><span class="o">(</span><span class="n">projectURL</span><span class="o">,</span> <span class="s1">''</span><span class="o">,</span> <span class="s1">''</span><span class="o">,</span> <span class="n">credential_id</span><span class="o">))</span>
+	<span class="n">List</span><span class="o">&lt;</span><span class="n">gitscmextension</span><span class="o">&gt;</span> <span class="n">gitScmExt</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">gitscmextension</span><span class="o">&gt;();</span>
+	<span class="n">gitScmExt</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RelativeTargetDirectory</span><span class="o">(</span><span class="s1">'script'</span><span class="o">))</span>
+	<span class="kt">def</span> <span class="n">scm</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GitSCM</span><span class="o">(</span><span class="n">userRemoteConfig</span><span class="o">,</span> <span class="n">branchSpec</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="n">submoduleConfig</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">gitScmExt</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">setScm</span><span class="o">(</span><span class="n">scm</span><span class="o">)</span>
+
+	<span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">ExecuteDslScripts</span><span class="o">(</span>
+	  <span class="k">new</span> <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">ExecuteDslScripts</span><span class="o">.</span><span class="na">ScriptLocation</span><span class="o">(</span>
+		  <span class="s1">'false'</span><span class="o">,</span>
+		  <span class="s2">"script/jenkins_job_dsl/simple/tutorial_dsl.groovy"</span><span class="o">,</span>
+		  <span class="kc">null</span>
+	  <span class="o">),</span>
+	  <span class="kc">false</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">RemovedJobAction</span><span class="o">.</span><span class="na">DELETE</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">RemovedViewAction</span><span class="o">.</span><span class="na">DELETE</span><span class="o">,</span>
+	  <span class="n">javaposse</span><span class="o">.</span><span class="na">jobdsl</span><span class="o">.</span><span class="na">plugin</span><span class="o">.</span><span class="na">LookupStrategy</span><span class="o">.</span><span class="na">JENKINS_ROOT</span><span class="o">,</span>
+	  <span class="s1">''</span>
+	<span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">buildersList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">builder</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">save</span><span class="o">()</span>
+
+	<span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">restart</span><span class="o">()</span>
+  <span class="n">EOH</span>
+  <span class="n">notifies</span> <span class="o">:</span><span class="n">execute</span><span class="o">,</span> <span class="s1">'jenkins_command[run_job_dsl]'</span>
+<span class="n">end</span>
+
+<span class="err">#</span> <span class="n">execute</span> <span class="n">the</span> <span class="n">job</span> <span class="n">using</span> <span class="n">the</span> <span class="n">cli</span>
+<span class="n">jenkins_command</span> <span class="s1">'run_job_dsl'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="s2">"build '#{node['jenkins_wrapper_cookbook']['settings']['dsl_job_name']}'"</span>
+  <span class="n">action</span> <span class="o">:</span><span class="n">nothing</span>
+<span class="n">end</span>
+</code></pre></div></div>
+
+<p>At this point we’ve defined a Jenkins bootstrap job that runs on a daily schedule, clones our DSL defintion repo (using SSH credentials if required)
+and creates/updates the jobs on the Jenkins server.</p>
+
+<hr />
+
+<h2 id="configure-jenkins">Configure Jenkins</h2>
+<p>Configuring Jenkins requires a thorough look at the <a href="http://javadoc.jenkins-ci.org/jenkins/model/Jenkins.html">Jenkins</a> <a href="http://javadoc.jenkins-ci.org/hudson/model/Hudson.html">documentation</a>.
+Any setting you can change via the web UI can be set via Jenkins groovy code.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Configure Jenkins Installation</span>
+<span class="c1">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'jenkins_configure'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="o">&lt;&lt;-</span><span class="no">EOH</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/^ {4}/</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span><span class="sh">
+    import jenkins.model.Jenkins;
+    import jenkins.model.*;
+    import org.jenkinsci.main.modules.sshd.*;
+
+    instance = Jenkins.instance
+    instance.setDisableRememberMe(true)
+    instance.setNumExecutors(</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'master_num_executors'</span><span class="p">]</span><span class="si">}</span><span class="sh">)
+    instance.setSystemMessage('</span><span class="si">#{</span><span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">.</span><span class="nf">capitalize</span><span class="si">}</span><span class="sh"> Jenkins Server - Managed by Chef Cookbook Version </span><span class="si">#{</span><span class="n">run_context</span><span class="p">.</span><span class="nf">cookbook_collection</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">].</span><span class="nf">metadata</span><span class="p">.</span><span class="nf">version</span><span class="si">}</span><span class="sh"> - Converged on ' + (new Date().format('dd-MM-yyyy')))
+
+    location = JenkinsLocationConfiguration.get()
+    location.setAdminAddress("</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">")
+    location.setUrl("http://</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_host_name'</span><span class="p">]</span><span class="si">}</span><span class="sh">/")
+    location.save()
+
+    sshd = SSHD.get()
+    sshd.setPort(</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'sshd_port'</span><span class="p">]</span><span class="si">}</span><span class="sh">)
+    sshd.save()
+
+    def mailer = instance.getDescriptor("hudson.tasks.Mailer")
+    mailer.setReplyToAddress("</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">")
+    mailer.setSmtpHost("localhost")
+    mailer.setDefaultSuffix("@example.com")
+    mailer.setUseSsl(false)
+    mailer.setSmtpPort("25")
+    mailer.setCharset("UTF-8")
+    instance.save()
+
+    def gitscm = instance.getDescriptor('hudson.plugins.git.GitSCM')
+    gitscm.setGlobalConfigName('Jenkins Build')
+    gitscm.setGlobalConfigEmail('</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'settings'</span><span class="p">][</span><span class="s1">'system_email_address'</span><span class="p">]</span><span class="si">}</span><span class="sh">')
+    instance.save()
+
+</span><span class="no">  EOH</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="authentication-and-authorization">Authentication (and Authorization)</h2>
+
+<ul>
+  <li>Authentication verifies who you are.</li>
+  <li>Authorization verifies what you can do.</li>
+</ul>
+
+<p>One of the great things about Jenkins is that you can specify each independently. Meaning you can offload authentication to your LDAP server, while configuring authorization on a per-job basis if you wanted.</p>
+
+<p>At this point in the guide, all we’re going to do is enable LDAP Authentication and specify Authorization for the automation user. All other user creation and authorization will be done in Part 2 of this guide, rather than in this Chef cookbook. There’s two reasons for this:</p>
+
+<ul>
+  <li>Chef client runs restart the Jenkins service, which we don’t want to do very often.</li>
+  <li>We want to make sure we can add Jenkins users at any time, and they should be able to login almost immediately.</li>
+</ul>
+
+<p>Here’s a LDAP Authentication strategy:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#################################################</span>
+<span class="c1"># Enable Jenkins Authentication</span>
+<span class="c1">#################################################</span>
+
+<span class="n">jenkins_script</span> <span class="s1">'enable_active_directory_authentication'</span> <span class="k">do</span>
+  <span class="n">command</span> <span class="o">&lt;&lt;-</span><span class="no">EOH</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/^ {4}/</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span><span class="sh">
+    import jenkins.model.*
+    import hudson.security.*
+    import hudson.plugins.active_directory.*
+
+    def instance = Jenkins.getInstance()
+
+    //set Active Directory security realm
+    String domain = 'my.domain.example.com'
+    String site = 'site'
+    String server = '192.168.1.1:3268'
+    String bindName = 'account@my.domain.com'
+    String bindPassword = 'password'
+    ad_realm = new ActiveDirectorySecurityRealm(domain, site, bindName, bindPassword, server)
+    instance.setSecurityRealm(ad_realm)
+
+    //set Project Matrix auth strategy
+    def strategy = new hudson.security.ProjectMatrixAuthorizationStrategy()
+    strategy.add(Permission.fromId('hudson.model.Hudson.Administer'),'</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins_wrapper_cookbook'</span><span class="p">][</span><span class="s1">'automation_username'</span><span class="p">]</span><span class="si">}</span><span class="sh">')
+    instance.setAuthorizationStrategy(strategy)
+
+    instance.save()
+</span><span class="no">  EOH</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<hr />
+
+<h1 id="fin">Fin.</h1>
+
+<p>At this point we have a completely automated Jenkins server.</p>
+
+<ul>
+  <li>Installed all the software required for Jenkins</li>
+  <li>Jenkins is installed and configured</li>
+  <li>LDAP authentication is enabled</li>
+  <li>We have created an automation user (with credentials) so subsequent CM runs can update Jenkins server configuration</li>
+  <li>All plugins are managed, and can be locked to an old version easily.</li>
+  <li>All Jenkins job configuration is defined in code, and jobs are populated via a bootstrap job.</li>
+  <li>No more precious snowflake. You should feel comfortable completely destroying your Jenkins server and rebuilding it at any time.</li>
+  <li>The only thing left to do is add additional Jenkins users and configure some more complex Jenkins DSL Jobs.</li>
+</ul>
+
+<p>You’ll be tempted to define multiple users and jobs in your Jenkins CM script. Don’t.</p>
+
+<ul>
+  <li>Most CM systems don’t really understand Jenkins jobs, they just take a XML blob and write it to the filesystem. Jenkins Job XML is verbose and disgusting, and not designed to be edited manually.</li>
+  <li>Storing jobs and users in your CM script mean that changes will need to be done through the CM system, which usually restarts the Jenkins service.. not something you want to do often on a busy Jenkins server.</li>
+  <li>Defining complex Jenkins jobs in groovy is still a bit nasty, with very little documentation.</li>
+  <li>Thankfully this is all solved via the Jenkins DSL which we’ll talk about in Part 2 - Maintainable Jenkins Jobs using Job DSL (Coming Soon)</li>
+</ul>
+
+<p>All code found in this series is available in my github repo: AnalogJ/you-dont-know-jenkins.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

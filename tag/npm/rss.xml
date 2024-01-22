@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>npm errors with infinite loop</title>
+	  <link>/npm-errors-with-infinite-loop</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-05-21T16:35:02-05:00</pubDate>
+	  <guid>/npm-errors-with-infinite-loop</guid>
+	  <description><![CDATA[
+	     <p>Occasionally I’ll be working with a nodejs project and when I attempt to run <code class="language-plaintext highlighter-rouge">$ npm install</code> I’ll see what appears to be an infinite loop with the same package partially installing and then failing over and over.</p>
+
+<p>I found a fix on the npm github issue tracker and I’ve added it here for posterity</p>
+
+<p><code class="language-plaintext highlighter-rouge">rm -rf ~/.npm</code></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

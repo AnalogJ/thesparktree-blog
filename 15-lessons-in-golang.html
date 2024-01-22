@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>15 Lessons in Golang</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - 15 Lessons in Golang" />
+    <meta name="twitter:description" content="Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure). In case you’re not familiar with it,..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/15-lessons-in-golang" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_golang.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - 15 Lessons in Golang" />
+    <meta property="og:description" content="Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure). In case you’re not familiar with it,..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/15-lessons-in-golang" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_golang.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/15-lessons-in-golang",
+        "image": "https://blog.thesparktree.com/assets/images/cover_golang.png",
+        "description": "Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure). In case you’re not familiar with it,..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_golang.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">15 Lessons in Golang</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2017-07-31">31 Jul 2017</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/golang'>Golang</a>,
+                    
+                
+                    
+                       <a href='/tag/capsulecd'>Capsulecd</a>,
+                    
+                
+                    
+                       <a href='/tag/docker'>Docker</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure).
+In case you’re not familiar with it, it’s an open source language developed by Google.
+It mostly caught my interest due to the fact that it’s pitched as a statically typed, compiled modern language.</p>
+
+<p>For a long time that was the extent of my Golang knowledge. I knew I wanted to take a closer look at
+it at some point, but I had other priorities. About 4 months ago, I realized the Golang could be the
+solution to one of the problems I was facing with <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>, my application for generically automating
+package releases for any language (npm, cookbooks, gems, pip, jars, etc).</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<p>The problem was that <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> was a executable distributed in a Ruby gem, which meant that anyone
+who wanted to use <code class="language-plaintext highlighter-rouge">CapsuleCD</code> needed to have a Ruby interpreter installed on their build machine, even
+if all they were just trying to do was package a Python library. This made my Docker containers bloated,
+and more complicated to develop. Wouldn’t it be nice to just have single binary I could download into the
+container? And so the migration to Golang began, if only in my head at that point.</p>
+
+<p>Over the next couple months, I kept going back to that idea, and a couple weeks ago, I finally sat down and
+started porting my ~3000 line Ruby application to Golang. While I could have just bought a book like Golang
+for Dummies, I decided to just jump into the coding, and just read blog posts and stack overflow when I got stuck.</p>
+
+<p>I can already hear some of you cringing. To be honest, while I was having a lot of fun, my initial development
+was pretty slow. I was trying to write an application in a new language, without knowing any of the conventions.
+The thing is, I loved it. Those “Ah-Ha!” moments and getting things compiling again after a huge refactor
+were an incredible motivator.</p>
+
+<p>Here’s a bunch of the unexpected/unconventional things I learned while porting my app to Golang.</p>
+
+<blockquote>
+  <p>Please note, these are things that I didn’t <strong>expect</strong> when I started writing Golang code with a
+background in popular typed and dynamically typed languages, (C++, C#, Java, Ruby, Python and NodeJS).
+These are not necessarily criticisms of Golang. I was able to go from 0 -&gt; working release of my software
+in a completely new language in 2 weeks. That’s pretty awesome if you ask me.</p>
+</blockquote>
+
+<h1 id="before-your-first-line">Before your first line.</h1>
+
+<h2 id="package-layout">Package Layout</h2>
+<p>While not required for a compiled language, I was still unprepared for the fact that there doesn’t seem to be a <strong>Standard™</strong> folder structure for a Golang library, like there is for Ruby, Chef &amp; Node. There seem to be a couple of popular community structures, and I found myself liking <a href="https://peter.bourgon.org/go-best-practices-2016/#repository-structure">Peter Bourgon’s recommendations</a>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>github.com/peterbourgon/foo/
+  circle.yml
+  Dockerfile
+  cmd/
+    foosrv/
+      main.go
+    foocli/
+      main.go
+  pkg/
+    fs/
+      fs.go
+      fs_test.go
+      mock.go
+      mock_test.go
+    merge/
+      merge.go
+      merge_test.go
+    api/
+      api.go
+      api_test.go
+</code></pre></div></div>
+
+<h2 id="circular-dependencies">!Circular Dependencies</h2>
+<p>Package layout becomes even more important when you find out that Golang does’t support circular
+dependencies between packages. If A imports B, and B imports A, Golang will give up and complain.
+I actually kinda like it, as it forced me to think a bit more about my application’s domain model.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import cycle not allowed
+package github.com/AnalogJ/dep/a
+  imports github.com/AnalogJ/dep/b
+  imports github.com/AnalogJ/dep/a
+</code></pre></div></div>
+
+<h2 id="dependency-management">Dependency management</h2>
+<p><code class="language-plaintext highlighter-rouge">npm</code>, <code class="language-plaintext highlighter-rouge">pypi</code>, <code class="language-plaintext highlighter-rouge">bundler</code>. Each of these package managers are synonymous with their language. However Golang
+doesn’t have an official package manger (<a href="https://github.com/golang/dep">yet</a>). In the meantime the community
+has come up with a <a href="https://github.com/Masterminds/glide">couple</a> <a href="https://github.com/FiloSottile/gvt">of</a>
+<a href="https://github.com/kardianos/govendor">good</a> <a href="https://github.com/FiloSottile/gvt">alternatives</a>. The problem
+is that they are all really good, and it can be a bit daunting to pick one. I ended up choosing <a href="https://github.com/Masterminds/glide">Glide</a>,
+because it has a similar feel to <code class="language-plaintext highlighter-rouge">bundler</code> and <code class="language-plaintext highlighter-rouge">npm</code>.</p>
+
+<h2 id="documentation">Documentation</h2>
+<p>This is actually one of the best things about Golang. <code class="language-plaintext highlighter-rouge">go docs</code> and the <code class="language-plaintext highlighter-rouge">godoc.org</code> site are awesome
+and standardize the documentation for any library you might use. This is a nice step up from the NodeJS
+community where all package documentation is custom and self hosted.</p>
+
+<h2 id="goroot-gopath">GOROOT, GOPATH</h2>
+<p>Golang imports are done in a kind of weird way. Unlike most other languages, Golang basically requires
+that your source live in pre-configured folder(s). I’m not going to delve into the details, but you should
+know that it takes a bit of setup &amp; getting used to. Dmitri Shuralyov’s <a href="https://dmitri.shuralyov.com/blog/18">How I use GOPATH with multiple
+workspaces</a> is a great resource.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GOPATH=/landing/workspace/path:/personal/workspace/path:/corporate/workspace/path
+</code></pre></div></div>
+
+<h1 id="scratching-that-itch">Scratching that Itch.</h1>
+
+<h2 id="pseudo-class-struct-inheritance">Pseudo <del>Class</del> Struct Inheritance</h2>
+<p>The Golang developers did some interesting things when designing the inheritance model. Instead of using
+one of the more conventional inheritance models of typed languages like multiple-inheritance or classical
+inheritance, Golang follows a multiple composition pattern similar to Ruby.
+<a href="https://github.com/luciotato/golang-notes/blob/master/OOP.md#method-shadowing">Method-Shadowing</a> can
+cause some unexpected results if not understood completely.</p>
+
+<h2 id="duck-typed-interfaces">Duck-Typed Interfaces</h2>
+<p>This is another cool unexpected feature of Golang. Interfaces are <a href="https://en.wikipedia.org/wiki/Duck_typing">duck-typed</a>,
+something I’ve only seen in dynamically typed languages. This duck-typing works hand-in-hand with <code class="language-plaintext highlighter-rouge">struct</code>
+composition.</p>
+
+<h2 id="structs-have-fields-interfaces-dont">Structs have fields, Interfaces don’t</h2>
+<p>Unfortunately <code class="language-plaintext highlighter-rouge">structs</code> can’t have the same <em>API</em> as <code class="language-plaintext highlighter-rouge">interfaces</code>, as the latter cannot define fields. This
+is not a huge issue, as one can just define a getter and a setter method on the interface, but it was a bit
+confusing. I’m sure theres a good technical/CS theory answer for why this is, but yeah.</p>
+
+<h2 id="publicprivate-naming">Public/Private naming</h2>
+<p>Golang took Python’s <code class="language-plaintext highlighter-rouge">public</code> and <code class="language-plaintext highlighter-rouge">private</code> method naming scheme one level further. When I initially found
+out that functions, methods and struct names starting with an uppercase character are public and lowercase
+are private, I wasn’t sure how to feel about it. But honestly, after working with Golang for 2 weeks, I
+really like this convention.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>type PublicStructName struct {}
+type privateStructName struct {}
+</code></pre></div></div>
+
+<h2 id="defer">defer</h2>
+<p>Another surprisingly useful feature Golang. I’m sure it’s a result of Golang’s parallel processing and
+error model, but <code class="language-plaintext highlighter-rouge">defer</code>’s make it really easy to keep your cleanup close to the originating code. Mentally
+I treat it like an alternative to a <code class="language-plaintext highlighter-rouge">finally</code> method in the <code class="language-plaintext highlighter-rouge">try-catch-finally</code> pattern or the <code class="language-plaintext highlighter-rouge">using</code>
+block in <code class="language-plaintext highlighter-rouge">C#</code>/<code class="language-plaintext highlighter-rouge">Java</code> but I’m sure there are more creative uses for it.</p>
+
+<h2 id="go-fmt-is-awesome"><code class="language-plaintext highlighter-rouge">go fmt</code> is awesome</h2>
+<p>You’ll never have the “tabs vs spaces” debate with a Golang developer. There is a standardized Golang
+style and <code class="language-plaintext highlighter-rouge">go fmt</code> can reformat your code to comply with it. It’s a neat tool, and reading its source
+introduced me to the powerful <a href="https://golang.org/pkg/go/parser/"><code class="language-plaintext highlighter-rouge">parser</code></a> and <a href="https://golang.org/pkg/go/ast/"><code class="language-plaintext highlighter-rouge">ast</code></a> libraries.</p>
+
+<h2 id="goarch-goos-cgo--cross-compiling">GOARCH, GOOS, CGO &amp; Cross Compiling</h2>
+<p>My goal of creating a single standalone <code class="language-plaintext highlighter-rouge">CapsuleCD</code> binary is the entire reason I started my port
+to Golang. However it quickly became apparent that simple static binaries aren’t an intrinsic feature
+of Golang (which should have been obvious). If your code is all written in vanilla Golang, and the code
+of all your dependencies (and their dependencies), then you can <a href="http://golangcookbook.com/chapters/running/cross-compiling/">build static binaries</a>
+to your heart’s content using <code class="language-plaintext highlighter-rouge">GOOS</code> and <code class="language-plaintext highlighter-rouge">GOARCH</code>. However if you’re unlucky like I was, and you have
+a dependency that calls <code class="language-plaintext highlighter-rouge">C</code> code under the hood (by importing a <code class="language-plaintext highlighter-rouge">C pseudo-package</code>) then you’re in for
+a world of pain. Don’t get me wrong, creating a dynamically linked binary is still super easy. But to
+generate a static binary, with no external dependencies, means you need to ensure that all your
+<code class="language-plaintext highlighter-rouge">C</code> dependencies (and their dependencies) are all statically linked too. Like I said, obvious.
+<code class="language-plaintext highlighter-rouge">C pseudo-packages</code> are compiled via <code class="language-plaintext highlighter-rouge">CGO</code>, and you’ll need to look at the documentation to find all
+the compiler flags necessary to help <code class="language-plaintext highlighter-rouge">CGO</code> locate your static libraries. A table of all supported GOOS
+and GOARCH pairs is located in the <a href="https://golang.org/doc/install/source#environment">Golang docs</a></p>
+
+<h1 id="how-do-i-test-this">How do I test this?</h1>
+
+<h2 id="hidden-in-plain-sight">Hidden in plain sight</h2>
+<p>Test files are suffixed with <code class="language-plaintext highlighter-rouge">_test.go</code> and should be located side-by-side with the code they test,
+rather than relegated to a special testing folder. Its nice, even though it feels a bit cluttered at first.</p>
+
+<p>Test data goes in a special <code class="language-plaintext highlighter-rouge">testdata</code> folder. Both the <code class="language-plaintext highlighter-rouge">testdata</code> folder and <code class="language-plaintext highlighter-rouge">_test.go</code> files are completely
+ignored by the compiler during <code class="language-plaintext highlighter-rouge">go build</code>.</p>
+
+<h2 id="go-list-and-vendor-folder"><code class="language-plaintext highlighter-rouge">go list</code> and <code class="language-plaintext highlighter-rouge">vendor</code> folder</h2>
+<p>So, dependency management is pretty new to the Golang language, and not all tools understand the special
+<code class="language-plaintext highlighter-rouge">vendor</code> folder. As such, when you run <code class="language-plaintext highlighter-rouge">go test</code>, by default you’ll find it running the tests of all your
+dependencies. Use <code class="language-plaintext highlighter-rouge">go list | grep -v /vendor</code> to get Golang to ignore the vendor folder.</p>
+
+<p><code class="language-plaintext highlighter-rouge">go fmt $(go list ./... | grep -v /vendor/)</code></p>
+
+<h2 id="if-err--nil"><code class="language-plaintext highlighter-rouge">if err != nil</code></h2>
+<p>I’m a stickler for code coverage. I try to keep my open source projects above 80% coverage, but I’m having
+a hard time doing that with Golang. Those of you already familiar with Golang will probably just point out that
+Golang is one of the easiest languages to get <a href="https://blog.golang.org/cover">good coverage in</a>. Rather
+than creating a seperate execution path for errors (<code class="language-plaintext highlighter-rouge">try-catch-finally</code>) Golang treats all errors as standard objects.
+Golang convention states that functions which can produce errors should return them as it’s last <code class="language-plaintext highlighter-rouge">return</code> argument.</p>
+
+<p>It’s a pretty interesting model, which reminds me a bit of <code class="language-plaintext highlighter-rouge">Node</code>’s built-in functions. However, just like <code class="language-plaintext highlighter-rouge">Node</code>, it can
+be difficult to write unit tests that produce errors in built-in functionality. This becomes even more annoying when you follow
+a coding pattern where you bubble-up errors, and then handle them at a higher level. When doing this, you’ll write alot of
+code the looks like the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data, err := myfunction(...)
+if(err != nil){
+	return err
+}
+
+data2, err2 := myfunction2(...)
+if(err2 != nil){
+	return err
+}
+
+</code></pre></div></div>
+
+<p>This starts to clutter up your code pretty quick. At this point some of you may be thinking that <code class="language-plaintext highlighter-rouge">interface</code>s and <code class="language-plaintext highlighter-rouge">mock</code>s
+would solve these problems. While that’s true in some cases, I don’t think it makes sense to write massive <code class="language-plaintext highlighter-rouge">interface</code>s for
+built-in libraries like <code class="language-plaintext highlighter-rouge">os</code> and <code class="language-plaintext highlighter-rouge">ioutil</code>, or pass those libraries in as arguments, just so that we can artifically generate
+errors for <code class="language-plaintext highlighter-rouge">ioutil.WriteFile</code> and <code class="language-plaintext highlighter-rouge">os.MkdirAll</code>.</p>
+
+<p>I’m that this is definitely a shortcoming in my mental-model, but I’ve read a ton of documentation and blog posts on how
+unit tests and code coverage should be done in Golang, and I still haven’t found a pattern that makes sense without
+seeming to require a dependency injection engine of some sort, something that Golang seems to actively dislike as too cumbersome.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>I’d love to hear your thoughts. I’ve only been working with Golang for a few weeks, but it’s been an incredibly educational
+and enjoyable experience. I was able to go from no experience to building a real, working application in Golang in very
+little time, not just toy examples from some book. I know that I’m no expert in Golang yet, and that there are still  theory gaps
+in my understanding of Golang, but I feel like they are much further apart than I expected when I went down this <code class="language-plaintext highlighter-rouge">self-taught without books</code> path.</p>
+
+<p>Golang worked exactly as I thought it would, giving me <a href="https://github.com/AnalogJ/capsulecd/releases">binaries</a> that I can easily download
+onto slim Docker containers, without requiring a Ruby interpreter. If you maintain executables in other languages, I would
+definitely recommend you consider giving Golang a try.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=15 Lessons in Golang&amp;url=https://blog.thesparktree.com/15-lessons-in-golang"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/15-lessons-in-golang"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/15-lessons-in-golang"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/15-lessons-in-golang" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/15-lessons-in-golang'; //'a unique URL for each page where Disqus is present'
+        this.page.title = '15 Lessons in Golang';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_github.png)" href="/capsulecd-v2-released">
+            <section class="post">
+                <h2>CapsuleCD v2 Released</h2>
+                <p>[CapsuleCD](https://github.com/AnalogJ/capsulecd) is made up of a series of scripts/commands that make it easy for you...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_localhost.png)" href="/local-development-with-wildcard-dns">
+            <section class="post">
+                <h2>Local Development with Wildcard DNS</h2>
+                <p>The holy-grail of local development is wildcard DNS: the ability to have *.local.company.com pointing to...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

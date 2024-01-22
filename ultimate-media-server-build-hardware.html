@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Ultimate Media Server Build - Part 1 - Hardware</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Ultimate Media Server Build - Part 1 - Hardware" />
+    <meta name="twitter:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/ultimate-media-server-build-hardware" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Ultimate Media Server Build - Part 1 - Hardware" />
+    <meta property="og:description" content="I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/ultimate-media-server-build-hardware" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_plex.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/ultimate-media-server-build-hardware",
+        "image": "https://blog.thesparktree.com/assets/images/cover_plex.jpg",
+        "description": "I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_plex.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Ultimate Media Server Build - Part 1 - Hardware</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2019-01-06">06 Jan 2019</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/homeserver'>Homeserver</a>,
+                    
+                
+                    
+                       <a href='/tag/plex'>Plex</a>,
+                    
+                
+                    
+                       <a href='/tag/hardware'>Hardware</a>,
+                    
+                
+                    
+                       <a href='/tag/linux'>Linux</a>,
+                    
+                
+                    
+                       <a href='/tag/supermicro'>Supermicro</a>,
+                    
+                
+                    
+                       <a href='/tag/nas'>Nas</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>I’ve referenced my home server many times, but I never had the time to go into the details of how it was built or how it works.
+Recently I decided to completely rebuild it, replacing the hardware and basing it on-top of a completely new operating system.
+I thought it would be a good idea to keep a build log, tracking what I did, my design decisions, and constraints you should consider
+if you want to follow in my footsteps.</p>
+
+<p>This series will be broken up into multiple parts</p>
+
+<ul>
+  <li><strong><a href="/ultimate-media-server-build-hardware">Part 1 - Hardware</a></strong></li>
+  <li><a href="/ultimate-media-server-build-log">Part 2 - Build Log</a></li>
+  <li><a href="/ultimate-media-server-build-mediadepot">Part 3 - MediaDepot/CoreOS Configuration</a></li>
+  <li>Part 4 - Application Docker Containers</li>
+</ul>
+
+<p>This is <strong>Part 1</strong>, where we’ll be talking about the Hardware. Specifically the hardware I chose to build my server, the
+alternatives I explored and compromised I had to consider.</p>
+
+<hr />
+
+<h1 id="hardware">Hardware</h1>
+
+<p>Since most of you just care about the part list and the price, lets get that out of the way first (note, <strong>affiliate links</strong>):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Type</th>
+      <th style="text-align: left">Item</th>
+      <th style="text-align: left">Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><strong>CPU</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2snR6Bd">Intel - Xeon E3-1275 V6 3.8 GHz Quad-Core Processor</a></td>
+      <td style="text-align: left">$367.97</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>CPU Cooler</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2Md8P7z">Noctua - NH-L9i 33.84 CFM CPU Cooler</a></td>
+      <td style="text-align: left">$39.95</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Motherboard</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2RPHNs8">Supermicro - X11SSL-CF Micro ATX LGA1151 Motherboard</a></td>
+      <td style="text-align: left">$275.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Memory</strong></td>
+      <td style="text-align: left"><a href="https://pcpartpicker.com/product/LXDzK8/crucial-32gb-2-x-16gb-ddr4-2400-memory-ct9029050">Crucial - 32 GB (2 x 16 GB) DDR4-2400 Memory</a></td>
+      <td style="text-align: left">$380.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Power</strong></td>
+      <td style="text-align: left"><a href="https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box">Seasonic SS-350M1U Seasonic Power Supply SS-350M1U EPS 1U ATX12V v23.1 &amp; EPS12V 80PLUS 350W Brown Box</a></td>
+      <td style="text-align: left">$80.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Case</strong></td>
+      <td style="text-align: left"><a href="http://www.u-nas.com/xcart/product.php?productid=17640">U-NAS NSC-810A Server Chassis</a></td>
+      <td style="text-align: left">$245.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Storage</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a></td>
+      <td style="text-align: left">$250.20</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Boot Drive</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2VW45Y7">Samsung 500GB 860 EVO 2.5” SSD</a></td>
+      <td style="text-align: left">$82.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Video Card</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2D6dKUI">PNY - Quadro P2000 5 GB Video Card</a></td>
+      <td style="text-align: left">$425.00</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2CibYyh">Cable Matters Internal Mini-SAS HD to 4x SATA Forward Breakout Cable 3.3 Feet</a></td>
+      <td style="text-align: left">$17.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2D63ITt">Clovertale Braided ATX Sleeved Cable Extension kit for Power Supply Cable Kit, PSU connectors, 24 Pin, 8 pin, 6 pin 4 + 4 Pin, 6 Pack, with Reusable Fastening Cable Ties 10 Pack (Red/Black)</a></td>
+      <td style="text-align: left">$26.99</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Other</strong></td>
+      <td style="text-align: left"><a href="https://amzn.to/2VLMX7n">EMOZNY Dupont Wire Kit Male to Male,Femaleto Female, Male to Female, Pin Headers, Jumper Caps Kit (Standard)</a></td>
+      <td style="text-align: left">$9.98</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><strong>Total</strong></td>
+      <td style="text-align: left"><strong>$3421.22</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Yeah, you read that right, ~3k for my ultimate media server, and thats using server grade hardware thats already 2 years old. This is an expensive hobby.</p>
+
+<p>Let’s break it down and discuss each item, and why it was chosen over the alternatives.</p>
+
+<h2 id="case">Case</h2>
+<p>Though its not traditionally important, in a home server the case you choose sets a lot more limitations than a traditional pc or even a rack mounted server.</p>
+
+<p>In my case, I wanted the following:</p>
+
+<ul>
+  <li>support for at-least 8 hot-swappable hard drives</li>
+  <li>room for a dedicated SSD boot disk</li>
+  <li>adequate ventilation for a micro-ATX (or a mini-ITX) motherboard</li>
+  <li>look more like an appliance than a computer tower</li>
+  <li>have the smallest footprint possible.</li>
+</ul>
+
+<p>I decided to go with the <a href="http://www.u-nas.com/xcart/product.php?productid=17640">NSC-810A by U-NAS</a>. It’s a bit on the expensive side when it comes to a case, but it provides me with the room to use a
+micro-ATX motherboard, while still supporting 8 hot-swappable hard drives in a small footprint. And it doesn’t look that bad either,
+which is important for a server that’s sitting on my shelf, rather than a server rack in the basement.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/unas-nsc-810A.jpg" alt="nsc-810a" style="max-height: 600px;" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model Number</td>
+      <td>NSC-810A</td>
+    </tr>
+    <tr>
+      <td>Hot Swap Drive Bays</td>
+      <td>8x 3.5”</td>
+    </tr>
+    <tr>
+      <td>Internal Drive Bays</td>
+      <td>1x 2.5”</td>
+    </tr>
+    <tr>
+      <td>Motherboard</td>
+      <td>Micro ATX</td>
+    </tr>
+    <tr>
+      <td>PCIe Slots</td>
+      <td>2x</td>
+    </tr>
+    <tr>
+      <td>Power Supply Form Factor</td>
+      <td>1U Flex</td>
+    </tr>
+    <tr>
+      <td>Dimensions(L x W x H)</td>
+      <td>31.5cm x 27.5cm x 19.7cm</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="http://www.u-nas.com/xcart/product.php?productid=17640">source</a></p>
+
+<h3 id="compromises">Compromises</h3>
+
+<ul>
+  <li>Cable extensions are required for PSU</li>
+  <li>Cable extensions are required for Front-Panel headers</li>
+  <li>Riser cables/cards are required for PCIe expansion cards</li>
+</ul>
+
+<h2 id="cpu">CPU</h2>
+
+<p>When choosing a CPU, there’s a few requirements I had to consider</p>
+
+<ul>
+  <li>My server would be running 24x7 so the CPU should be fairly efficient</li>
+  <li>There would be lots of applications running at the same time, so a high core count would be preferable.</li>
+  <li>A higher clock speed would ensure that video transcodes would complete faster
+    <ul>
+      <li>My plan includes a dedicated video card for hardware transcodes, so this does not apply</li>
+    </ul>
+  </li>
+  <li>Uptime and stability are almost more important than raw performance, so ECC memory would be preferred.</li>
+  <li>I want a modern (but cost effective) CPU that will be able to handle my workload for years</li>
+</ul>
+
+<p>Here’s a helpful table I put together so I could quickly compare CPU’s as they are referenced in different ways.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Generation</th>
+      <th>Year</th>
+      <th>Xeon Family Number</th>
+      <th>Core Family Name</th>
+      <th>Socket</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3</td>
+      <td>2012</td>
+      <td>v2</td>
+      <td>Ivy Bridge</td>
+      <td>1155/H2</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>2013</td>
+      <td>V3</td>
+      <td>Haswell</td>
+      <td>1150, 2011-1</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>2015-Jun</td>
+      <td>v4</td>
+      <td>Broadwell</td>
+      <td>1150, 2011</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>2015-Sept</td>
+      <td>v5</td>
+      <td>Skylake</td>
+      <td>1151, 2066</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>2017-Jan</td>
+      <td>V6</td>
+      <td>Kaby Lake</td>
+      <td>1151, 2066</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>2017-Oct</td>
+      <td> </td>
+      <td>Coffee Lake</td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Given these requirements I decided to go with a Xeon V6 processor. Specifically the <a href="https://amzn.to/2snR6Bd">Xeon E3-1275V6</a>.</p>
+
+<p>You might think that the Xeon <a href="https://amzn.to/2snR6Bd">Xeon E3-1275V6</a> is probably overkill for a simple NAS, and you’re not wrong.
+The reason I chose is is that my server is not a simple NAS, it’ll be running a bunch of applications in parallel 24x7 and I
+wanted the highest multi-core and CPU clock I could get without breaking the bank.</p>
+
+<p>If you’re not going to be running as many workloads on your home server as I am feel free to dial back the power (and cost) of your CPU. <strong>However I would stay away from the E3-1220V6 or below as it only has 2 cores vs 4 cores for E3-1230V6 and above</strong></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/xeon-e3-1275V6.jpg" alt="xeon e3-1275V6" style="max-height: 600px;" /></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Code Name</td>
+      <td>Kaby Lake</td>
+    </tr>
+    <tr>
+      <td>Processor Number</td>
+      <td>E3-1275V6</td>
+    </tr>
+    <tr>
+      <td>Launch Date</td>
+      <td>Q1’17</td>
+    </tr>
+    <tr>
+      <td>Cores</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Threads</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>Base Clock</td>
+      <td>3.80 GHz</td>
+    </tr>
+    <tr>
+      <td>Max Clock</td>
+      <td>4.20 GHz</td>
+    </tr>
+    <tr>
+      <td>TDP</td>
+      <td>73 W</td>
+    </tr>
+    <tr>
+      <td>Socket</td>
+      <td>LGA1151</td>
+    </tr>
+    <tr>
+      <td>Max RAM</td>
+      <td>64GB</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://ark.intel.com/products/97478/Intel-Xeon-Processor-E3-1275-v6-8M-Cache-3-80-GHz-">source</a></p>
+
+<h3 id="compromises-1">Compromises</h3>
+
+<p>You’ll want to consider the applications you’re running on your server:</p>
+
+<ul>
+  <li>The rule of thumb for ZFS is 1GB RAM for every 1TB of storage.
+    <ul>
+      <li>With 8 storage drives you could potentially have 96TB of storage (8*12TB) which is more than the Max RAM.</li>
+    </ul>
+  </li>
+  <li>Socket 1151 has been replaced by Socket 2066, so if you want to eventually upgrade to a newer CPU, you wont be able to.</li>
+</ul>
+
+<h2 id="cpu-fan">CPU Fan</h2>
+
+<p>Given that we’ve selected a small form factor case and a powerful CPU, ventilation and cooling are going to become very important.
+Noctura is well known in the PC market for their quiet but powerful cooling solutions.
+They have a CPU fan thats targeted specifically towards small form factor cases, and is compatible with our LGA1151 CPU socket:
+<a href="https://amzn.to/2Md8P7z">Noctua - NH-L9i</a></p>
+
+<p>Thats not enough though. We’ll need to verify that the Thermal Design Power (TDP) of our chosen CPU is compatible with the Noctura fan.</p>
+
+<blockquote>
+  <p>The thermal design power (TDP), sometimes called thermal design point, is the maximum amount of heat generated by a computer chip or component (often a CPU, GPU or system on a chip) that the cooling system in a computer is designed to dissipate under any workload.
+https://en.wikipedia.org/wiki/Thermal_design_power</p>
+</blockquote>
+
+<p>Thankfully Noctura releases TDP guidelines for all their fans, including the <a href="https://noctua.at/en/nh_l9i_tdp_guidelines">NH-L9i</a>. Though our exact CPU model is not listed as compatible, we can see that the fan can handle ~91W TDP from Kaby Lake processors, which higher than our expected TDP of 71W.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/noctua-nh-l9i.jpg" alt="noctua nh-l9i" style="max-height: 600px;" /></p>
+
+<h2 id="motherboard">Motherboard</h2>
+
+<p>Now that we’ve chosen our Case and CPU, it’s time to find a compatible motherboard. 
+Given the size constraints of our case and socket constraints of our CPU, we’re looking for something that matches the following requirements:</p>
+
+<ul>
+  <li>Socket LGA1151 compatible, specifically the Xeon V6 family.</li>
+  <li>Micro-ATX</li>
+  <li>Can support 9+ SATA drives (8 storage drives + 1 OS drive)</li>
+  <li>At least one 16x PCIe slot (we want to use a dedicated video card for transcoding, see <a href="#video-card">Video Card</a>)</li>
+  <li>Support for 64GB of RAM</li>
+  <li>Remote management capability (low priority)</li>
+</ul>
+
+<p>For “enthusiast” server grade hardware, theres a couple of trusted names:</p>
+
+<ul>
+  <li>Supermicro</li>
+  <li>ASRock Rack</li>
+  <li>ASUS</li>
+</ul>
+
+<p>I ended up focusing on Supermicro as I was able to find a broader range of server motherboards.</p>
+
+<p>If you’re looking at Supermicro motherboards I highly recommend the following resources:</p>
+
+<ul>
+  <li><a href="https://www.supermicro.com/support/resources/MB_matrix.php">Supermicro Motherboard Matrix</a> - compare/filter all Supermicro motherboards</li>
+  <li><a href="https://www.supermicro.com/products/Product_Naming_Convention/Naming_MBD_Intel_UP.cfm">Supermicro Product Naming Conventions</a> - helped me decode the motherboard feature just by glancing at model numbers</li>
+</ul>
+
+<p>After comparing features and looking at prices, I settled on the <a href="https://amzn.to/2RPHNs8">X11SSL-CF motherboard by Supermicro</a>.</p>
+
+<p>Before we dive into why, lets take a look at some other motherboards I considered, but ultimately decided against:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Cost (USD)</th>
+      <th>Issue(s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSZ-TLN4F.cfm">X11SSZ-TLN4F</a></td>
+      <td>$357.41</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSZ-F.cfm">X11SSZ-F</a></td>
+      <td>$230.72</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSM-F.cfm">X11SSM-F</a></td>
+      <td>$197</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSL-F.cfm">X11SSL-F</a></td>
+      <td>$197</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSi-LN4F.cfm">X11SSi-LN4F</a></td>
+      <td>$229.69</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-LN4F.cfm">X11SSH-LN4F</a></td>
+      <td>$227.63</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-F.cfm">X11SSH-F</a></td>
+      <td>$213.21</td>
+      <td>Not enough SATA/No SAS expansion</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSH-CTF.cfm">X11SSH-CTF</a></td>
+      <td>$408</td>
+      <td>No x16 PCIe slot, expensive</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>My 2 reasons for filtering out motherboards were:</p>
+
+<ul>
+  <li>Not enough SATA/No SAS expansion (solvable via <a href="https://www.amazon.com/SAS9211-8I-8PORT-Int-Sata-Pcie/dp/B002RL8I7M">HBA controller card</a> but loses PCIe slot)</li>
+  <li>No x16 PCIe slot (solvable via <a href="https://www.moddiy.com/products/PCI%252dExpress-PCI%252dE-16X-to-16X-Riser-Card-Flexible-Ribbon-Extender-Cable-w%7B47%7DMolex-%252b-Solid-Capacitor.html">powered 8x-16x PCIE riser card</a> but I’m uncomfortable with the power supply)</li>
+</ul>
+
+<p>While there are solutions for each of the problems above I went with a no-compromises motherboard that gave me everything I wanted out of the box.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model Number</td>
+      <td><a href="https://www.supermicro.com/products/motherboard/Xeon/C236_C232/X11SSL-CF.cfm">X11SSL-CF</a></td>
+    </tr>
+    <tr>
+      <td>Socket</td>
+      <td>LGA1151</td>
+    </tr>
+    <tr>
+      <td>Processor Support</td>
+      <td>Xeon E3-1200 v6/v5 or 7th/6th Gen. Core i3</td>
+    </tr>
+    <tr>
+      <td>Chipset</td>
+      <td>C232</td>
+    </tr>
+    <tr>
+      <td>RAM Slots</td>
+      <td>4 DIMM</td>
+    </tr>
+    <tr>
+      <td>RAM Type</td>
+      <td>Unbuffered ECC UDIMM DDR4 2400MHz</td>
+    </tr>
+    <tr>
+      <td>RAM Max</td>
+      <td>64GB</td>
+    </tr>
+    <tr>
+      <td>PCIe Slots</td>
+      <td>1 PCI-E 3.0 x8 (in x16),  1 PCI-E 3.0 x4 (in x8),1 PCI-E 3.0 x1</td>
+    </tr>
+    <tr>
+      <td>SAS</td>
+      <td>2x mini-SAS HD (SFF8643) SAS3</td>
+    </tr>
+    <tr>
+      <td>Remote Management</td>
+      <td><a href="https://www.supermicro.com/en/solutions/management-software/bmc-resources">IPMI</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/supermicro-x11ssl-cf.jpg" alt="supermicro x11ssl-cf" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-2">Compromises</h3>
+
+<p>While this motherboard works great for my requirements, you should pay attention to the following compromises:</p>
+
+<ul>
+  <li>The Chipset is C232, which does not support Intel iGPU/onboard Video
+    <ul>
+      <li>C236 is focused for desktop use and supports Intel iGPU</li>
+    </ul>
+  </li>
+  <li>DDR4 ECC UDIMM is expensive and hard to find</li>
+  <li>Supermicro motherboards are notorious for RAM incompatibility (here’s the <a href="https://www.supermicro.com/support/resources/memory/display.cfm?mspd=2.4&amp;mtyp=95&amp;id=5E439CF38EB300CF19AD9C0E862DCBF9&amp;prid=84936&amp;type=DDR4%201.2V&amp;ecc=1&amp;reg=0&amp;fbd=0">official compatibility list</a>)</li>
+  <li>v1.x of the BIOS does not work with Xeon V6 CPU’s, you need to upgrade to v2.x
+    <ul>
+      <li>boot using a Xeon v5 and then flash the BIOS</li>
+      <li>RMA the board and get the manufacturer to update the BIOS</li>
+      <li>buy a license for IPMI (~$20) and update the BIOS using the management console.</li>
+    </ul>
+  </li>
+  <li>1Gigabit Ethernet (not 10Gigabit Ethernet)</li>
+  <li>Supermicro motherboards with an onboard SAS controller is more expensive, look at LSI HBA controller cards if you have room.</li>
+</ul>
+
+<h2 id="memory-ram">Memory (RAM)</h2>
+<p>Our options for RAM are limited by our motherboard and CPU:</p>
+
+<ul>
+  <li>64GB max</li>
+  <li>16GB max per DIMM slot</li>
+  <li>4 DIMM slots</li>
+  <li>must be DDR4</li>
+  <li>must be ECC</li>
+  <li>must be Unbuffered</li>
+  <li><em>should</em> be on the <a href="https://www.supermicro.com/support/resources/memory/display.cfm?mspd=2.4&amp;mtyp=95&amp;id=5E439CF38EB300CF19AD9C0E862DCBF9&amp;prid=84936&amp;type=DDR4%201.2V&amp;ecc=1&amp;reg=0&amp;fbd=0">official compatibility list</a></li>
+  <li>must not cost and arm and a leg</li>
+</ul>
+
+<p>When it comes to ECC UDIMM DDR4 RAM, its that last point that’s the problem. DDR4 RAM is expensive, and RAM for our chosen motherboard/cpu even more so.</p>
+
+<p>I ended up going with Crucial RAM that was compatible on paper, even though it wasn’t on the official compatibility list because I wanted to save money and it had been tested working on the same model motherboard.</p>
+
+<h2 id="power-supply-psu">Power Supply (PSU)</h2>
+
+<p>We’re looking for a PSU that is:</p>
+
+<ul>
+  <li>1U Flex form factor</li>
+  <li>300-350W
+    <ul>
+      <li>8*10W per disk</li>
+      <li>Video Card</li>
+      <li>65-250W Motherboard/CPU</li>
+    </ul>
+  </li>
+  <li>Modular if possible (saves space)</li>
+  <li><a href="https://www.tomshardware.com/reviews/psu-buying-guide,2916-5.html">80 PLUS Certified</a> - Power efficient since we’re running 24x7</li>
+  <li>Quiet (server PSU’s are known to be jet-engine loud)</li>
+</ul>
+
+<p>The only real PSU that matches these requirements is the Seasonic SS-300M1U and Seasonic SS-350M1U. I decided to go with the <a href="https://pcpartpicker.com/product/xTjWGX/seasonic-ss-350m1u-seasonic-power-supply-ss-350m1u-eps-1u-atx12v-v231-eps12v-80plus-350w-brown-box">SS-350M1U</a> as I felt the extra power was necessary with my dedicated video card. With just storage drives you may be fine with just the SS-300M1U.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Seasonic SS-350M1U</td>
+    </tr>
+    <tr>
+      <td>Wattage</td>
+      <td>350W</td>
+    </tr>
+    <tr>
+      <td>Efficiency</td>
+      <td>80 PLUS</td>
+    </tr>
+    <tr>
+      <td>Cabling</td>
+      <td>Modular</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="http://www2.seasonic.com/product/ss-350-m1u-active-pfc-f0/">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/seasonic-SS-350M1U.png" alt="seasonic SS-350M1U" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-3">Compromises</h3>
+
+<ul>
+  <li>It seems that the SS-300M1U and SS-350M1U PSU’s are end-of-life and are no longer manufactured. Unfortunately I was unable to find a replacement, so I purchased mine used on Ebay.</li>
+  <li>It does not have an 8-pin power connector, only a 4-pin. That was seemingly ok with my motherboard, but YMMV.</li>
+</ul>
+
+<h2 id="video-card">Video Card</h2>
+
+<p>While a video card is optional for most servers, I’m building a dedicated streaming/transcoding server for Plex and the iGPU just isn’t enough.</p>
+
+<p>I need a video card that:</p>
+
+<ul>
+  <li>can handle a large number of simultaneous transcodes</li>
+  <li>supports a large number of codecs</li>
+  <li>only takes up 1 PCIe slot</li>
+  <li>doesn’t have significant power requirements</li>
+  <li>can handle heavy, long duration usage</li>
+  <li>can fit in a small form factor case</li>
+</ul>
+
+<p>Again, there wasn’t much to choose from. The <a href="https://amzn.to/2D6dKUI">Nvidia Quadro P2000</a>  (released 2017) is the first enterprise video card that supports <a href="https://developer.nvidia.com/video-encode-decode-gpu-support-matrix">unlimited concurrent transcodes</a>. Later versions of the video card add additional features while costing significantly more. It’s the best cost-effective solution for a transcode heavy server like mine.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Nvidia Quadro P2000</td>
+    </tr>
+    <tr>
+      <td>GPU Memory</td>
+      <td>5GB</td>
+    </tr>
+    <tr>
+      <td>Interface</td>
+      <td>PCIe x16</td>
+    </tr>
+    <tr>
+      <td>Transcodes</td>
+      <td>Unlimited</td>
+    </tr>
+    <tr>
+      <td>Max Power Consumption</td>
+      <td>75W</td>
+    </tr>
+    <tr>
+      <td>Form Factor</td>
+      <td>4.40” H x 7.90” L, Single Slot</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.pny.com/nvidia-quadro-p2000">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/nvidia-quadro-p2000.jpeg" alt="nvidia quadro p2000" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-4">Compromises</h3>
+
+<ul>
+  <li>requires a PCIe x16 slot (uncommon in micro-ATX motherboards)</li>
+  <li>additional power consumption</li>
+  <li>iGPU is more cost effective for infrequent transcoding usage</li>
+</ul>
+
+<h2 id="boot-drive">Boot Drive</h2>
+
+<p>Here’s what I considered when choosing my boot drive:</p>
+
+<ul>
+  <li>a 2.5” drive that mounts in the NSC-810A boot drive bay</li>
+  <li>has fast I/O as I’ll be running multiple docker containers &amp; applications on my server concurrently</li>
+  <li>should be atleast 300GB large, as the boot drive will act like a cache drive for all my applications (some of which are media heavy like Plex) and will be the primary drive for new downloads (until the downloads are complete and moved to a storage drive automatically)</li>
+  <li>S.M.A.R.T capable so that I can monitor the health of the drive using automated tools.</li>
+  <li>Low power usage</li>
+</ul>
+
+<p>I ended up going with a  <a href="https://amzn.to/2VW45Y7">Samsung 500GB 860 EVO 2.5” SSD</a> drive as it checked off all of the boxes.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Samsung 500GB 860 EVO</td>
+    </tr>
+    <tr>
+      <td>Capacity</td>
+      <td>500GB</td>
+    </tr>
+    <tr>
+      <td>Form Factor</td>
+      <td>2.5”</td>
+    </tr>
+    <tr>
+      <td>Max Seq Read</td>
+      <td>Up to 550 MB/s</td>
+    </tr>
+    <tr>
+      <td>Max Seq Write</td>
+      <td>Up to 520 MB/s</td>
+    </tr>
+    <tr>
+      <td>NAND Type</td>
+      <td>Samsung 64-Layer V-NAND</td>
+    </tr>
+    <tr>
+      <td>S.M.A.R.T. Support</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>Max Power Consumption</td>
+      <td>4.0W</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.samsung.com/us/computing/memory-storage/solid-state-drives/ssd-860-evo-2-5--sata-iii-500gb-mz-76e500b-am/">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/samsung-500gb-evo-860.jpg" alt="samsung 860 evo" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-5">Compromises</h3>
+<ul>
+  <li>
+    <p>The Samsung 860 EVO is a TLC NAND type drive:</p>
+
+    <blockquote>
+      <p>Storing 3 bits per cell, TLC flash is the cheapest form of flash to manufacture. The biggest disadvantage to this type of flash is that it is only suitable for consumer usage, and would not be able to meet the standards for industrial use. Read/write life cycles are considerably shorter at 3,000 to 5,000 cycles per cell.	 
+  <a href="https://www.mydigitaldiscount.com/everything-you-need-to-know-about-slc-mlc-and-tlc-nand-flash.html">SLC, MLC, TLC</a></p>
+    </blockquote>
+  </li>
+</ul>
+
+<p>While this concerning, I’ve mitigated the issue with the following:</p>
+<ul>
+  <li>The boot drive contains very little important data, all completed downloads and persistent data is automatically moved off onto the storage drives</li>
+  <li>Application data is backed up into the cloud using <code class="language-plaintext highlighter-rouge">duplicati</code>.</li>
+  <li>S.M.A.R.T will notify me when my drive begins to fail</li>
+  <li>The drive is incredibly cheap for the performance it provides.</li>
+</ul>
+
+<h2 id="storage">Storage</h2>
+
+<p>Storage one of the most important areas of our built, but its also one of the most flexible. 
+Our server is designed to use JBOD (Just-a-bunch-of-disks) meaning we can add storage as necessary, and our disks can be of varying sizes (unlike RAID).</p>
+
+<p>However, even with this flexibility, there are a couple of things we’re looking for:</p>
+
+<ul>
+  <li>S.M.A.R.T support to ensure that we can monitor the health of our drives</li>
+  <li>Read speed performance</li>
+  <li>Good price to GB ratio</li>
+  <li>NAS type storage drives, power efficient</li>
+  <li>Large cache</li>
+</ul>
+
+<p>I went with the <a href="https://amzn.to/2SNujdq">Western Digital - Red 8 TB 3.5” 5400RPM Internal Hard Drive</a>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Specification</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Model</td>
+      <td>Western Digital - Red</td>
+    </tr>
+    <tr>
+      <td>Capacity</td>
+      <td>8TB</td>
+    </tr>
+    <tr>
+      <td>Cache</td>
+      <td>256MB</td>
+    </tr>
+    <tr>
+      <td>RPM</td>
+      <td>5400</td>
+    </tr>
+    <tr>
+      <td>S.M.A.R.T. Support</td>
+      <td>Yes</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><a href="https://www.wd.com/products/internal-storage/wd-red.html">source</a></p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/nas/wd-nas-red-8tb.jpg" alt="wd nas red" style="max-height: 600px;" /></p>
+
+<h3 id="compromises-6">Compromises</h3>
+<ul>
+  <li>You can also <a href="https://imgur.com/gallery/IsZxx">shuck white label versions of this drive from EasyStore 8TB</a></li>
+</ul>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Ultimate Media Server Build - Part 1 - Hardware&amp;url=https://blog.thesparktree.com/ultimate-media-server-build-hardware"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/ultimate-media-server-build-hardware"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/ultimate-media-server-build-hardware"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/ultimate-media-server-build-hardware" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/ultimate-media-server-build-hardware'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Ultimate Media Server Build - Part 1 - Hardware';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_plex.jpg)" href="/ultimate-media-server-build-log">
+            <section class="post">
+                <h2>Ultimate Media Server Build - Part 2 - Build Log</h2>
+                <p>I've referenced my home server many times, but I never had the time to go...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_coreos.png)" href="/customize-coreos-kernel-part-2">
+            <section class="post">
+                <h2>Customize the CoreOS Kernel - Part 2 - Kernel SDK</h2>
+                <p>After running into a roadblock while attempting to build the Intel I915 driver as a...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

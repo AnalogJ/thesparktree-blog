@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Devops for Startups & Small Teams</title>
+	  <link>/devops-for-startups</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-09-13T04:19:33-05:00</pubDate>
+	  <guid>/devops-for-startups</guid>
+	  <description><![CDATA[
+	     <p>When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.</p>
+
+<p>The following are the quick and dirty Devops patterns &amp; procedures that I put in place before working on any new system.
+I primarily focus on free tools and services because of how cheap I am, so feel free to replace them comparable tools of your choice,
+you big spender, you.</p>
+
+<h1 id="before-your-first-line">Before your first line</h1>
+<ul>
+  <li><strong>Store your code in Git</strong> - <a href="https://github.com/">Github</a> <em>[free open source]</em>/<a href="https://bitbucket.org/">Bitbucket</a>
+<em>[free private]</em>/<a href="https://www.gitlab.com">GitLab</a> <em>[free private]</em>  -
+there shouldn’t be more to say here other than, store your source in a VCS from day 1.</li>
+  <li>Design your app with <strong>multiple environments</strong> in mind. You should be able to switch between Local/Stage/Production development
+with no code changes, just configuration changes (via environmental variables or a config file). I love <a href="https://github.com/indexzero/nconf">nconf</a>
+for NodeJS, but most languages have something similar.</li>
+  <li><strong>Isolate your configuration.</strong> Its probably not necessary to move your configuration into a compeltely separate system yet,
+but make sure you can easily if you scale. Sprinkling your configuration in multiple places is just asking for an application re-write.</li>
+  <li><strong>Follow a branching pattern.</strong> At it’s simplest it could just be 2 branches, “master” and “develop” or you could go nuts
+and follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">gitflow</a>. It doesn’t matter, as long as you follow
+the damn thing, and don’t just commit directly to master. Setup branch protection to disable commits to “master”.
+This is going to be important later when you start doing Continuous Integration (CI). Bad habits are hard to break.</li>
+  <li><strong>Setup CI</strong>. You don’t need to go full throttle with a standalone Jenkins server. Just make sure your code is compiling
+in a clean-room environment, that doesn’t include the dozens of apps and libraries you already have installed on your
+dev machine. <a href="https://travis-ci.org/">TravisCI</a> <em>[free]</em> and <a href="https://circleci.com">CircleCI</a> <em>[free]</em> are great, and integrate
+with Github/Bitbucket. At a bare minimum build your artifacts inside a clean Docker container.</li>
+  <li>Setup an <strong>issue tracker/project management board</strong>. <a href="https://waffle.io">Waffle.io</a> <em>[free]</em> is great and integrates with Github,
+but you may be able to just get away with <a href="https://help.github.com/articles/creating-a-project-board/">Github Project Boards</a> <em>[free]</em> to start</li>
+  <li>Make some Architecture decisions:
+    <ul>
+      <li>Decide if you can get away with a <a href="https://github.com/myles/awesome-static-generators">static frontend</a> or SPA
+  architecture for your front end. If you can, you’ll get infinite scaling of your front-end for almost free.
+  Distributing static files is a solved problem–CDN’s have been doing it for years. <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em>
+  is your <del>cheapest</del> best friend. Pairing it with Github pages [free] is a poor developer’s dream.</li>
+      <li>Can you go Serverless/FAAS for your backend? You no longer need to maintain or monitor hardware, you get infinite*
+  scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="before-your-first-staging-environment-deploy">Before your first staging environment deploy</h1>
+<ul>
+  <li>Have a <strong>unit test suite</strong> - Yeah yeah, TDD. But be honest, when’s the last time you started a project with TDD? Still, you’ll thank
+yourself when you come back to your code after 2 weeks, or even just a couple of days. It’s also a pre-req for some of the next points.</li>
+  <li><strong>Code Coverage/Code Quality</strong> tools - When I feel that I have an application that can actually run on a server is when I
+know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
+cold water, they help stifle that feeling of euphoria that stops you from really digging into your code. A nice UI really helps
+and I’m a big fan of <a href="https://coveralls.io/">Coveralls.io</a> <em>[free open source]</em> and <a href="https://codecov.io/">CodeCov</a> <em>[free open source]</em>,
+both have great integration with SCM’s and CI platforms.</li>
+  <li><strong>Forward your logs</strong> to a centralized logging system (Cloud-watch is fine, if you don’t plan on actually debugging your app.)
+<a href="https://www.loggly.com">Loggly</a> <em>[free]</em> is great. Make sure you forward environment data and user data to your log aggregator as well, to give your
+logs context.</li>
+  <li><strong>Use a CDN</strong> like <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em> in front of your site if you haven’t already. You definitely don’t have the traffic yet
+that requires it, but don’t wait until you’re ready to launch. Its time-consuming, error prone and can cause DNS downtime,
+even if you don’t misconfigure something. It’s not something you want to leave to the last minute.</li>
+  <li><strong>Write documentation/setup instructions</strong> as you start building your Stage environment. Your documentation should always
+be relative to Stage, <strong>NOT</strong> Production. You will forget. You will copy and paste from your docs, and you will run a
+destructive operation against your production database. <a href="https://np.reddit.com/r/cscareerquestions/comments/6ez8ag/accidentally_destroyed_production_database_on/">Cough..</a>
+    <ul>
+      <li>List all the weird/one-off configuration you had to do to get your staging server working. New accounts on 3rd
+  party services, ip whitelisting, database population, you’ll need this checklist when you spin up Production, and
+  finding out whats different between Prod and Stage is going to be a huge pain without it. Infrastructure-as-code/Configuration Management
+   is your friend here, but may not be enough by itself.</li>
+    </ul>
+  </li>
+  <li><strong>Follow modern infrastructure practices.</strong> <a href="https://www.terraform.io/">Infrastructure-as-code</a> and <a href="https://www.chef.io/chef/">Configuration</a> <a href="https://puppet.com/">Management</a> are buzzwords for a reason.
+And they don’t have to be super complicated. You don’t need to design the Mona Lisa of Chef cookbooks. At a bare minimum
+make sure that you can spin up a whole environment with the click of a single button. Automation is the key here. You’ll
+be doing this a lot more than you’d expect, so take some time and do it right. When you find yourself under the gun, needing
+to scale your environment, you’ll be thankful.</li>
+  <li><strong>Version your code.</strong> Create releases, tag your software, its incredibly useful when debugging what software your actually
+running in different environments. It also makes it much easier to deploy previous versions when you want to do regression
+testing, or rollback a broken deployment. Check out something like <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>
+which can build, test, tag, merge branches and release your software automatically.</li>
+  <li><strong>Setup Continuous Deployments</strong> - If you’re already using a CI platform to test your code, why not automatically deploy your
+validated code to your Staging environment? Depending on your application architecture, this may be a bit complicated, but
+having your CI tested code deployed to a staging environment automatically is going to drastically improve your development
+cadence while still ensuring stability. And if your stability is being effected, prioritize your tests, they’re supposed to
+catch 90% of your errors before they even get to a staging env.</li>
+</ul>
+
+<h1 id="before-your-first-prod-deploy">Before your first prod deploy</h1>
+<ul>
+  <li><strong>Automate your backups.</strong> This is probably obvious to everyone, but a backup process without a verified restore process is
+useless. Try to setup a weekly backup and restore of your staging environment database. Use the same code/process you would in Production.</li>
+  <li>Write a script to <strong>populate your database</strong> with test data. Massive amounts of test data. <a href="https://github.com/marak/Faker.js/">Faker.js</a>
+has an API. Check how your Staging environment actually handles real data, not just the toy amounts you’ve thrown in.</li>
+</ul>
+
+<h1 id="once-your-application-is-live">Once your application is live</h1>
+<ul>
+  <li>Track the versions of your <strong>application’s dependencies, and their dependencies</strong>,
+<a href="https://en.wikipedia.org/wiki/Turtles_all_the_way_down">it’s turtles all the way down</a>. This is to ensure that you know
+what software makes up your stack, but also so you can be notified of bug fixes and security issues.</li>
+  <li>Make sure you have <strong>monitoring</strong> in place.
+    <ul>
+      <li><a href="https://www.pingdom.com/free">Pingdom</a> <em>[free]</em> will let notify you if your application is inaccessible externally.</li>
+      <li>Track system metrics like CPU and memory load on your servers. <a href="https://newrelic.com/">NewRelic</a> <em>[free]</em>,
+  <a href="https://www.librato.com/">Librato</a> <em>[free]</em> and <a href="https://cloud.google.com/stackdriver/">StackDriver</a> <em>[paid]</em> work well.</li>
+      <li>Configure a user analytics &amp; monitoring solution like <a href="https://www.google.com/analytics/">Google Analytics</a> <em>[free]</em>. Setup alerts when your traffic
+  increases or drops more than 15%.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This is just my checklist, but I’d love to hear yours. Is there any devopsy related tasks you think I’m missing?</p>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>CapsuleCD v2 Released</title>
+	  <link>/capsulecd-v2-released</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-08-06T04:19:33-05:00</pubDate>
+	  <guid>/capsulecd-v2-released</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> is made up of a series of scripts/commands that
+make it easy for you to package and release a new version of your library artifact (Ruby gem, Npm package, Chef cookbook.. ) while still following best practices:</p>
+
+<ul>
+  <li>bumping <code class="language-plaintext highlighter-rouge">semvar</code> tags</li>
+  <li>regenerating any <code class="language-plaintext highlighter-rouge">*.lock</code> files</li>
+  <li>validates all dependencies exist and are free of vulnerabilities</li>
+  <li>runs unit tests &amp; linters</li>
+  <li>uploads versioned artifact to community hosting service (rubygems/supermarket/pypi/etc)</li>
+  <li>creating a new git tag</li>
+  <li>pushing changes back to source control &amp; creating a release</li>
+  <li>and others..</li>
+</ul>
+
+<p>While <code class="language-plaintext highlighter-rouge">CapsuleCD</code> <strong>was</strong> a series of scripts, with the release of <strong>v2</strong> that’s no longer the case.</p>
+
+<p><code class="language-plaintext highlighter-rouge">CapsuleCD</code> has been re-written, and is now available as a <a href="https://github.com/AnalogJ/capsulecd/releases">static binary</a>
+on <a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-darwin-amd64"><code class="language-plaintext highlighter-rouge">macOS</code></a> and
+<a href="https://github.com/AnalogJ/capsulecd/releases/download/v2.0.10/capsulecd-linux-amd64"><code class="language-plaintext highlighter-rouge">Linux</code></a>
+(<code class="language-plaintext highlighter-rouge">Windows</code> and <code class="language-plaintext highlighter-rouge">NuGet</code> support is hopefully coming soon)</p>
+
+<p>You no longer need to worry that the version of Ruby used by your library &amp; <code class="language-plaintext highlighter-rouge">gemspec</code> is different than the
+version required by <code class="language-plaintext highlighter-rouge">CapsuleCD</code>. If you maintain any Python or NodeJS libraries, this also means that a Ruby
+runtime for just for CapsuleCD is unnecessary. The <code class="language-plaintext highlighter-rouge">CapsuleCD</code> <a href="https://hub.docker.com/r/analogj/capsulecd/tags/">Docker</a>
+images for other languages are much slimmer, and based off the standard community images with <a href="https://github.com/AnalogJ/capsulecd-docker">minimal changes</a>.</p>
+
+<p>Releasing a new version of your Ruby library hasn’t changed, it’s as easy as downloading the <a href="https://github.com/AnalogJ/capsulecd/releases">binary</a> and running:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CAPSULE_SCM_GITHUB_ACCESS_TOKEN=123456789ABCDEF \
+CAPSULE_SCM_REPO_FULL_NAME=AnalogJ/gem_analogj_test \
+CAPSULE_SCM_PULL_REQUEST=4 \
+CAPSULE_RUBYGEMS_API_KEY=ASDF12345F \
+capsulecd start --scm github --package_type ruby
+</code></pre></div></div>
+
+<p>Click below to watch a screencast of <code class="language-plaintext highlighter-rouge">CapuleCD</code> in action:</p>
+
+<p align="center">
+<a href="https://analogj.github.io/capsulecd">
+  <img alt="CapsuleCD screencast" width="800" src="https://cdn.rawgit.com/AnalogJ/capsulecd/v2.0.10/capsulecd-screencast.png" />
+  </a>
+</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>15 Lessons in Golang</title>
+	  <link>/15-lessons-in-golang</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2017-07-31T04:19:33-05:00</pubDate>
+	  <guid>/15-lessons-in-golang</guid>
+	  <description><![CDATA[
+	     <p>Like many developers, I heard a lot of buzz about Golang (or is it Go, I’m still not sure).
+In case you’re not familiar with it, it’s an open source language developed by Google.
+It mostly caught my interest due to the fact that it’s pitched as a statically typed, compiled modern language.</p>
+
+<p>For a long time that was the extent of my Golang knowledge. I knew I wanted to take a closer look at
+it at some point, but I had other priorities. About 4 months ago, I realized the Golang could be the
+solution to one of the problems I was facing with <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>, my application for generically automating
+package releases for any language (npm, cookbooks, gems, pip, jars, etc).</p>
+
+<div class="github-widget" data-repo="AnalogJ/capsulecd"></div>
+
+<p>The problem was that <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a> was a executable distributed in a Ruby gem, which meant that anyone
+who wanted to use <code class="language-plaintext highlighter-rouge">CapsuleCD</code> needed to have a Ruby interpreter installed on their build machine, even
+if all they were just trying to do was package a Python library. This made my Docker containers bloated,
+and more complicated to develop. Wouldn’t it be nice to just have single binary I could download into the
+container? And so the migration to Golang began, if only in my head at that point.</p>
+
+<p>Over the next couple months, I kept going back to that idea, and a couple weeks ago, I finally sat down and
+started porting my ~3000 line Ruby application to Golang. While I could have just bought a book like Golang
+for Dummies, I decided to just jump into the coding, and just read blog posts and stack overflow when I got stuck.</p>
+
+<p>I can already hear some of you cringing. To be honest, while I was having a lot of fun, my initial development
+was pretty slow. I was trying to write an application in a new language, without knowing any of the conventions.
+The thing is, I loved it. Those “Ah-Ha!” moments and getting things compiling again after a huge refactor
+were an incredible motivator.</p>
+
+<p>Here’s a bunch of the unexpected/unconventional things I learned while porting my app to Golang.</p>
+
+<blockquote>
+  <p>Please note, these are things that I didn’t <strong>expect</strong> when I started writing Golang code with a
+background in popular typed and dynamically typed languages, (C++, C#, Java, Ruby, Python and NodeJS).
+These are not necessarily criticisms of Golang. I was able to go from 0 -&gt; working release of my software
+in a completely new language in 2 weeks. That’s pretty awesome if you ask me.</p>
+</blockquote>
+
+<h1 id="before-your-first-line">Before your first line.</h1>
+
+<h2 id="package-layout">Package Layout</h2>
+<p>While not required for a compiled language, I was still unprepared for the fact that there doesn’t seem to be a <strong>Standard™</strong> folder structure for a Golang library, like there is for Ruby, Chef &amp; Node. There seem to be a couple of popular community structures, and I found myself liking <a href="https://peter.bourgon.org/go-best-practices-2016/#repository-structure">Peter Bourgon’s recommendations</a>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>github.com/peterbourgon/foo/
+  circle.yml
+  Dockerfile
+  cmd/
+    foosrv/
+      main.go
+    foocli/
+      main.go
+  pkg/
+    fs/
+      fs.go
+      fs_test.go
+      mock.go
+      mock_test.go
+    merge/
+      merge.go
+      merge_test.go
+    api/
+      api.go
+      api_test.go
+</code></pre></div></div>
+
+<h2 id="circular-dependencies">!Circular Dependencies</h2>
+<p>Package layout becomes even more important when you find out that Golang does’t support circular
+dependencies between packages. If A imports B, and B imports A, Golang will give up and complain.
+I actually kinda like it, as it forced me to think a bit more about my application’s domain model.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import cycle not allowed
+package github.com/AnalogJ/dep/a
+  imports github.com/AnalogJ/dep/b
+  imports github.com/AnalogJ/dep/a
+</code></pre></div></div>
+
+<h2 id="dependency-management">Dependency management</h2>
+<p><code class="language-plaintext highlighter-rouge">npm</code>, <code class="language-plaintext highlighter-rouge">pypi</code>, <code class="language-plaintext highlighter-rouge">bundler</code>. Each of these package managers are synonymous with their language. However Golang
+doesn’t have an official package manger (<a href="https://github.com/golang/dep">yet</a>). In the meantime the community
+has come up with a <a href="https://github.com/Masterminds/glide">couple</a> <a href="https://github.com/FiloSottile/gvt">of</a>
+<a href="https://github.com/kardianos/govendor">good</a> <a href="https://github.com/FiloSottile/gvt">alternatives</a>. The problem
+is that they are all really good, and it can be a bit daunting to pick one. I ended up choosing <a href="https://github.com/Masterminds/glide">Glide</a>,
+because it has a similar feel to <code class="language-plaintext highlighter-rouge">bundler</code> and <code class="language-plaintext highlighter-rouge">npm</code>.</p>
+
+<h2 id="documentation">Documentation</h2>
+<p>This is actually one of the best things about Golang. <code class="language-plaintext highlighter-rouge">go docs</code> and the <code class="language-plaintext highlighter-rouge">godoc.org</code> site are awesome
+and standardize the documentation for any library you might use. This is a nice step up from the NodeJS
+community where all package documentation is custom and self hosted.</p>
+
+<h2 id="goroot-gopath">GOROOT, GOPATH</h2>
+<p>Golang imports are done in a kind of weird way. Unlike most other languages, Golang basically requires
+that your source live in pre-configured folder(s). I’m not going to delve into the details, but you should
+know that it takes a bit of setup &amp; getting used to. Dmitri Shuralyov’s <a href="https://dmitri.shuralyov.com/blog/18">How I use GOPATH with multiple
+workspaces</a> is a great resource.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>GOPATH=/landing/workspace/path:/personal/workspace/path:/corporate/workspace/path
+</code></pre></div></div>
+
+<h1 id="scratching-that-itch">Scratching that Itch.</h1>
+
+<h2 id="pseudo-class-struct-inheritance">Pseudo <del>Class</del> Struct Inheritance</h2>
+<p>The Golang developers did some interesting things when designing the inheritance model. Instead of using
+one of the more conventional inheritance models of typed languages like multiple-inheritance or classical
+inheritance, Golang follows a multiple composition pattern similar to Ruby.
+<a href="https://github.com/luciotato/golang-notes/blob/master/OOP.md#method-shadowing">Method-Shadowing</a> can
+cause some unexpected results if not understood completely.</p>
+
+<h2 id="duck-typed-interfaces">Duck-Typed Interfaces</h2>
+<p>This is another cool unexpected feature of Golang. Interfaces are <a href="https://en.wikipedia.org/wiki/Duck_typing">duck-typed</a>,
+something I’ve only seen in dynamically typed languages. This duck-typing works hand-in-hand with <code class="language-plaintext highlighter-rouge">struct</code>
+composition.</p>
+
+<h2 id="structs-have-fields-interfaces-dont">Structs have fields, Interfaces don’t</h2>
+<p>Unfortunately <code class="language-plaintext highlighter-rouge">structs</code> can’t have the same <em>API</em> as <code class="language-plaintext highlighter-rouge">interfaces</code>, as the latter cannot define fields. This
+is not a huge issue, as one can just define a getter and a setter method on the interface, but it was a bit
+confusing. I’m sure theres a good technical/CS theory answer for why this is, but yeah.</p>
+
+<h2 id="publicprivate-naming">Public/Private naming</h2>
+<p>Golang took Python’s <code class="language-plaintext highlighter-rouge">public</code> and <code class="language-plaintext highlighter-rouge">private</code> method naming scheme one level further. When I initially found
+out that functions, methods and struct names starting with an uppercase character are public and lowercase
+are private, I wasn’t sure how to feel about it. But honestly, after working with Golang for 2 weeks, I
+really like this convention.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>type PublicStructName struct {}
+type privateStructName struct {}
+</code></pre></div></div>
+
+<h2 id="defer">defer</h2>
+<p>Another surprisingly useful feature Golang. I’m sure it’s a result of Golang’s parallel processing and
+error model, but <code class="language-plaintext highlighter-rouge">defer</code>’s make it really easy to keep your cleanup close to the originating code. Mentally
+I treat it like an alternative to a <code class="language-plaintext highlighter-rouge">finally</code> method in the <code class="language-plaintext highlighter-rouge">try-catch-finally</code> pattern or the <code class="language-plaintext highlighter-rouge">using</code>
+block in <code class="language-plaintext highlighter-rouge">C#</code>/<code class="language-plaintext highlighter-rouge">Java</code> but I’m sure there are more creative uses for it.</p>
+
+<h2 id="go-fmt-is-awesome"><code class="language-plaintext highlighter-rouge">go fmt</code> is awesome</h2>
+<p>You’ll never have the “tabs vs spaces” debate with a Golang developer. There is a standardized Golang
+style and <code class="language-plaintext highlighter-rouge">go fmt</code> can reformat your code to comply with it. It’s a neat tool, and reading its source
+introduced me to the powerful <a href="https://golang.org/pkg/go/parser/"><code class="language-plaintext highlighter-rouge">parser</code></a> and <a href="https://golang.org/pkg/go/ast/"><code class="language-plaintext highlighter-rouge">ast</code></a> libraries.</p>
+
+<h2 id="goarch-goos-cgo--cross-compiling">GOARCH, GOOS, CGO &amp; Cross Compiling</h2>
+<p>My goal of creating a single standalone <code class="language-plaintext highlighter-rouge">CapsuleCD</code> binary is the entire reason I started my port
+to Golang. However it quickly became apparent that simple static binaries aren’t an intrinsic feature
+of Golang (which should have been obvious). If your code is all written in vanilla Golang, and the code
+of all your dependencies (and their dependencies), then you can <a href="http://golangcookbook.com/chapters/running/cross-compiling/">build static binaries</a>
+to your heart’s content using <code class="language-plaintext highlighter-rouge">GOOS</code> and <code class="language-plaintext highlighter-rouge">GOARCH</code>. However if you’re unlucky like I was, and you have
+a dependency that calls <code class="language-plaintext highlighter-rouge">C</code> code under the hood (by importing a <code class="language-plaintext highlighter-rouge">C pseudo-package</code>) then you’re in for
+a world of pain. Don’t get me wrong, creating a dynamically linked binary is still super easy. But to
+generate a static binary, with no external dependencies, means you need to ensure that all your
+<code class="language-plaintext highlighter-rouge">C</code> dependencies (and their dependencies) are all statically linked too. Like I said, obvious.
+<code class="language-plaintext highlighter-rouge">C pseudo-packages</code> are compiled via <code class="language-plaintext highlighter-rouge">CGO</code>, and you’ll need to look at the documentation to find all
+the compiler flags necessary to help <code class="language-plaintext highlighter-rouge">CGO</code> locate your static libraries. A table of all supported GOOS
+and GOARCH pairs is located in the <a href="https://golang.org/doc/install/source#environment">Golang docs</a></p>
+
+<h1 id="how-do-i-test-this">How do I test this?</h1>
+
+<h2 id="hidden-in-plain-sight">Hidden in plain sight</h2>
+<p>Test files are suffixed with <code class="language-plaintext highlighter-rouge">_test.go</code> and should be located side-by-side with the code they test,
+rather than relegated to a special testing folder. Its nice, even though it feels a bit cluttered at first.</p>
+
+<p>Test data goes in a special <code class="language-plaintext highlighter-rouge">testdata</code> folder. Both the <code class="language-plaintext highlighter-rouge">testdata</code> folder and <code class="language-plaintext highlighter-rouge">_test.go</code> files are completely
+ignored by the compiler during <code class="language-plaintext highlighter-rouge">go build</code>.</p>
+
+<h2 id="go-list-and-vendor-folder"><code class="language-plaintext highlighter-rouge">go list</code> and <code class="language-plaintext highlighter-rouge">vendor</code> folder</h2>
+<p>So, dependency management is pretty new to the Golang language, and not all tools understand the special
+<code class="language-plaintext highlighter-rouge">vendor</code> folder. As such, when you run <code class="language-plaintext highlighter-rouge">go test</code>, by default you’ll find it running the tests of all your
+dependencies. Use <code class="language-plaintext highlighter-rouge">go list | grep -v /vendor</code> to get Golang to ignore the vendor folder.</p>
+
+<p><code class="language-plaintext highlighter-rouge">go fmt $(go list ./... | grep -v /vendor/)</code></p>
+
+<h2 id="if-err--nil"><code class="language-plaintext highlighter-rouge">if err != nil</code></h2>
+<p>I’m a stickler for code coverage. I try to keep my open source projects above 80% coverage, but I’m having
+a hard time doing that with Golang. Those of you already familiar with Golang will probably just point out that
+Golang is one of the easiest languages to get <a href="https://blog.golang.org/cover">good coverage in</a>. Rather
+than creating a seperate execution path for errors (<code class="language-plaintext highlighter-rouge">try-catch-finally</code>) Golang treats all errors as standard objects.
+Golang convention states that functions which can produce errors should return them as it’s last <code class="language-plaintext highlighter-rouge">return</code> argument.</p>
+
+<p>It’s a pretty interesting model, which reminds me a bit of <code class="language-plaintext highlighter-rouge">Node</code>’s built-in functions. However, just like <code class="language-plaintext highlighter-rouge">Node</code>, it can
+be difficult to write unit tests that produce errors in built-in functionality. This becomes even more annoying when you follow
+a coding pattern where you bubble-up errors, and then handle them at a higher level. When doing this, you’ll write alot of
+code the looks like the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data, err := myfunction(...)
+if(err != nil){
+	return err
+}
+
+data2, err2 := myfunction2(...)
+if(err2 != nil){
+	return err
+}
+
+</code></pre></div></div>
+
+<p>This starts to clutter up your code pretty quick. At this point some of you may be thinking that <code class="language-plaintext highlighter-rouge">interface</code>s and <code class="language-plaintext highlighter-rouge">mock</code>s
+would solve these problems. While that’s true in some cases, I don’t think it makes sense to write massive <code class="language-plaintext highlighter-rouge">interface</code>s for
+built-in libraries like <code class="language-plaintext highlighter-rouge">os</code> and <code class="language-plaintext highlighter-rouge">ioutil</code>, or pass those libraries in as arguments, just so that we can artifically generate
+errors for <code class="language-plaintext highlighter-rouge">ioutil.WriteFile</code> and <code class="language-plaintext highlighter-rouge">os.MkdirAll</code>.</p>
+
+<p>I’m that this is definitely a shortcoming in my mental-model, but I’ve read a ton of documentation and blog posts on how
+unit tests and code coverage should be done in Golang, and I still haven’t found a pattern that makes sense without
+seeming to require a dependency injection engine of some sort, something that Golang seems to actively dislike as too cumbersome.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>I’d love to hear your thoughts. I’ve only been working with Golang for a few weeks, but it’s been an incredibly educational
+and enjoyable experience. I was able to go from no experience to building a real, working application in Golang in very
+little time, not just toy examples from some book. I know that I’m no expert in Golang yet, and that there are still  theory gaps
+in my understanding of Golang, but I feel like they are much further apart than I expected when I went down this <code class="language-plaintext highlighter-rouge">self-taught without books</code> path.</p>
+
+<p>Golang worked exactly as I thought it would, giving me <a href="https://github.com/AnalogJ/capsulecd/releases">binaries</a> that I can easily download
+onto slim Docker containers, without requiring a Ruby interpreter. If you maintain executables in other languages, I would
+definitely recommend you consider giving Golang a try.</p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

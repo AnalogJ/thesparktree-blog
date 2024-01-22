@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Devops for Startups & Small Teams</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Devops for Startups & Small Teams" />
+    <meta name="twitter:description" content="When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from the..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/devops-for-startups" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_devops3.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Devops for Startups & Small Teams" />
+    <meta property="og:description" content="When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from the..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/devops-for-startups" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_devops3.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/devops-for-startups",
+        "image": "https://blog.thesparktree.com/assets/images/cover_devops3.png",
+        "description": "When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from the..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_devops3.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Devops for Startups & Small Teams</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2017-09-13">13 Sep 2017</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/startup'>Startup</a>,
+                    
+                
+                    
+                       <a href='/tag/teams'>Teams</a>,
+                    
+                
+                    
+                       <a href='/tag/startup'>Startup</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>,
+                    
+                
+                    
+                       <a href='/tag/github'>Github</a>,
+                    
+                
+                    
+                       <a href='/tag/bitbucket'>Bitbucket</a>,
+                    
+                
+                    
+                       <a href='/tag/loggly'>Loggly</a>,
+                    
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/travisci'>Travisci</a>,
+                    
+                
+                    
+                       <a href='/tag/circleci'>Circleci</a>,
+                    
+                
+                    
+                       <a href='/tag/waffle'>Waffle</a>,
+                    
+                
+                    
+                       <a href='/tag/cloudflare'>Cloudflare</a>,
+                    
+                
+                    
+                       <a href='/tag/pingdom'>Pingdom</a>,
+                    
+                
+                    
+                       <a href='/tag/googleanalytics'>Googleanalytics</a>,
+                    
+                
+                    
+                       <a href='/tag/newrelic'>Newrelic</a>,
+                    
+                
+                    
+                       <a href='/tag/capsulecd'>Capsulecd</a>,
+                    
+                
+                    
+                       <a href='/tag/codecov'>Codecov</a>,
+                    
+                
+                    
+                       <a href='/tag/coverallsio'>Coverallsio</a>,
+                    
+                
+                    
+                       <a href='/tag/stackdriver'>Stackdriver</a>,
+                    
+                
+                    
+                       <a href='/tag/gitlab'>Gitlab</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>When you’re working on a side-project or at a startup as part of a small focused team, it can be hard to get away from
+the heads-down mentality of “just do it”. But sometimes it can be valuable to step back and recognize that a bit of upfront
+infrastructure work can save you days or even weeks of time getting your MVP up and running.</p>
+
+<p>The following are the quick and dirty Devops patterns &amp; procedures that I put in place before working on any new system.
+I primarily focus on free tools and services because of how cheap I am, so feel free to replace them comparable tools of your choice,
+you big spender, you.</p>
+
+<h1 id="before-your-first-line">Before your first line</h1>
+<ul>
+  <li><strong>Store your code in Git</strong> - <a href="https://github.com/">Github</a> <em>[free open source]</em>/<a href="https://bitbucket.org/">Bitbucket</a>
+<em>[free private]</em>/<a href="https://www.gitlab.com">GitLab</a> <em>[free private]</em>  -
+there shouldn’t be more to say here other than, store your source in a VCS from day 1.</li>
+  <li>Design your app with <strong>multiple environments</strong> in mind. You should be able to switch between Local/Stage/Production development
+with no code changes, just configuration changes (via environmental variables or a config file). I love <a href="https://github.com/indexzero/nconf">nconf</a>
+for NodeJS, but most languages have something similar.</li>
+  <li><strong>Isolate your configuration.</strong> Its probably not necessary to move your configuration into a compeltely separate system yet,
+but make sure you can easily if you scale. Sprinkling your configuration in multiple places is just asking for an application re-write.</li>
+  <li><strong>Follow a branching pattern.</strong> At it’s simplest it could just be 2 branches, “master” and “develop” or you could go nuts
+and follow <a href="http://nvie.com/posts/a-successful-git-branching-model/">gitflow</a>. It doesn’t matter, as long as you follow
+the damn thing, and don’t just commit directly to master. Setup branch protection to disable commits to “master”.
+This is going to be important later when you start doing Continuous Integration (CI). Bad habits are hard to break.</li>
+  <li><strong>Setup CI</strong>. You don’t need to go full throttle with a standalone Jenkins server. Just make sure your code is compiling
+in a clean-room environment, that doesn’t include the dozens of apps and libraries you already have installed on your
+dev machine. <a href="https://travis-ci.org/">TravisCI</a> <em>[free]</em> and <a href="https://circleci.com">CircleCI</a> <em>[free]</em> are great, and integrate
+with Github/Bitbucket. At a bare minimum build your artifacts inside a clean Docker container.</li>
+  <li>Setup an <strong>issue tracker/project management board</strong>. <a href="https://waffle.io">Waffle.io</a> <em>[free]</em> is great and integrates with Github,
+but you may be able to just get away with <a href="https://help.github.com/articles/creating-a-project-board/">Github Project Boards</a> <em>[free]</em> to start</li>
+  <li>Make some Architecture decisions:
+    <ul>
+      <li>Decide if you can get away with a <a href="https://github.com/myles/awesome-static-generators">static frontend</a> or SPA
+  architecture for your front end. If you can, you’ll get infinite scaling of your front-end for almost free.
+  Distributing static files is a solved problem–CDN’s have been doing it for years. <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em>
+  is your <del>cheapest</del> best friend. Pairing it with Github pages [free] is a poor developer’s dream.</li>
+      <li>Can you go Serverless/FAAS for your backend? You no longer need to maintain or monitor hardware, you get infinite*
+  scaling out of the box. The tradeoff is that your costs will vary with usage, which can be a good thing for startups.</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="before-your-first-staging-environment-deploy">Before your first staging environment deploy</h1>
+<ul>
+  <li>Have a <strong>unit test suite</strong> - Yeah yeah, TDD. But be honest, when’s the last time you started a project with TDD? Still, you’ll thank
+yourself when you come back to your code after 2 weeks, or even just a couple of days. It’s also a pre-req for some of the next points.</li>
+  <li><strong>Code Coverage/Code Quality</strong> tools - When I feel that I have an application that can actually run on a server is when I
+know I need to take a step back and look at all the things that I missed. Code coverage/quality tools are like a bucket of
+cold water, they help stifle that feeling of euphoria that stops you from really digging into your code. A nice UI really helps
+and I’m a big fan of <a href="https://coveralls.io/">Coveralls.io</a> <em>[free open source]</em> and <a href="https://codecov.io/">CodeCov</a> <em>[free open source]</em>,
+both have great integration with SCM’s and CI platforms.</li>
+  <li><strong>Forward your logs</strong> to a centralized logging system (Cloud-watch is fine, if you don’t plan on actually debugging your app.)
+<a href="https://www.loggly.com">Loggly</a> <em>[free]</em> is great. Make sure you forward environment data and user data to your log aggregator as well, to give your
+logs context.</li>
+  <li><strong>Use a CDN</strong> like <a href="https://www.cloudflare.com">CloudFlare</a> <em>[free]</em> in front of your site if you haven’t already. You definitely don’t have the traffic yet
+that requires it, but don’t wait until you’re ready to launch. Its time-consuming, error prone and can cause DNS downtime,
+even if you don’t misconfigure something. It’s not something you want to leave to the last minute.</li>
+  <li><strong>Write documentation/setup instructions</strong> as you start building your Stage environment. Your documentation should always
+be relative to Stage, <strong>NOT</strong> Production. You will forget. You will copy and paste from your docs, and you will run a
+destructive operation against your production database. <a href="https://np.reddit.com/r/cscareerquestions/comments/6ez8ag/accidentally_destroyed_production_database_on/">Cough..</a>
+    <ul>
+      <li>List all the weird/one-off configuration you had to do to get your staging server working. New accounts on 3rd
+  party services, ip whitelisting, database population, you’ll need this checklist when you spin up Production, and
+  finding out whats different between Prod and Stage is going to be a huge pain without it. Infrastructure-as-code/Configuration Management
+   is your friend here, but may not be enough by itself.</li>
+    </ul>
+  </li>
+  <li><strong>Follow modern infrastructure practices.</strong> <a href="https://www.terraform.io/">Infrastructure-as-code</a> and <a href="https://www.chef.io/chef/">Configuration</a> <a href="https://puppet.com/">Management</a> are buzzwords for a reason.
+And they don’t have to be super complicated. You don’t need to design the Mona Lisa of Chef cookbooks. At a bare minimum
+make sure that you can spin up a whole environment with the click of a single button. Automation is the key here. You’ll
+be doing this a lot more than you’d expect, so take some time and do it right. When you find yourself under the gun, needing
+to scale your environment, you’ll be thankful.</li>
+  <li><strong>Version your code.</strong> Create releases, tag your software, its incredibly useful when debugging what software your actually
+running in different environments. It also makes it much easier to deploy previous versions when you want to do regression
+testing, or rollback a broken deployment. Check out something like <a href="https://github.com/AnalogJ/capsulecd">CapsuleCD</a>
+which can build, test, tag, merge branches and release your software automatically.</li>
+  <li><strong>Setup Continuous Deployments</strong> - If you’re already using a CI platform to test your code, why not automatically deploy your
+validated code to your Staging environment? Depending on your application architecture, this may be a bit complicated, but
+having your CI tested code deployed to a staging environment automatically is going to drastically improve your development
+cadence while still ensuring stability. And if your stability is being effected, prioritize your tests, they’re supposed to
+catch 90% of your errors before they even get to a staging env.</li>
+</ul>
+
+<h1 id="before-your-first-prod-deploy">Before your first prod deploy</h1>
+<ul>
+  <li><strong>Automate your backups.</strong> This is probably obvious to everyone, but a backup process without a verified restore process is
+useless. Try to setup a weekly backup and restore of your staging environment database. Use the same code/process you would in Production.</li>
+  <li>Write a script to <strong>populate your database</strong> with test data. Massive amounts of test data. <a href="https://github.com/marak/Faker.js/">Faker.js</a>
+has an API. Check how your Staging environment actually handles real data, not just the toy amounts you’ve thrown in.</li>
+</ul>
+
+<h1 id="once-your-application-is-live">Once your application is live</h1>
+<ul>
+  <li>Track the versions of your <strong>application’s dependencies, and their dependencies</strong>,
+<a href="https://en.wikipedia.org/wiki/Turtles_all_the_way_down">it’s turtles all the way down</a>. This is to ensure that you know
+what software makes up your stack, but also so you can be notified of bug fixes and security issues.</li>
+  <li>Make sure you have <strong>monitoring</strong> in place.
+    <ul>
+      <li><a href="https://www.pingdom.com/free">Pingdom</a> <em>[free]</em> will let notify you if your application is inaccessible externally.</li>
+      <li>Track system metrics like CPU and memory load on your servers. <a href="https://newrelic.com/">NewRelic</a> <em>[free]</em>,
+  <a href="https://www.librato.com/">Librato</a> <em>[free]</em> and <a href="https://cloud.google.com/stackdriver/">StackDriver</a> <em>[paid]</em> work well.</li>
+      <li>Configure a user analytics &amp; monitoring solution like <a href="https://www.google.com/analytics/">Google Analytics</a> <em>[free]</em>. Setup alerts when your traffic
+  increases or drops more than 15%.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>This is just my checklist, but I’d love to hear yours. Is there any devopsy related tasks you think I’m missing?</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Devops for Startups & Small Teams&amp;url=https://blog.thesparktree.com/devops-for-startups"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/devops-for-startups"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/devops-for-startups"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/devops-for-startups" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/devops-for-startups'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Devops for Startups &amp; Small Teams';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_jenkins.jpg)" href="/you-dont-know-jenkins-part-3">
+            <section class="post">
+                <h2>You Don't Know Jenkins - Part 3</h2>
+                <p>With the release of Jenkins 2.x, support for Pipeline jobs is built-in. This is important...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_quietthyme.png)" href="/state-of-the-ebook">
+            <section class="post">
+                <h2>State of the eBook ecosystem</h2>
+                <p>Here’s what I’m looking for. An always available library. I want my books stored in...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

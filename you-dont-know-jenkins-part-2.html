@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>You Don't Know Jenkins - Part 2</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - You Don't Know Jenkins - Part 2" />
+    <meta name="twitter:description" content="Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-2" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - You Don't Know Jenkins - Part 2" />
+    <meta property="og:description" content="Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-2" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/you-dont-know-jenkins-part-2",
+        "image": "https://blog.thesparktree.com/assets/images/cover_jenkins.jpg",
+        "description": "Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun. It doesn’t matter if..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_jenkins.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">You Don't Know Jenkins - Part 2</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2016-08-22">22 Aug 2016</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/jenkins'>Jenkins</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/groovy'>Groovy</a>,
+                    
+                
+                    
+                       <a href='/tag/chef'>Chef</a>,
+                    
+                
+                    
+                       <a href='/tag/dsl'>Dsl</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing plugins for every api/platform under the sun.
+It doesn’t matter if you’re team has 300 developers or 3, Jenkins can still make your life a lot easier.</p>
+
+<p>Having said all that, over time it can feel like the burdens out-weigh the benefits:</p>
+
+<ul>
+  <li>As your software grows you’ll find yourself cloning jobs to setup a new environments (test/stage/prod/etc), which quickly get out of sync with each other.</li>
+  <li>Refactoring a large number of jobs can be daunting using the config UI.</li>
+  <li>It’s easy for Jenkins (or any CI server) to become an untouchable <a href="https://martinfowler.com/bliki/SnowflakeServer.html">snowflake</a>.
+Its frightening to even contemplate upgrading your Jenkins version &amp; plugins, let alone building a new Jenkins installation.</li>
+  <li>Jenkins freestyle jobs work great for simple CI builds, but as you start using them for deployment &amp; orchestration, you’ll start to see their limits</li>
+</ul>
+
+<p>This series is all about solving these common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></li>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></strong></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></li>
+</ul>
+
+<p>This is <strong>Part 2 - Maintainable Jenkins Jobs using Job DSL</strong>. If you haven’t read <a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1</a>, you’ll want to do that first, as we’ll be referring to some concepts defined there.</p>
+
+<hr />
+
+<h2 id="maintainable-jenkins-jobs-using-job-dsl">Maintainable Jenkins Jobs using Job DSL</h2>
+
+<blockquote>
+  <p>If you’re not using the <a href="https://github.com/jenkinsci/job-dsl-plugin">Jenkins DSL</a> plugin to manage your Jenkins jobs,  you’re doing yourself, your team and your entire <strong>profession</strong> a disservice. Use it, it’s awesome.</p>
+</blockquote>
+
+<p>We’re trying to follow the common practice of <code class="language-plaintext highlighter-rouge">infrastructure as code</code>, which boils down to managing, provisioning &amp;
+configuring servers using machine-processable definition files rather than physically configuring hardware or using interactive configuration tools.</p>
+
+<p>The naive approach would be to just take all the <a href="https://stackoverflow.com/questions/2087142/is-there-a-way-to-keep-hudson-jenkins-configuration-files-in-source-control">Jenkins configuration XML files, commit them in git</a>, and call it a day.</p>
+
+<p>You really don’t want to do that: Jenkins Job XML is verbose, plugin version specific and not designed to be edited manually.
+Thankfully there’s an incredibly powerful alternative: <a href="https://github.com/jenkinsci/job-dsl-plugin">Jenkins Job DSL plugin</a>.
+The Job DSL plugin was originally developed at Netflix but it has since been open sourced and is now maintained by the core Jenkins team.</p>
+
+<p>In <a href="https://blog.thesparktree.com/post/149039600544/you-dont-know-jenkins-part-1">Part 1</a> we created a Jenkins DSL Bootstrap/Seed job
+which, when given a Job DSL git repo, would populate the Jenkins server with our simple Jenkins DSL Job:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">job</span><span class="o">(</span><span class="s1">'DSL-Tutorial-1-Test'</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">scm</span> <span class="o">{</span>
+		<span class="n">git</span><span class="o">(</span><span class="s1">'git://github.com/quidryan/aws-sdk-test.git'</span><span class="o">)</span>
+	<span class="o">}</span>
+	<span class="n">steps</span> <span class="o">{</span>
+		<span class="n">maven</span><span class="o">(</span><span class="s1">'-e clean test'</span><span class="o">)</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>At a high level, here are some of the things you’ll need to do and think about to correctly manage your Jobs-as-code configuration.</p>
+
+<ul>
+  <li>You’ll need a git repo to store your Job DSL files.</li>
+  <li>Anyone who had Job Configure permission on the Jenkins server should have read (and maybe push) access to this repo.</li>
+  <li>Access to the Job configuration page within Jenkins should be disabled for all users. If required for debugging jobs, ensure
+that it’s understood that all manual changes to jobs will be lost. Your git repo should be the single source of truth for all Job configuration
+    <ul>
+      <li>The DSL is simple enough that non-developers who are familiar with Jenkins job configuration page can easily make changes</li>
+    </ul>
+  </li>
+  <li>Define <strong>every single one</strong> of your Jenkins jobs using the Jenkins DSL plugin.</li>
+  <li>Customize your Jenkins bootstrap job to point to your DSL git repo and build on a schedule, or use an SCM trigger.</li>
+  <li>Specify Jenkins views and folders in the DSL to logically group your jobs and create nice dashboards</li>
+  <li>(Optional) Write <a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Testing-DSL-Scripts">Job DSL tests</a> to verify that your Jobs work the way they should.</li>
+  <li>(Optional) If you have a complicated Jenkins job structure, you can add tags to your DSL repo, so that you can revert jobs to a previous known working set.</li>
+</ul>
+
+<p>I’m not going to dive deep into the available methods/plugin integrations of the Jenkins DSL in this series, there are much better resources for that:</p>
+
+<ul>
+  <li><a href="https://jenkinsci.github.io/job-dsl-plugin/">Job DSL API Viewer</a></li>
+  <li><a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Job-DSL-Commands">Job DSL Commands</a></li>
+  <li><a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Real-World-Examples">Real World Examples</a></li>
+</ul>
+
+<p>Instead I’ll talk about some <strong>advanced</strong> techniques you can use to migrate your complex Jenkins jobs, and make your DSL repo maintainable, even with hundreds of users/developers.</p>
+
+<ul>
+  <li>Factory/Builder pattern using a class library</li>
+  <li>Configure Block &amp; Extending the DSL</li>
+  <li>Environment Based Configuration</li>
+  <li>User management in Code</li>
+  <li>Shared Data from Configuration Management</li>
+</ul>
+
+<blockquote>
+  <p>Please note that I said <strong>advanced</strong>. You’ll want to make sure you’re comfortable playing around with Groovy &amp; DSL syntax before you try
+anything below. Also some of these techniques are only necessary for extremely complicated Jenkins installations
+(with multiple environments, large numbers of jobs and/or usage as a deployment &amp; orchestration pipeline)</p>
+</blockquote>
+
+<p>If you’re following along at home using <code class="language-plaintext highlighter-rouge">Vagrant</code>, you’ll want to delete the <code class="language-plaintext highlighter-rouge">dsl-bootstrap-job</code> and then checkout the <code class="language-plaintext highlighter-rouge">part_2</code> branch of the <a href="https://github.com/AnalogJ/you-dont-know-jenkins">AnalogJ/you-dont-know-jenkins</a> repo.
+The DSL code has been moved to its own dedicated repo: <a href="https://github.com/AnalogJ/you-dont-know-jenkins-job-dsl">AnalogJ/you-dont-know-jenkins-job-dsl</a></p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-job-dsl"></div>
+
+<hr />
+
+<h2 id="factorybuilder-pattern-using-a-class-library">Factory/Builder pattern using a class library</h2>
+
+<p>Once you start migrating jobs to the Job DSL, you’ll find yourself writing a lot of the same boilerplate code, maybe something like:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">job</span><span class="o">(</span><span class="n">jobName</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">logRotator</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">)</span>
+	<span class="c1">//..</span>
+	<span class="n">wrappers</span> <span class="o">{</span>
+		<span class="n">preBuildCleanup</span><span class="o">()</span>
+		<span class="n">timeout</span> <span class="o">{</span>
+			<span class="n">elastic</span><span class="o">(</span><span class="mi">150</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">60</span><span class="o">)</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+	<span class="c1">//..</span>
+	<span class="n">publishers</span> <span class="o">{</span>
+		<span class="n">archiveArtifacts</span><span class="o">(</span><span class="s1">'build/test-output/**/*.html'</span><span class="o">)</span>
+		<span class="c1">//..</span>
+		<span class="n">extendedEmail</span> <span class="o">{</span>
+			<span class="n">recipientList</span><span class="o">(</span><span class="s1">'engineers@example.org'</span><span class="o">)</span>
+			<span class="n">contentType</span><span class="o">(</span><span class="s1">'text/html'</span><span class="o">)</span>
+			<span class="n">triggers</span> <span class="o">{</span>
+				<span class="n">failure</span> <span class="o">{</span>
+					<span class="n">attachBuildLog</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+				<span class="o">}</span>
+			<span class="o">}</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>If this was a programming language, you would have refactored out your code to keep things DRY.
+Well Jenkins DSL is just Groovy and the plugin lets you specify a relative classpath to load from.
+In addition to getting rid of boilerplate code, we can do things like enforce naming rules and customize the jobs
+depending on the Chef environment (which we’ll talk about below)</p>
+
+<p>In our DSL repo, lets create the following structure (it’s not magic, feel free to modify to your needs).
+Everything in the <code class="language-plaintext highlighter-rouge">lib</code> folder is treated as a library that can be refenced by the Groovy files in the root directory.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lib/companyname/factory/JobFactory.groovy
+lib/companyname/factory/BuildJobFactory.groovy
+factory_pattern_common_dsl.groovy
+</code></pre></div></div>
+
+<p>Lets keep our <code class="language-plaintext highlighter-rouge">JobFactory</code> class simple for now, all it needs to do is define some base job types,
+with a default <code class="language-plaintext highlighter-rouge">logRotator</code>.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// lib/companyname/factory/JobFactory.groovy</span>
+
+<span class="kn">package</span> <span class="nn">companyname.factory</span>
+<span class="kn">import</span> <span class="nn">companyname.*</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">JobFactory</span> <span class="o">{</span>
+  <span class="kt">def</span> <span class="n">_dslFactory</span>
+  <span class="nf">JobFactory</span><span class="o">(</span><span class="n">dslFactory</span><span class="o">){</span>
+	<span class="n">_dslFactory</span> <span class="o">=</span> <span class="n">dslFactory</span>
+  <span class="o">}</span>
+
+  <span class="kt">def</span> <span class="nf">myJob</span><span class="o">(</span><span class="n">_name</span><span class="o">,</span> <span class="n">_description</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">_dslFactory</span><span class="o">.</span><span class="na">freeStyleJob</span><span class="o">(</span><span class="n">_name</span><span class="o">){</span>
+	  <span class="n">description</span> <span class="s2">"DSL MANAGED: - $_descripton"</span>
+	  <span class="n">logRotator</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">)</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="kt">def</span> <span class="nf">myMavenJob</span><span class="o">(</span><span class="n">_name</span><span class="o">,</span> <span class="n">_description</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">_dslFactory</span><span class="o">.</span><span class="na">mavenJob</span><span class="o">(</span><span class="n">_name</span><span class="o">){</span>
+	  <span class="n">description</span> <span class="s2">"DSL MANAGED: - $_descripton"</span>
+	  <span class="n">logRotator</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">10</span><span class="o">)</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>Now lets create a <code class="language-plaintext highlighter-rouge">BuildJobFactory</code> that inherits from the simple <code class="language-plaintext highlighter-rouge">JobFactory</code>. It defines another a slightly more
+complex <code class="language-plaintext highlighter-rouge">baseBuildRpmJob</code> that will be used by all build jobs, and (optionally) also defines a <code class="language-plaintext highlighter-rouge">buildWebAppRpmJob</code> which has all the rest of the configuration specific to the job, like SCM, ant tasks.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// lib/companyname/factory/BuildJobFactory.groovy</span>
+
+<span class="kn">package</span> <span class="nn">companyname.factory</span>
+<span class="kn">import</span> <span class="nn">companyname</span>
+<span class="kn">import</span> <span class="nn">groovy.transform.*</span> <span class="c1">//this is required for the @InheritConstructors decorator</span>
+
+<span class="nd">@InheritConstructors</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BuildJobFactory</span> <span class="kd">extends</span> <span class="n">JobFactory</span> <span class="o">{</span>
+
+  <span class="c1">// Define a base build job</span>
+  <span class="kt">def</span> <span class="nf">baseBuildRpmJob</span><span class="o">(</span><span class="n">_name</span><span class="o">,</span><span class="n">_description</span><span class="o">){</span>
+	<span class="kt">def</span> <span class="n">job</span> <span class="o">=</span> <span class="n">myJob</span><span class="o">(</span><span class="n">_name</span><span class="o">,</span> <span class="n">_description</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">with</span><span class="o">{</span>
+	  <span class="n">logRotator</span><span class="o">(-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">50</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="mi">20</span><span class="o">)</span>
+	  <span class="n">publishers</span> <span class="o">{</span>
+		<span class="n">archiveArtifacts</span><span class="o">(</span><span class="s1">'dist/**'</span><span class="o">)</span>
+		<span class="n">fingerprint</span><span class="o">(</span><span class="s1">'dist/**'</span><span class="o">)</span>
+	  <span class="o">}</span>
+	<span class="o">}</span>
+	<span class="k">return</span> <span class="n">job</span>
+  <span class="o">}</span>
+
+  <span class="c1">// Define specific jobs</span>
+  <span class="kt">def</span> <span class="nf">buildWebAppRpm</span><span class="o">()</span> <span class="o">{</span>
+	<span class="kt">def</span> <span class="n">job</span> <span class="o">=</span> <span class="n">baseBuildRpmJob</span><span class="o">(</span><span class="s1">'Build-Webapp-RPM'</span><span class="o">,</span> <span class="s1">'Builds the web app v1 RPM'</span><span class="o">)</span>
+	<span class="n">job</span><span class="o">.</span><span class="na">with</span><span class="o">{</span>
+	  <span class="n">scm</span> <span class="o">{</span>
+		<span class="c1">// your scm (git/hg/perforce/..) repo config here</span>
+	  <span class="o">}</span>
+	  <span class="n">steps</span> <span class="o">{</span>
+		<span class="n">ant</span><span class="o">(</span><span class="s1">'build-webapp-rpm'</span><span class="o">)</span>
+		<span class="n">ant</span><span class="o">(</span><span class="s1">'test-webapp'</span><span class="o">)</span>
+	  <span class="o">}</span>
+	<span class="o">}</span>
+	<span class="k">return</span> <span class="n">job</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Ok. So inheritance is a thing. Now what? How do we actually add this job to Jenkins?
+Lets fill out the <code class="language-plaintext highlighter-rouge">factory_pattern_common_dsl.groovy</code> file.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// factory_pattern_common_dsl.groovy</span>
+
+<span class="kn">import</span> <span class="nn">companyname.*</span>
+<span class="kn">import</span> <span class="nn">companyname.factory.*</span>
+
+<span class="kt">def</span> <span class="n">buildJobFactory</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BuildJobFactory</span><span class="o">(</span><span class="k">this</span><span class="o">)</span>
+<span class="n">buildJobFactory</span><span class="o">.</span><span class="na">buildWebAppRpm</span><span class="o">()</span>
+<span class="n">buildWebAppRpm</span><span class="o">.</span><span class="na">baseBuildRpmJob</span><span class="o">(</span><span class="s1">'Build-Dynamically-Defined-Rpm'</span><span class="o">)</span>
+  <span class="o">.</span><span class="na">with</span><span class="o">{</span>
+	<span class="n">scm</span> <span class="o">{</span>
+		<span class="c1">// your scm (git/hg/perforce/..) repo config here</span>
+	<span class="o">}</span>
+	<span class="n">steps</span> <span class="o">{</span>
+		<span class="n">ant</span><span class="o">(</span><span class="s1">'build-dynamic-rpm'</span><span class="o">)</span>
+		<span class="n">ant</span><span class="o">(</span><span class="s1">'test-dynamic'</span><span class="o">)</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>The key thing to pay attention to in these examples is the <code class="language-plaintext highlighter-rouge">.with {}</code> function. It allows us to reopen and extend a closure defined in a <code class="language-plaintext highlighter-rouge">Factory</code>.</p>
+
+<p>Finally, lets modify our Jenkins cookbook bootstrap job to point to this new DSL repo, and reference this <code class="language-plaintext highlighter-rouge">lib/</code> classpath</p>
+
+<p>You can take a look at the exact changes here: <a href="https://github.com/AnalogJ/you-dont-know-jenkins/compare/part_2_factory">part_2_factory branch diff</a></p>
+
+<p>At this point we should have 2 new jobs on our Jenkins server: <code class="language-plaintext highlighter-rouge">Build-Webapp-RPM</code> defined in the <code class="language-plaintext highlighter-rouge">BuildJobFactory</code> and
+<code class="language-plaintext highlighter-rouge">Build-Dynamically-Defined-Rpm</code> which was defined in the actual DSL. Later on we’ll discuss why we might want to dynamically
+define jobs in the DSL instead of in a <code class="language-plaintext highlighter-rouge">Factory</code>, its primarily related to Environment specific overrides.
+It’s best not to mix these two patterns unless you really do have multiple Jenkins environments built from the same DSL code base.</p>
+
+<hr />
+
+<h2 id="configure-block--extending-the-dsl">Configure Block &amp; Extending the DSL</h2>
+
+<p>At some point you’ll run into a <strike>unmaintained</strike> niche plugin that’s not currently supported by the DSL. If you’re lucky you might be
+able to use the <a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Automatically-Generated-DSL">Automatically Generated DSL</a>.
+But lets be honest, you’re not that lucky.</p>
+
+<p>The first thing you’re going to want to do is manually configure that plugin using the Job configure UI, and save the job.
+Then you’ll want to open up the job’s <code class="language-plaintext highlighter-rouge">config.xml</code> file and look for XML node the plugin created. Here’s the XML that the
+<code class="language-plaintext highlighter-rouge">filesystem</code> plugin added:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;scm</span> <span class="na">class=</span><span class="s">"hudson.plugins.filesystem_scm.FSSCM"</span><span class="nt">&gt;&lt;path&gt;</span>/example/path/on/filesystem<span class="nt">&lt;/path&gt;&lt;clearworkspace&gt;</span>false<span class="nt">&lt;/clearworkspace&gt;&lt;copyhidden&gt;</span>false<span class="nt">&lt;/copyhidden&gt;&lt;filterenabled&gt;</span>false<span class="nt">&lt;/filterenabled&gt;&lt;includefilter&gt;</span>false<span class="nt">&lt;/includefilter&gt;&lt;filters&gt;&lt;/filters&gt;&lt;/scm&gt;</span>
+</code></pre></div></div>
+
+<p>Great, now we need to translate that to something the DSL understands using the <code class="language-plaintext highlighter-rouge">configure</code> block.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// lib/extensions/FilesystemScm.groovy</span>
+
+<span class="kn">package</span> <span class="nn">companyname.extensions</span>
+<span class="kd">class</span> <span class="nc">FilesystemScm</span> <span class="o">{</span>
+
+  <span class="c1">// based off https://github.com/jenkinsci/job-dsl-plugin/wiki/The-Configure-Block#configure-svn</span>
+  <span class="kd">static</span> <span class="n">Closure</span> <span class="nf">filesystem</span><span class="o">(</span><span class="n">String</span> <span class="n">_path</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">_copyHidden</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">_clearWorkspace</span> <span class="o">=</span> <span class="kc">false</span><span class="o">){</span>
+	<span class="k">return</span> <span class="o">{</span> <span class="n">project</span> <span class="o">-&gt;</span>
+	  <span class="n">project</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">project</span> <span class="s">/ scm) /</span><span class="o">/</span> <span class="n">remove</span> <span class="n">the</span> <span class="n">existing</span> <span class="s1">'scm'</span> <span class="n">element</span>
+	  <span class="n">project</span> <span class="o">/</span> <span class="n">scm</span><span class="o">(</span><span class="kd">class</span><span class="err">:</span> <span class="err">'</span><span class="nc">hudson</span><span class="o">.</span><span class="na">plugins</span><span class="o">.</span><span class="na">filesystem_scm</span><span class="o">.</span><span class="na">FSSCM</span><span class="err">'</span><span class="o">)</span> <span class="o">{</span>
+		  <span class="n">path</span> <span class="n">_path</span>
+		  <span class="n">clearWorkspace</span> <span class="n">_clearWorkspace</span>
+		  <span class="n">copyHidden</span> <span class="n">_copyHidden</span>
+		  <span class="n">filterEnabled</span> <span class="s1">'false'</span>
+		  <span class="n">includeFilter</span> <span class="s1">'false'</span>
+		  <span class="n">filters</span> <span class="s1">''</span>
+	  <span class="o">}</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>If the syntax is unfamiliar, don’t worry it’s actually not too complicated, the DSL plugin wiki is a <a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/The-Configure-Block#transforming-xml">great explanation</a>.
+The cool thing is that almost every plugin supported by the DSL has an option configure block as well, so if you want to
+use a new feature that isn’t yet supported by the DSL, you can add it in the plugin’s configure block.</p>
+
+<p>Now you can call this <strike>terrible</strike> plugin in your DSL definitions or in a <code class="language-plaintext highlighter-rouge">Factory</code>:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// factory_pattern_common_dsl.groovy</span>
+
+<span class="kn">import</span> <span class="nn">companyname.*</span>
+<span class="kn">import</span> <span class="nn">companyname.factory.*</span>
+<span class="kn">import</span> <span class="nn">companyname.extensions.*</span>
+
+<span class="n">buildWebAppRpm</span><span class="o">.</span><span class="na">baseBuildRpmJob</span><span class="o">(</span><span class="s1">'Build-Dynamically-Defined-Rpm'</span><span class="o">)</span>
+	<span class="o">.</span><span class="na">with</span><span class="o">{</span>
+		<span class="c1">//..</span>
+	<span class="n">configure</span> <span class="n">FilesystemScm</span><span class="o">.</span><span class="na">filesystem</span><span class="o">(</span><span class="s1">'/opt/local/filepath/'</span><span class="o">)</span>
+	<span class="c1">//..</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="environment-based-configuration">Environment Based Configuration</h2>
+
+<p>Lets talk about multiple deployment environments. As your product matures you’ll find yourself needing to create multiple
+versions of your application for testing and validation reasons. This could be as simple as dedicated <code class="language-plaintext highlighter-rouge">development</code>, <code class="language-plaintext highlighter-rouge">stage</code> and <code class="language-plaintext highlighter-rouge">prod</code>
+stacks, but it could be as complicated as creating a completely functional stack in the cloud for each commit or pull request,
+ and then destroying it after.</p>
+
+<p>Either way you’ll find yourself creating Jenkins jobs that are basically clones of each other, but may have different parameters, slave labels or
+notification rules. Using the <code class="language-plaintext highlighter-rouge">Factory</code> pattern above you can easily create reusable template jobs and customize them for each environment,
+but how do you organize them?</p>
+
+<p>Depending on if you have a single Jenkins server with multiple slaves or a dedicated Jenkins server per environment,
+you’ll probably want to <a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Job-DSL-Commands#folder">organize some of your Jobs into folders</a> using the <a href="https://wiki.jenkins-ci.org/display/JENKINS/CloudBees+Folders+Plugin">Jenkins Folder Plugin</a>
+and/or modify your bootstrap job to load a <code class="language-plaintext highlighter-rouge">*_dsl.groovy</code> file depending on your Chef environment.</p>
+
+<p>Organizing your DSL files for a dedicated Jenkins server per environment is easy. Lets take our existing DSL
+repo folder structure and add the following files:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dev/dev_customized_jobs_dsl.groovy
+dev/dev_customized_qe_jobs_dsl.groovy
+stage/stage_customized_jobs_dsl.groovy
+prod/prod_customized_jobs_dsl.groovy
+</code></pre></div></div>
+
+<p>And then we can modify the DSL seed job to load the common jobs as well as any environment specific jobs:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>script/factory_pattern_common_dsl.groovy
+script/{environment name}/*.groovy
+</code></pre></div></div>
+
+<p>Here’s where we made that change in our Chef <a href="https://github.com/AnalogJ/you-dont-know-jenkins/blob/part_2/jenkins_wrapper_cookbook/recipes/default.rb#L214">jenkins_wrapper_cookbook</a>.</p>
+
+<hr />
+
+<h2 id="user-management-in-code">User management in Code</h2>
+
+<p>Now for the main event. In part one we spun up a bare-bones Jenkins server.
+While we installed all the right software and configured the Jenkins server, we only created a single user, for the dedicated use of our configuration management system.</p>
+
+<blockquote>
+  <p>Before we go any further, let me be clear. We will be adding new users (and their associated <strong>security</strong> roles) to Jenkins using
+<strong>automation</strong>. If the words security and automation in the same sentence are giving you anxiety, that’s good.
+You should analyze the security of your corporate network, git server and Jenkins server credential access before you even
+consider automating user creation. At the same time, you should weigh it against the time spent managing users and permissions
+and the benefits of partial self-service.</p>
+</blockquote>
+
+<p>With all that out of the way, lets get started. Jenkins supports multiple security models, but I’ll be talking about <code class="language-plaintext highlighter-rouge">Project Matrix Authorization</code> which is the most granular.
+In our DSL repo we’ll be creating a <code class="language-plaintext highlighter-rouge">Utilities.groovy</code> file with our security related methods.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// lib/companyname/Utilities.groovy</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Utilities</span> <span class="o">{</span>
+  <span class="kd">static</span> <span class="nf">populateUserAuthorization</span><span class="o">(</span><span class="n">out</span><span class="o">,</span> <span class="n">user_permissions</span><span class="o">)</span> <span class="o">{</span>
+
+	<span class="k">if</span> <span class="o">(!</span><span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">isUseSecurity</span><span class="o">())</span> <span class="o">{</span>
+	  <span class="n">out</span><span class="o">.</span><span class="na">print</span> <span class="s2">"--&gt; no authorization strategy found. skipping user management."</span>
+	  <span class="k">return</span>
+	<span class="o">}</span>
+	<span class="n">out</span><span class="o">.</span><span class="na">println</span> <span class="s2">"--&gt; retrieving and verifying project matrix authorization strategy"</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">getAuthorizationStrategy</span><span class="o">().</span><span class="na">getClass</span><span class="o">().</span><span class="na">getName</span><span class="o">()</span> <span class="o">!=</span> <span class="s2">"hudson.security.ProjectMatrixAuthorizationStrategy"</span><span class="o">){</span>
+	  <span class="n">out</span><span class="o">.</span><span class="na">println</span> <span class="s2">"--&gt; authorization strategy is not matrix authorization. skipping user management."</span>
+	  <span class="k">return</span>
+	<span class="o">}</span>
+
+	<span class="c1">//create a new strategy so that we can guarantee that only the users specified have permissions to Jenkins.</span>
+	<span class="kt">def</span> <span class="n">strategy</span> <span class="o">=</span> <span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">getDescriptor</span><span class="o">(</span><span class="s2">"hudson.security.ProjectMatrixAuthorizationStrategy"</span><span class="o">).</span><span class="na">create</span><span class="o">()</span>
+
+	<span class="n">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s1">'--&gt; Set permissions for automation users:'</span><span class="o">)</span>
+	<span class="n">addUserPermissionsToStrategy</span><span class="o">(</span><span class="n">strategy</span><span class="o">,</span> <span class="n">Constants</span><span class="o">.</span><span class="na">automation_username</span><span class="o">,</span> <span class="o">[</span><span class="s1">'hudson.model.Hudson.Administer'</span><span class="o">],</span> <span class="n">out</span><span class="o">)</span>
+
+	<span class="n">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s1">'--&gt; add permissions for each specified user'</span><span class="o">)</span>
+	<span class="n">user_permissions</span><span class="o">.</span><span class="na">each</span><span class="o">{</span> <span class="n">k</span><span class="o">,</span> <span class="n">v</span> <span class="o">-&gt;</span>
+	  <span class="n">addUserPermissionsToStrategy</span><span class="o">(</span><span class="n">strategy</span><span class="o">,</span> <span class="n">k</span><span class="o">,</span> <span class="n">v</span><span class="o">,</span> <span class="n">out</span><span class="o">)</span>
+	<span class="o">}</span>
+
+	<span class="n">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s1">'--&gt; set the project matrix authorization strategy'</span><span class="o">)</span>
+	<span class="n">Jenkins</span><span class="o">.</span><span class="na">instance</span><span class="o">.</span><span class="na">setAuthorizationStrategy</span><span class="o">(</span><span class="n">strategy</span><span class="o">)</span>
+  <span class="o">}</span>
+
+  <span class="kd">static</span> <span class="nf">addUserPermissionsToStrategy</span><span class="o">(</span><span class="n">strategy</span><span class="o">,</span> <span class="n">user</span><span class="o">,</span> <span class="n">permissions</span><span class="o">,</span> <span class="n">out</span><span class="o">){</span>
+	<span class="n">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s2">"--&gt; adding ${user}:${permissions}"</span><span class="o">)</span>
+	<span class="n">permissions</span><span class="o">.</span><span class="na">each</span> <span class="o">{</span> <span class="n">perm_string</span> <span class="o">-&gt;</span>
+	  <span class="n">strategy</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">Permission</span><span class="o">.</span><span class="na">fromId</span><span class="o">(</span><span class="n">perm_string</span><span class="o">),</span> <span class="n">user</span><span class="o">)</span>
+	<span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Now we’ll create a <code class="language-plaintext highlighter-rouge">users.groovy</code> file in each environment folder so that we can have a managed list of authorized users for each environment.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// dev/users.groovy</span>
+
+<span class="kn">import</span> <span class="nn">companyname.*</span>
+<span class="cm">/*
+# This file defines the users that have access to the Jenkins server, folders and their permissions.
+# You can specify permissions for unauthenticated users by using the "anonymous" username
+#
+# The following permissions are available on Jenkins:
+#  hudson.model.Hudson.Administer,
+#  hudson.model.Hudson.ConfigureUpdateCenter,
+#  hudson.model.Hudson.Read,
+#  hudson.model.Hudson.RunScripts,
+#  hudson.model.Hudson.UploadPlugins,
+#  hudson.model.Computer.Build,
+#  hudson.model.Computer.Build,
+#  hudson.model.Computer.Configure,
+#  hudson.model.Computer.Connect,
+#  hudson.model.Computer.Create,
+#  hudson.model.Computer.Delete,
+#  hudson.model.Computer.Disconnect,
+#  hudson.model.Run.Delete,
+#  hudson.model.Run.Update,
+#  hudson.model.View.Configure,
+#  hudson.model.View.Create,
+#  hudson.model.View.Read,
+#  hudson.model.View.Delete,
+#  hudson.model.Item.Create,
+#  hudson.model.Item.Delete,
+#  hudson.model.Item.Configure,
+#  hudson.model.Item.Read,
+#  hudson.model.Item.Discover,
+#  hudson.model.Item.Build,
+#  hudson.model.Item.Workspace,
+#  hudson.model.Item.Cancel
+#
+# Make it easy on us and list your username in alphabetical order.
+*/</span>
+
+<span class="kt">def</span> <span class="n">user_permissions</span> <span class="o">=</span> <span class="o">[</span>
+  <span class="c1">//TODO: this is definitely not something you'll do in production, it's just so that you can validate the</span>
+  <span class="c1">//DSL worked correctly in Vagrant</span>
+  <span class="s1">'anonymous'</span><span class="o">:</span> <span class="o">[</span><span class="s1">'hudson.model.Hudson.Administer'</span><span class="o">],</span>
+
+  <span class="s1">'alice.name'</span><span class="o">:</span> <span class="o">[</span><span class="s1">'hudson.model.Hudson.Administer'</span><span class="o">],</span>
+  <span class="s1">'bob12'</span><span class="o">:</span> <span class="o">[</span><span class="s1">'hudson.model.Hudson.Read'</span><span class="o">,</span> <span class="s1">'hudson.model.Item.Build'</span><span class="o">,</span> <span class="s1">'hudson.model.Item.Workspace'</span><span class="o">],</span>
+  <span class="s1">'char.lie'</span><span class="o">:</span> <span class="o">[</span><span class="s1">'hudson.model.Hudson.Read'</span><span class="o">,</span> <span class="s1">'hudson.model.Item.Build'</span><span class="o">,]</span>
+<span class="o">]</span>
+
+<span class="n">Utilities</span><span class="o">.</span><span class="na">populateUserAuthorizationPerFolder</span><span class="o">(</span><span class="n">out</span><span class="o">,</span> <span class="n">user_permissions</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p>Now we have all our users defined in text, permissions are easy to update and there’s a built in audit system - git.
+To ensure that user’s don’t just add themselves as Administrators or wreak havoc on your Job configurations,
+you could enable read-only access to the Git repo, and tell users to create pull requests.
+Setting the DSL bootstrap job to run overnight would also ensure that newly added/removed permissions are kept in-sync on Jenkins.</p>
+
+<hr />
+
+<h2 id="shared-data-from-configuration-management">Shared Data from Configuration Management</h2>
+
+<p>As you invest time creating a robust Jenkins installation, you’ll find yourself wishing to share data between your Configuration Management
+system (Chef, Ansible, Puppet, etc) and the Job DSL. While this should be limited as much as possible, occasionally
+you’ll find that you have no alternative.</p>
+
+<p>This can be done by chaining the <a href="https://github.com/jenkinsci/job-dsl-plugin/wiki/Job-DSL-Commands#reading-files-from-workspace"><code class="language-plaintext highlighter-rouge">readFileFromWorkspace</code></a> command in the Job DSL,
+with the Groovy <a href="http://groovy-lang.org/json.html"><code class="language-plaintext highlighter-rouge">JsonSlurper#parseText()</code></a> method and your CM system’s ability to write
+template files to the filesystem.</p>
+
+<p>In Chef this could look like:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">file</span> <span class="s2">"</span><span class="si">#{</span><span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'home'</span><span class="p">]</span><span class="si">}</span><span class="s2">/chef_environment_data.json"</span> <span class="k">do</span>
+	<span class="n">content</span> <span class="n">lazy</span> <span class="p">{</span>
+		<span class="no">JSON</span><span class="p">.</span><span class="nf">pretty_generate</span><span class="p">(</span>
+			<span class="ss">:chef_environment_name</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="p">.</span><span class="nf">chef_environment</span><span class="p">,</span>
+			<span class="ss">:important</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="p">[</span><span class="s1">'my'</span><span class="p">][</span><span class="s1">'attribute'</span><span class="p">][</span><span class="s1">'here'</span><span class="p">],</span>
+			<span class="ss">:data</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="p">[</span><span class="s1">'another'</span><span class="p">][</span><span class="s1">'one'</span><span class="p">]</span>
+		<span class="p">)</span>
+	<span class="p">}</span>
+	<span class="n">owner</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'user'</span><span class="p">]</span>
+	<span class="n">group</span> <span class="n">node</span><span class="p">[</span><span class="s1">'jenkins'</span><span class="p">][</span><span class="s1">'master'</span><span class="p">][</span><span class="s1">'group'</span><span class="p">]</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>Then copy it into the DSL job workspace as part of your bootstrap job:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">def</span> <span class="n">shellStep</span> <span class="o">=</span> <span class="k">new</span> <span class="n">hudson</span><span class="o">.</span><span class="na">tasks</span><span class="o">.</span><span class="na">Shell</span><span class="o">(</span><span class="s1">'cp -f $HUDSON_HOME/chef_environment_data.json $WORKSPACE/chef_environment_data.json'</span><span class="o">)</span>
+<span class="n">job</span><span class="o">.</span><span class="na">buildersList</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">shellStep</span><span class="o">)</span>
+</code></pre></div></div>
+
+<p>And then finally read it and parse it anywhere you have access to the DSL context (like in a <code class="language-plaintext highlighter-rouge">_dsl.groovy</code> file or inside your <code class="language-plaintext highlighter-rouge">Factory</code> classes)</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">new</span> <span class="nf">JsonSlurper</span><span class="o">().</span><span class="na">parseText</span><span class="o">(</span><span class="n">readFileFromWorkspace</span><span class="o">(</span><span class="s1">'chef_environment_data.json'</span><span class="o">))</span>
+</code></pre></div></div>
+
+<hr />
+
+<h1 id="fin">Fin.</h1>
+
+<p>Even if you didn’t use any of the techniques in this guide, out of the box you’ll get the following with the DSL plugin:</p>
+<ul>
+  <li>You can update your Jenkins job configurations by just updating a git repo, no CM run or cookbook packaging required</li>
+  <li>You have a history of what changes were made, who made them, and (hopefully) why they were made.</li>
+  <li>The DSL will automatically cleanup managed jobs that are no-longer required</li>
+</ul>
+
+<p>Now that we have a Jenkins server with actual build jobs, lets see how we can use Pipelines to automate Orchestration &amp; Deployment
+with Jenkins.</p>
+
+<p><strong>Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</strong> <em>(Coming soon)</em></p>
+
+<p>In Part 3 we’ll talk about the common pitfalls &amp; workarounds with Pipelines (serialization errors, scriptApproval, groovy CPS, parameter handling),
+as well as some of the incredibly cool things you can do with them (user input, stages, deployment job chains, credential scopes,
+flyweight vs heavyweight context, libraries)</p>
+
+<p>All Chef found in this guide is available in the <code class="language-plaintext highlighter-rouge">part_2</code> branch of <a href="https://github.com/AnalogJ/you-dont-know-jenkins">AnalogJ/you-dont-know-jenkins</a> and all DSL code is available in the <a href="https://github.com/AnalogJ/you-dont-know-jenkins-job-dsl">AnalogJ/you-dont-know-jenkins-job-dsl</a> repo.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=You Don't Know Jenkins - Part 2&amp;url=https://blog.thesparktree.com/you-dont-know-jenkins-part-2"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/you-dont-know-jenkins-part-2"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/you-dont-know-jenkins-part-2"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/you-dont-know-jenkins-part-2" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/you-dont-know-jenkins-part-2'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'You Don&#39;t Know Jenkins - Part 2';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_letsencrypt.jpg)" href="/custom-domains-for-aws-lambdaapi-gateway-using">
+            <section class="post">
+                <h2>Custom Domains for AWS Lambda/API Gateway using Letsencrypt</h2>
+                <p>> AWS Lambda lets you run code without provisioning or managing servers. You pay only...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_jenkins.jpg)" href="/you-dont-know-jenkins-part-1">
+            <section class="post">
+                <h2>You Don't Know Jenkins - Part 1</h2>
+                <p>Jenkins is great. It’s the most popular CI/CD tool, with an incredibly active community writing...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

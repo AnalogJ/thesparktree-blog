@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Continuous Deployment with Dokku (Full Guide)</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Continuous Deployment with Dokku (Full Guide)" />
+    <meta name="twitter:description" content="So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it. You’ve heard of this cool new tool called..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Continuous Deployment with Dokku (Full Guide)" />
+    <meta property="og:description" content="So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it. You’ve heard of this cool new tool called..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_docker.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide",
+        "image": "https://blog.thesparktree.com/assets/images/cover_docker.jpg",
+        "description": "So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it. You’ve heard of this cool new tool called..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_docker.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Continuous Deployment with Dokku (Full Guide)</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2014-06-15">15 Jun 2014</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/dokku'>Dokku</a>,
+                    
+                
+                    
+                       <a href='/tag/continuous deployment'>Continuous deployment</a>,
+                    
+                
+                    
+                       <a href='/tag/ssl'>Ssl</a>,
+                    
+                
+                    
+                       <a href='/tag/wercker'>Wercker</a>,
+                    
+                
+                    
+                       <a href='/tag/nodejs'>Nodejs</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>So you have a fancy new Cloud@Cost [DigitalOcean/Linode] Server, and you want to do something interesting/useful with it.
+You’ve heard of this cool new tool called docker, but you’re not sure if it’s that useful for you, you mostly play with web development.
+You’re a big fan of Heroku however, and wouldn’t it be cool if you could do all your prototyping and development in a Heroku-like environment using Docker?
+Dokku to the rescue.</p>
+
+<h1 id="ubuntu-version">Ubuntu Version</h1>
+
+<p>First thing’s first, lets check what version of Ubuntu we have installed, we want to live on the bleeding edge (LTS) so why not upgrade to the newest version of Ubuntu.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /etc/lsb-release
+<span class="nv">DISTRIB_ID</span><span class="o">=</span>Ubuntu
+<span class="nv">DISTRIB_RELEASE</span><span class="o">=</span>13.10
+<span class="nv">DISTRIB_CODENAME</span><span class="o">=</span>saucy
+<span class="nv">DISTRIB_DESCRIPTION</span><span class="o">=</span><span class="s2">"Ubuntu 13.10"</span>
+</code></pre></div></div>
+
+<p>Well that’s no fun. Lets upgrade to 14.04, the new hotness.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>apt-get update
+<span class="nv">$ </span><span class="nb">sudo </span>apt-get <span class="nb">install </span>update-manager-core
+<span class="nv">$ </span><span class="nb">sudo </span>nano /etc/update-manager/release-upgrades
+</code></pre></div></div>
+
+<p>Now change normal to lts in opened text file</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Prompt=lts
+</code></pre></div></div>
+
+<p>Before we get started, lets poke a hole in our firewall, just for fun. (Mostly because our upgrade is going to occur over SSH, and the installer will open up an additional ssh port as a backup)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iptables -I INPUT -p tcp --dport 1022 -j ACCEPT
+</code></pre></div></div>
+
+<p>Now use one of the following commands to upgrade:</p>
+
+<p>Option1:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>apt-get update
+<span class="nv">$ </span><span class="nb">sudo </span><span class="k">do</span><span class="nt">-release-upgrade</span> <span class="nt">-d</span>
+</code></pre></div></div>
+
+<p>Option2:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo apt-get dist-upgrade -d
+</code></pre></div></div>
+
+<p>Now you can wait for an un-godly amount of time.</p>
+
+<h1 id="configuring-ubuntu">Configuring Ubuntu</h1>
+<p>Its no fun entering passwords all the time, so lets log into our brand new Ubuntu 14.04 machine with a fancy SSH key.</p>
+
+<p>First lets create a new SSH key, just follow the default instructions.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ssh-keygen
+</code></pre></div></div>
+
+<p>Now we can see the result in our <code class="language-plaintext highlighter-rouge">~/.ssh</code> folder.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ls ~/.ssh/
+-rw-------. 1 root root 1675 Jul 27 15:01 id_rsa
+-rw-r--r--. 1 root root  406 Jul 27 15:01 id_rsa.pub
+</code></pre></div></div>
+
+<p>Now lets copy our public key over to the Cloud@Cost machine
+To copy the public key to the machine you want to SSH and fix permissions (you will be prompted for the root password):</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'mkdir -p /root/.ssh'</span>
+<span class="nv">$ </span>scp /root/.ssh/id_rsa.pub root@<span class="o">{</span>server ip address<span class="o">}</span>:/root/.ssh/authorized_keys
+<span class="nv">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'chmod  700 /root/.ssh'</span>
+<span class="nv">$ </span>ssh root@<span class="o">{</span>server ip address<span class="o">}</span> <span class="s1">'chmod  600 /root/.ssh/*'</span>
+</code></pre></div></div>
+
+<p>You should now be able to ssh directly from to Cloud@Cost server without providing a password:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ssh root@{server ip address}
+</code></pre></div></div>
+
+<h1 id="dokku-for-everyone">Dokku for everyone!</h1>
+<p>Now that we’ve finished with the baby steps, lets get into the meat of the matter. Docker/Dokku!</p>
+
+<p>It starts off simple enough, just run the following command on your Cloud@Cost server.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ wget -qO- https://raw.github.com/progrium/dokku/v0.2.3/bootstrap.sh | sudo DOKKU_TAG=v0.2.3 bash
+</code></pre></div></div>
+
+<p>Now that Dokku is installed, we have to tell it what domain it’s hosted on. Basically we’ll be accessing our applications on unique subdomains (*.mydomain.com), eg. <code class="language-plaintext highlighter-rouge">mygreatapp.thesparktree.com</code> or <code class="language-plaintext highlighter-rouge">helloworld.thesparktree.com</code>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo "thesparktree.com" &gt;&gt; /home/dokku/VHOST
+</code></pre></div></div>
+
+<p>Finally, we need to make sure that we can push code and create apps on our Dokku service. We’ll need to add our ssh key to the Dokku user, and specify a short descriptor for our key (eg. <code class="language-plaintext highlighter-rouge">dokkukey</code>). On our host machine, run the following:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cat ~/.ssh/id_rsa.pub | ssh root@{server ip address} "sudo sshcommand acl-add dokku {key name/descriptor}"
+</code></pre></div></div>
+
+<h1 id="plugins">Plugins</h1>
+
+<p>The best part about being a developer is being able to <strike>steal</strike> reuse other developers code. Dokku has a pretty vibrant plugin ecosystem, and we’ll install a few of my favorite plugins below. You can see the full list of plugins <a href="https://github.com/progrium/dokku/wiki/Plugins">here</a></p>
+
+<p>All plugins live in the same folder.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd</span> /var/lib/dokku/plugins
+<span class="nv">$ </span>git clone https://github.com/petercip/dokku-pg-plugin.git postgresql
+<span class="c"># the following repo only works with postgres 9.1 - https://github.com/jeffutter/dokku-postgresql-plugin postgresql</span>
+<span class="nv">$ </span>git clone https://github.com/cedricziel/dokku-deployment-keys.git /var/lib/dokku/plugins/deployment-keys
+...other plugins here...
+<span class="nv">$ </span>dokku plugins-install
+</code></pre></div></div>
+
+<h1 id="deploy-an-app">Deploy an app</h1>
+
+<p>Now that Dokku is all setup, we can push our web app to Dokku. Make sure you don’t have any spaces in your <code class="language-plaintext highlighter-rouge">{dokku remote name}</code> or <code class="language-plaintext highlighter-rouge">{application name}</code>.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cd </span>node-js-sample
+<span class="nv">$ </span>git remote add <span class="o">{</span>dokku remote name<span class="o">}</span> dokku@<span class="o">{</span>server ip address<span class="o">}</span>:<span class="o">{</span>application name<span class="o">}</span>
+<span class="nv">$ </span>git push <span class="o">{</span>dokku remote name<span class="o">}</span> master
+</code></pre></div></div>
+
+<p>You can now see your application’s url by typing:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ dokku url {application name}
+</code></pre></div></div>
+
+<p>Lets start up the postgresql container.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>dokku postgresql:create <span class="o">{</span>application name<span class="o">}</span>
+<span class="nv">$ </span>dokku postgresql:link <span class="o">{</span>application name<span class="o">}</span> <span class="o">{</span>application name<span class="o">}</span>
+</code></pre></div></div>
+
+<h1 id="setting-environmental-variables">Setting Environmental variables.</h1>
+<p>You have your app running pushed to Dokku, but it’s not working (of course its not, when has something ever worked the first time). Lets set some of the required environmental variables that your app needs to work properly.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>dokku config &lt;app&gt; <span class="c"># display the config vars for an app</span>
+<span class="nv">$ </span>dokku config:get &lt;app&gt; KEY 3 display a config value <span class="k">for </span>an app
+<span class="nv">$ </span>dokku config:set &lt;app&gt; <span class="nv">KEY1</span><span class="o">=</span>VALUE1 <span class="o">[</span><span class="nv">KEY2</span><span class="o">=</span>VALUE2 ...] <span class="c"># set one or more config vars</span>
+<span class="nv">$ </span>dokku config:unset &lt;app&gt; KEY1 <span class="o">[</span>KEY2 ...] <span class="c"># unset one or more config vars</span>
+</code></pre></div></div>
+
+<p>so we could do something like:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ dokku config:set {application name} NODE_ENV=development
+</code></pre></div></div>
+
+<h1 id="adding-ssl">Adding SSL</h1>
+
+<p>But wait, something’s wrong. Where’s that green lock in the corner of your browser… without it, how are you going to stop the hackers and the NSA from breaking into your Twitter clone? Don’t worry, I got you covered.</p>
+
+<p>Since this is just a web server for testing applications, lets assume you can get away with a simple SSL cert. Possibly even one that expires yearly. Check out StartSSL for a free SSL certificate.</p>
+
+<p><a href="https://launchbylunch.com/posts/2014/Jan/23/blog-tech-stack/">This SSL guide</a> has some good instructions under the SSL section.
+At the end of the process you should have the following files:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>secure.key - The unencrypted version of your private key (be very careful no one else has access to this file!)
+secure.key.secure - The encrypted version of your private key (does not need to be copied to server)
+server.csr - Your new certificate (bundle)
+</code></pre></div></div>
+
+<p>If you had any intermediate certificates, you should just concatenate them to the server.csr file to create a certificate bundle.
+Now copy the <code class="language-plaintext highlighter-rouge">secure.key</code> and <code class="language-plaintext highlighter-rouge">server.csr</code> to the <code class="language-plaintext highlighter-rouge">/home/dokku/{application name}/tls</code> folder on your cloud@cost server. Create the <code class="language-plaintext highlighter-rouge">tls</code> folder if it doesn’t exist. Rename the <code class="language-plaintext highlighter-rouge">secure.key</code> file to <code class="language-plaintext highlighter-rouge">server.key</code> and rename the <code class="language-plaintext highlighter-rouge">server.csr</code> to <code class="language-plaintext highlighter-rouge">server.crt</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ls -al
+-rw-r--r-- 1 dokku  dokku  7241 Jun 15 12:58 server.crt
+-rw-r--r-- 1 dokku  dokku  1676 Jun 15 12:58 server.key
+</code></pre></div></div>
+
+<p>Redeployment of the application will be needed to apply TLS configuration. Once it is redeployed, the application will be accessible by <code class="language-plaintext highlighter-rouge">https://</code> (redirection from<code class="language-plaintext highlighter-rouge">https://</code> is applied as well).</p>
+
+<h1 id="continuous-deployment">Continuous Deployment.</h1>
+
+<p>So you’ve gotten through this wonderful guide, and you’re thinking.. Its a sunday night, and I still have some time to kill. That’s great. Let’s finish up by setting up continuous deployment for our application using Wercker. Wercker is a SAAS similar to CircleCI, TravisCI and Jenkins. The nice thing about Wercker is that it has free accounts with the limitation that only one build can occur at a time.</p>
+
+<p>There’s no need to walk you through creating an account with Wercker. Wercker is based around a <code class="language-plaintext highlighter-rouge">werker.yml</code> file that you add to your project root. Here’s what mine looks like.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">box</span><span class="pi">:</span> <span class="s">wercker/nodejs</span>
+<span class="c1"># Build definition</span>
+<span class="na">build</span><span class="pi">:</span>
+  <span class="c1"># The steps that will be executed on build</span>
+  <span class="na">steps</span><span class="pi">:</span>
+    <span class="c1"># A step that executes `npm install` command</span>
+    <span class="pi">-</span> <span class="s">npm-install</span>
+    <span class="c1"># A step that executes `npm test` command</span>
+    <span class="pi">-</span> <span class="s">npm-test</span>
+    <span class="c1"># A custom script step, name value is used in the UI</span>
+    <span class="c1"># and the code value contains the command that get executed</span>
+    <span class="pi">-</span> <span class="na">script</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">echo nodejs information</span>
+        <span class="s">code</span><span class="err">:</span> <span class="pi">|</span>
+          <span class="s">echo "node version $(node -v) running"</span>
+          <span class="s">echo "npm version $(npm -v) running"</span>
+<span class="na">deploy</span><span class="pi">:</span>
+  <span class="na">steps</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">add-to-known_hosts</span><span class="pi">:</span>
+        <span class="na">hostname</span><span class="pi">:</span> <span class="s">$SERVER_HOSTNAME</span>
+    <span class="pi">-</span> <span class="na">add-ssh-key</span><span class="pi">:</span>
+        <span class="na">keyname</span><span class="pi">:</span> <span class="s">DOKKU</span>
+    <span class="pi">-</span> <span class="na">script</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">Initialize new repository</span>
+        <span class="na">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">rm -rf .git</span>
+          <span class="s">git init</span>
+          <span class="s">git config --global user.name "wercker"</span>
+          <span class="s">git config --global user.email "pleasemailus@wercker.com"</span>
+          <span class="s">git remote add dokku dokku@$SERVER_HOSTNAME:build</span>
+    <span class="pi">-</span> <span class="na">script</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">Add everything to the repository</span>
+        <span class="na">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">git add .</span>
+          <span class="s">git commit -m "Result of deploy $WERCKER_GIT_COMMIT"</span>
+    <span class="pi">-</span> <span class="na">script</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">Push to dokku</span>
+        <span class="na">code</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">git push dokku master -f</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">wercker.yml</code> file is broken up into two parts, the <code class="language-plaintext highlighter-rouge">build</code> and <code class="language-plaintext highlighter-rouge">deploy</code> sections. This <code class="language-plaintext highlighter-rouge">wercker.yml</code> file is for a node application. Once the build finishes, and the tests pass, the application deploys to our Dokku server, automatically.</p>
+
+<p>I’m going to assume that you’ve already connected your bitbucket/github account, and added your project. Lets jump straight into the configuration.
+First lets got to the <code class="language-plaintext highlighter-rouge">settings</code> tab, and add a new SSH key. Wercker will generate the private key pair for us, we just have to name the key, and copy the public key that they give us.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782lvfFkZ1rzg9b0.png" alt="Ssh Keys" /></p>
+
+<p>We can then add the key to our Dokku server by modifying the <code class="language-plaintext highlighter-rouge">authorized_keys</code> file or using <code class="language-plaintext highlighter-rouge">sudo sshcommand acl-add dokku {key name/descriptor}</code></p>
+
+<p>Then, we should add a new <code class="language-plaintext highlighter-rouge">Deploy Target</code> to our Wercker project, pointing to our Cloud@Cost server. Select <code class="language-plaintext highlighter-rouge">Custom deploy</code> from the dropdown.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782yw22Zh1rzg9b0.png" alt="Custom Deploy Target" /></p>
+
+<p>Create a new environmental variable called <code class="language-plaintext highlighter-rouge">SERVER_HOSTNAME</code> and specify your dokku server hostname or ipaddress.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n782y5dmXQ1rzg9b0.png" alt="Env Variable" /></p>
+
+<p>Create one more environmental variable called <code class="language-plaintext highlighter-rouge">DOKKU</code> and point it to the SSH keypair you created earlier</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/dokku/tumblr_inline_n7830psbV91rzg9b0.png" alt="Env Variable Populated" /></p>
+
+<p>Make sure you hit the <code class="language-plaintext highlighter-rouge">Save</code> button, otherwise Wercker will ignore your configuration changes.</p>
+
+<p>Now make a test commit to your master branch, and push it to github/bitbucket. Your commit should automatically deploy via Wercker to your Dokku box.</p>
+
+<h1 id="fin">Fin.</h1>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Continuous Deployment with Dokku (Full Guide)&amp;url=https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/continuous-deployment-with-dokku-full-guide" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/continuous-deployment-with-dokku-full-guide'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Continuous Deployment with Dokku (Full Guide)';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_sails.jpg)" href="/ducktyping-sailsjs-core-for-background-tasks-via">
+            <section class="post">
+                <h2>Ducktyping SailsJS Core for Background Tasks via Kue</h2>
+                <p># Update After this post was written I was introduced to Sails Hooks, which is...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_npm.png)" href="/npm-errors-with-infinite-loop">
+            <section class="post">
+                <h2>npm errors with infinite loop</h2>
+                <p>Occasionally I’ll be working with a nodejs project and when I attempt to run $...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

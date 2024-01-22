@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Docker Hub - Matrix Builds and Tagging using Build Args</title>
+	  <link>/docker-hub-matrix-builds</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2019-09-12T04:19:33-05:00</pubDate>
+	  <guid>/docker-hub-matrix-builds</guid>
+	  <description><![CDATA[
+	     <p>If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the official Docker Image registry.
+One of the best things about Docker Hub is it’s support for Automated Builds, which is where Docker Hub will watch a
+Git repository for changes, and automatically build your Docker images whenever you make a new commit.</p>
+
+<p>This works great for most simple use cases (and even some complex ones), but occasionally you’ll wish you had a bit more control
+over the Docker Hub image build process.</p>
+
+<p>That’s where Docker’s <a href="https://docs.docker.com/docker-hub/builds/advanced/">Advanced options for Autobuild and Autotest</a>
+guide comes in. While it’s not quite a turn key solution, Docker Hub allows you to override the <code class="language-plaintext highlighter-rouge">test</code>, <code class="language-plaintext highlighter-rouge">build</code> and <code class="language-plaintext highlighter-rouge">push</code>
+stages completely, as well as run arbitrary code <code class="language-plaintext highlighter-rouge">pre</code> and <code class="language-plaintext highlighter-rouge">post</code> each of those stages.</p>
+
+<p>As always, here’s a Github repo with working code if you want to skip ahead:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+<h2 id="goal">Goal</h2>
+
+<p>So what’s the point? If Docker Hub works fine for most people, what’s an actual use case for these Advanced Options?</p>
+
+<p>Lets say you have developed a tool, and you would like to distribute it as a Docker image. The first problem is that you’d
+like to provide Docker images based on a handful of different OS’s. <code class="language-plaintext highlighter-rouge">ubuntu</code>, <code class="language-plaintext highlighter-rouge">centos6</code>, <code class="language-plaintext highlighter-rouge">centos7</code> and <code class="language-plaintext highlighter-rouge">alpine</code>
+Simple enough, just write a handful of Dockerfiles, and use the <code class="language-plaintext highlighter-rouge">FROM</code> instruction.
+But lets say that you also need to provide multiple versions of your tool, and each of those must also be distributed as a
+Docker Image based on different OS’s.</p>
+
+<p>Now the number of Dockerfiles you need to maintain has increased significantly. If you’re familiar with Jenkins, this would
+be perfect for a “Matrix Project”.</p>
+
+<p>Here’s what our Docker naming scheme might look like:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>ubuntu</th>
+      <th>centos6</th>
+      <th>centos7</th>
+      <th>alpine</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>v1.x</td>
+      <td>v1-ubuntu</td>
+      <td>v1-centos6</td>
+      <td>v1-centos7</td>
+      <td>v1-alpine</td>
+    </tr>
+    <tr>
+      <td>v2.x</td>
+      <td>v2-ubuntu</td>
+      <td>v2-centos6</td>
+      <td>v2-centos7</td>
+      <td>v2-alpine</td>
+    </tr>
+    <tr>
+      <td>v3.x</td>
+      <td>v3-ubuntu</td>
+      <td>v3-centos6</td>
+      <td>v3-centos7</td>
+      <td>v3-alpine</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As our software grows, you could image other axises being added: architectures, software runtimes, etc.</p>
+
+<h2 id="build-arguments">Build Arguments</h2>
+
+<p>Alright, so the first part of the solution is just making use of Dockerfile templating, also known as <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg">build arguments</a></p>
+
+<p>To keep the number of Dockerfiles to the minimum, we need to pick an axes that minimizes the number of changes required.
+In this example we’ll choose to create a separate Dockerfile for each OS, reusing it for each branch of our software.</p>
+
+<div class="language-Dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> ubuntu</span>
+<span class="k">ARG</span><span class="s"> software_version</span>
+
+<span class="k">RUN </span>apt-get update <span class="o">&amp;&amp;</span> apt-get <span class="nb">install</span> <span class="nt">-y</span> &lt;dependencies&gt; <span class="se">\
+</span>    ... <span class="se">\
+</span>    curl <span class="nt">-o</span> /usr/bin/myapp https://www.company.com/<span class="k">${</span><span class="nv">software_version</span><span class="k">}</span>/myapp-<span class="k">${</span><span class="nv">software_version</span><span class="k">}</span>
+
+</code></pre></div></div>
+
+<p>Now we can reuse this single Dockerfile to build 3 Docker images, running 3 different versions of our software:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker build -f ubuntu/Dockerfile --build-arg software_version=v1.0 -t v1-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v2.1 -t v2-ubuntu .
+docker build -f ubuntu/Dockerfile --build-arg software_version=v3.7 -t v3-ubuntu .
+</code></pre></div></div>
+
+<h2 id="project-structure">Project Structure</h2>
+<p>Looks great so far, but Docker Hub doesn’t support configuring Build Arguments though their web ui. So we’ll need to use the
+“Advanced options for Autobuild” documentation to override it.</p>
+
+<p>At this point our project repository probably looks something like this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>project/
+├── ubuntu/
+│   └── Dockerfile
+├── centos6/
+│   └── Dockerfile
+├── centos7/
+│   └── Dockerfile
+...
+</code></pre></div></div>
+
+<p>Docker Hub requires that the hook override directory is located as a sibling to the Dockerfile.
+To keep our repository DRY, we’ll instead create a <code class="language-plaintext highlighter-rouge">hook</code> directory at the top level, and symlink our <code class="language-plaintext highlighter-rouge">build</code> and <code class="language-plaintext highlighter-rouge">push</code>
+scripts into a hooks directory beside each Dockerfile. We’ll also create an empty <code class="language-plaintext highlighter-rouge">software-versions.txt</code> file in the project root,
+which we’ll use to store the versions of our software that needs to be automatically build. We’ll discuss this further in the next section.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>project/
+├── software-versions.txt
+├── hooks/
+│   ├── build
+│   └── push
+├── ubuntu/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos6/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+├── centos7/
+│   ├── hooks/
+│   │   ├── build (symlink)
+│   │   └── push (symlink)
+│   └── Dockerfile
+...
+</code></pre></div></div>
+
+<p>Now that we have our project organized in a way that Docker Hub expects, lets populate our override scripts</p>
+
+<h2 id="docker-hub-hook-override-scripts">Docker Hub Hook Override Scripts</h2>
+
+<p>Docker Hub provides the following environmental variables which are available to us in the logic of our scripts.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">SOURCE_BRANCH</code>: the name of the branch or the tag that is currently being tested.</li>
+  <li><code class="language-plaintext highlighter-rouge">SOURCE_COMMIT</code>: the SHA1 hash of the commit being tested.</li>
+  <li><code class="language-plaintext highlighter-rouge">COMMIT_MSG</code>: the message from the commit being tested and built.</li>
+  <li><code class="language-plaintext highlighter-rouge">DOCKER_REPO</code>: the name of the Docker repository being built.</li>
+  <li><code class="language-plaintext highlighter-rouge">DOCKERFILE_PATH</code>: the dockerfile currently being built.</li>
+  <li><code class="language-plaintext highlighter-rouge">DOCKER_TAG</code>: the Docker repository tag being built.</li>
+  <li><code class="language-plaintext highlighter-rouge">IMAGE_NAME</code>: the name and tag of the Docker repository being built. (This variable is a combination of <code class="language-plaintext highlighter-rouge">DOCKER_REPO</code>:<code class="language-plaintext highlighter-rouge">DOCKER_TAG</code>.)</li>
+</ul>
+
+<p>The following is a simplified version of a <code class="language-plaintext highlighter-rouge">build</code> hook script that we can use to override the <code class="language-plaintext highlighter-rouge">build</code> step on Docker Hub.
+Keep in mind that this script is missing some error handling for readability reasons.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/build in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker build command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker build -f </span><span class="nv">$DOCKERFILE_PATH</span><span class="s2"> -t </span><span class="nv">$IMAGE_NAME</span><span class="s2"> ."</span>
+
+<span class="nb">cat</span> <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+        <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+        <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+        <span class="nb">echo</span> <span class="s2">"docker build -f Dockerfile --build-arg software_version=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2"> -t </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2"> ../"</span>
+        docker build <span class="nt">-f</span> Dockerfile <span class="nt">--build-arg</span> <span class="nv">software_version</span><span class="o">=</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span> <span class="nt">-t</span> <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span> ../
+<span class="k">done</span>
+
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">push</code> script is similar:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="c">###############################################################################</span>
+<span class="c"># WARNING</span>
+<span class="c"># This is a symlinked file. The original lives at hooks/push in this repository</span>
+<span class="c">###############################################################################</span>
+
+<span class="c"># original docker push command</span>
+<span class="nb">echo</span> <span class="s2">"overwriting docker push </span><span class="nv">$IMAGE_NAME</span><span class="s2">"</span>
+
+<span class="nb">cat</span> <span class="s2">"../software-versions.txt"</span> | <span class="k">while </span><span class="nb">read </span>software_version_line
+<span class="k">do</span>
+    <span class="c"># The new image tag will include the version of our software, prefixed to the os image we're currently building</span>
+    <span class="nv">IMAGE_TAG</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">DOCKER_REPO</span><span class="k">}</span><span class="s2">:</span><span class="k">${</span><span class="nv">software_version_line</span><span class="k">}</span><span class="s2">-</span><span class="k">${</span><span class="nv">DOCKER_TAG</span><span class="k">}</span><span class="s2">"</span>
+
+    <span class="nb">echo</span> <span class="s2">"docker push </span><span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span><span class="s2">"</span>
+    docker push <span class="k">${</span><span class="nv">IMAGE_TAG</span><span class="k">}</span>
+<span class="k">done</span>
+
+</code></pre></div></div>
+
+<p>You should have noticed the <code class="language-plaintext highlighter-rouge">software-versions.txt</code> above. It’s basically a text file that just contains version numbers for
+our <code class="language-plaintext highlighter-rouge">myapp</code> software/binary.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>master
+v1.0
+v2.1
+v3.7
+</code></pre></div></div>
+<p>This file is then read line-by-line, and each line is passed into a docker build command via <code class="language-plaintext highlighter-rouge">--build-arg</code>. It’s also used as the
+version component in the Docker image build tag.</p>
+
+<h2 id="docker-hub-configuration">Docker Hub Configuration</h2>
+
+<p>The final component necessary to successfully build these images is to configure the Docker Hub project correctly.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/docker-hub/docker-hub-configuration.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<h2 id="fin">Fin</h2>
+
+<p>Again, here’s the Github repo with working code (using <code class="language-plaintext highlighter-rouge">jq</code> as our example software tool to be installed):</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-hub-matrix-builds"></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

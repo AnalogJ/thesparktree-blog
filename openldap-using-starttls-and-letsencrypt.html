@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>OpenLDAP using STARTTLS & LetsEncrypt</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - OpenLDAP using STARTTLS & LetsEncrypt" />
+    <meta name="twitter:description" content="LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication. LDAP provides the communication language that applications use to..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_ldap.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - OpenLDAP using STARTTLS & LetsEncrypt" />
+    <meta property="og:description" content="LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication. LDAP provides the communication language that applications use to..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_ldap.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt",
+        "image": "https://blog.thesparktree.com/assets/images/cover_ldap.png",
+        "description": "LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication. LDAP provides the communication language that applications use to..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_ldap.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">OpenLDAP using STARTTLS & LetsEncrypt</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2021-06-13">13 Jun 2021</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/ldap'>Ldap</a>,
+                    
+                
+                    
+                       <a href='/tag/letsencrypt'>Letsencrypt</a>,
+                    
+                
+                    
+                       <a href='/tag/tls'>Tls</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <blockquote>
+  <p>LDAP (Lightweight Directory Access Protocol) is an open and cross platform protocol used for directory services authentication.</p>
+
+  <p>LDAP provides the communication language that applications use to
+communicate with other directory services servers. Directory services
+store the users, passwords, and computer accounts, and share that
+information with other entities on the network.</p>
+
+  <p><strong>OpenLDAP</strong> is a <a href="https://en.wikipedia.org/wiki/Free_software">free</a>,
+<a href="https://en.wikipedia.org/wiki/Open-source_software" title="Open-source software">open-source</a> implementation of the
+<a href="https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol" title="Lightweight Directory Access Protocol">Lightweight Directory Access Protocol</a>
+(LDAP) developed by the OpenLDAP Project. It is released under its own BSD-style license called the OpenLDAP Public License.<a href="https://en.wikipedia.org/wiki/OpenLDAP#cite_note-4">[4]</a></p>
+</blockquote>
+
+<p>There are 2 commonly used mechanisms to secure LDAP traffic - LDAPS and StartTLS. LDAPS is deprecated in favor of Start TLS [RFC2830].</p>
+
+<p>During some recent infrastructure changes I found out the hard way that <a href="https://issues.jenkins.io/browse/JENKINS-14520">LDAP plugin for Jenkins does not support LDAP over TLS (StartTLS)</a>.
+Given that LDAPS is officially deprecated, I began work on a PR to add StartTLS support myself.</p>
+
+<p>Before I could start coding, I needed to create a local development environment with an LDAP server speaking StartTLS.
+Unfortunately, this was harder than I anticipated, as StartTLS (while officially supported since LDAPv3) is not well documented.</p>
+
+<p>In the following post ,I’ll show you how to get OpenLDAP up and running with StartTLS, using valid certificates from LetsEncrypt.</p>
+
+<p>As always, the code is Open Source and lives on Github:</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<h1 id="self-signed-vs-trusted-ca-certificates">Self-Signed vs Trusted CA Certificates</h1>
+
+<p>There are two types of <strong>SSL Certificates</strong> when you’re talking about signing. There are <strong>Self-Signed SSL Certificates</strong> and certificates
+that are signed by a Trusted Certificate Authority (and are usually already trusted by your system).</p>
+
+<p>Most OpenLDAP documentation I was able to find used Self-Signed certifates. While that works fine for most development,
+I am trying to replicate a production-like environment, which means real, trusted certificates. Thankfully, we can utilize
+short-lived trusted certificates provided by LetsEncrypt to secure our test OpenLDAP server.</p>
+
+<h1 id="generate-letsencrypt-certificate">Generate LetsEncrypt Certificate</h1>
+
+<div class="github-widget" data-repo="matrix-org/docker-dehydrated"></div>
+
+<p>The <a href="https://matrix.org/">matrix.org</a> team provide a simple <a href="https://github.com/matrix-org/docker-dehydrated#behaviour">Docker image</a>
+that you can use to generate LetsEncrypt certificates using the DNS-01 challenge. All you need is a custom domain, and a
+<a href="https://github.com/AnalogJ/lexicon">DNS provider with an API</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">mkdir </span>data
+
+<span class="c"># We cannot use a wildcard domain with OpenLDAP, so let's pick a simple obvious subdomain.</span>
+<span class="nb">echo</span> <span class="s2">"ldap.example.com"</span> <span class="o">&gt;</span> data/domains.txt
+
+docker run <span class="nt">--rm</span> <span class="se">\</span>
+<span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/data:/data <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_GENERATE_CONFIG</span><span class="o">=</span><span class="nb">yes</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_CA</span><span class="o">=</span><span class="s2">"https://acme-v02.api.letsencrypt.org/directory"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_CHALLENGE</span><span class="o">=</span><span class="s2">"dns-01"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_KEYSIZE</span><span class="o">=</span><span class="s2">"4096"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_HOOK</span><span class="o">=</span><span class="s2">"/usr/local/bin/lexicon-hook"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_RENEW_DAYS</span><span class="o">=</span><span class="s2">"30"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_KEY_RENEW</span><span class="o">=</span><span class="s2">"yes"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_ACCEPT_TERMS</span><span class="o">=</span><span class="nb">yes</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">DEHYDRATED_EMAIL</span><span class="o">=</span><span class="s2">"myemail@gmail.com"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">PROVIDER</span><span class="o">=</span>cloudflare <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_USERNAME</span><span class="o">=</span><span class="s2">"mycloudflareusername"</span> <span class="se">\</span>
+<span class="nt">-e</span> <span class="nv">LEXICON_CLOUDFLARE_TOKEN</span><span class="o">=</span><span class="s2">"mycloudflaretoken"</span> <span class="se">\</span>
+docker.io/matrixdotorg/dehydrated
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: pay attention to those last 3 environmental variables. They are passed to <a href="https://github.com/AnalogJ/lexicon">lexicon</a>
+and should be changed to match your DNS provider.</p>
+</blockquote>
+
+<p>Once <code class="language-plaintext highlighter-rouge">dehydrated</code> prints its success messge , you should see a handful of new subfolders in <code class="language-plaintext highlighter-rouge">data</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>data
+├── accounts
+│ └── xxxxxxxxxxxxxx
+│     ├── account_id.json
+│     ├── account_key.pem
+│     └── registration_info.json
+├── certs
+│ └── ldap.example.com
+│     ├── cert-xxxxxx.csr
+│     ├── cert-xxxxxx.pem
+│     ├── cert.csr -&gt; cert-xxxxxx.csr
+│     ├── cert.pem -&gt; cert-xxxxxx.pem
+│     ├── chain-xxxxxx.pem
+│     ├── chain.pem -&gt; chain-xxxxxx.pem
+│     ├── combined.pem
+│     ├── fullchain-xxxxxx.pem
+│     ├── fullchain.pem -&gt; fullchain-xxxxxx.pem
+│     ├── privkey-xxxxxx.pem
+│     └── privkey.pem -&gt; privkey-xxxxxx.pem
+├── chains
+├── config
+└── domains.txt
+</code></pre></div></div>
+
+<p>Let’s leave these files alone for now, and continue to standing up and configuring our OpenLDAP server.</p>
+
+<h1 id="deploying-openldap-via-docker">Deploying OpenLDAP via Docker</h1>
+
+<p>Since we’re not actually deploying a production instance (with HA/monitoring/security hardening/etc) we can take
+some short-cuts and use an off-the-shelf Docker image.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>The <a href="https://github.com/AnalogJ/docker-openldap-starttls">analogj/docker-openldap-starttls</a> image we’re using in the
+example below is based on the  <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild/test-openldap</a> Docker image,
+ which provies a vanilla install of OpenLDAP, and adds Futurama characters as test users.</p>
+
+<p>I’ve customized it to add support for custom Domains, dynamic configuration &amp; the ability to enforce StartTLS on the
+serverside (which is great for testing).</p>
+
+<p>Before we start the OpenLDAP container, lets rename and re-organize our LetsEncrypt certificates in a folder structure that the container expects:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir -p ldap
+cp data/fullchain.pem ldap/fullchain.crt
+cp data/cert.pem ldap/ldap.crt
+cp data/privkey.pem ldap/ldap.key
+</code></pre></div></div>
+
+<p>Next, lets start the OpenLDAP Docker container:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run --rm \
+-v `pwd`/ldap:/etc/ldap/ssl/ \
+-p 10389:10389 \
+-p 10636:10636 \
+-e LDAP_DOMAIN="example.com" \
+-e LDAP_BASEDN="dc=example,dc=com" \
+-e LDAP_ORGANISATION="Custom Organization Name, Example Inc." \
+-e LDAP_BINDDN="cn=admin,dc=example,dc=com" \
+-e LDAP_FORCE_STARTTLS="true" \
+ghcr.io/analogj/docker-openldap-starttls:master
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: the <code class="language-plaintext highlighter-rouge">LDAP_DOMAIN</code> should be your root domain (<code class="language-plaintext highlighter-rouge">example.com</code> vs <code class="language-plaintext highlighter-rouge">ldap.example.com</code> from your certificate).
+It’s used for test user email addresses.</p>
+
+  <p>Pay attention to the <code class="language-plaintext highlighter-rouge">LDAP_BASEDN</code> and <code class="language-plaintext highlighter-rouge">LDAP_BINDDN</code> variables, they should match your Domain root as well.</p>
+
+  <p><code class="language-plaintext highlighter-rouge">LDAP_FORCE_STARTTLS=true</code> is optional, you can use it to conditionally start your LDAP server with StartTLS enforced.</p>
+</blockquote>
+
+<p>If everything is correct, you should see <code class="language-plaintext highlighter-rouge">slapd starting</code> as your last log message.</p>
+
+<p>Lets test that the container is responding correctly, though the certificate will not match since we’re going to query it
+using <code class="language-plaintext highlighter-rouge">localhost:10389</code></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># LDAPTLS_REQCERT=never tells ldapsearch to skip certificate validation</span>
+<span class="c"># -Z is required if we used LDAP_FORCE_STARTTLS="true" to start the container.</span>
+
+<span class="nv">LDAPTLS_REQCERT</span><span class="o">=</span>never ldapsearch <span class="nt">-H</span> ldap://localhost:10389 <span class="nt">-Z</span> <span class="nt">-x</span> <span class="nt">-b</span> <span class="s2">"ou=people,dc=example,dc=com"</span> <span class="nt">-D</span> <span class="s2">"cn=admin,dc=example,dc=com"</span> <span class="nt">-w</span> GoodNewsEveryone <span class="s2">"(objectClass=inetOrgPerson)"</span>
+
+<span class="c"># ...</span>
+<span class="c"># search result</span>
+<span class="c"># search: 3</span>
+<span class="c"># result: 0 Success</span>
+<span class="c">#</span>
+<span class="c"># numResponses: 8</span>
+<span class="c"># numEntries: 7</span>
+</code></pre></div></div>
+
+<h1 id="dns">DNS</h1>
+
+<p>Wiring up DNS to correctly resolve to the new container running on you host is left as a exercise for the user.</p>
+
+<p>For testing, I just setup a simple A record pointing <code class="language-plaintext highlighter-rouge">ldap.example.com</code> to my laptop’s private IP address <code class="language-plaintext highlighter-rouge">192.168.0.123</code>.
+It obviously won’t resolve correctly outside my home network, but it works fine for testing.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ping ldap.example.com
+PING ldap.example.com (192.168.0.123): 56 data bytes
+64 bytes from 192.168.0.123: icmp_seq=0 ttl=64 time=0.045 ms
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: Remember, DNS updates can take a while to propagate. You’ll want to set a low TTL for the new record if your IP will
+be changing constantly (DHCP). You may also need to flush your DNS cache if the changes do not propagate correctly.</p>
+</blockquote>
+
+<h1 id="testing">Testing</h1>
+
+<p>You can test that the container is up and running (and accessible via our custom domain) with some handy <code class="language-plaintext highlighter-rouge">ldapsearch</code> commands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># List all Users (only works with LDAP_FORCE_STARTTLS=false)
+ldapsearch -H ldap://ldap.example.com:10389 -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Response:
+# ldap_bind: Confidentiality required (13)
+#	additional info: TLS confidentiality required
+
+# Request StartTLS (works with LDAP_FORCE_STARTTLS=true/false)
+ldapsearch -H ldap://ldap.example.com:10389 -Z -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Enforce StartTLS (only works with LDAP_FORCE_STARTTLS=true)
+ldapsearch -H ldap://example:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+
+# Query Open LDAP using Localhost url, also works with self-signed certs (-ZZ forces StartTLS)
+LDAPTLS_REQCERT=never ldapsearch -H ldap://localhost:10389 -ZZ -x -b "ou=people,dc=example,dc=com" -D "cn=admin,dc=example,dc=com" -w GoodNewsEveryone "(objectClass=inetOrgPerson)"
+</code></pre></div></div>
+
+<h1 id="how-does-it-work">How does it work?</h1>
+
+<p>Other than my changes that allow you to customize the domain, there are only 2 main changes from <a href="https://github.com/rroemhild/docker-test-openldap/">rroemhild’s amazing work</a>.</p>
+
+<ul>
+  <li>
+    <p>A slightly modified <code class="language-plaintext highlighter-rouge">tls.ldif</code> file, which uses the fullchain, private key and certificate provided by LetsEncrypt</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dn: cn=config
+changetype: modify
+replace: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ldap/ssl/fullchain.crt
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ldap/ssl/ldap.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ldap/ssl/ldap.key
+-
+replace: olcTLSVerifyClient
+olcTLSVerifyClient: never
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>A new (conditionally loaded) <code class="language-plaintext highlighter-rouge">force-starttls.ldif</code> file, which tells OpenLDAP to force TLS</p>
+
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dn: cn=config
+changetype:  modify
+add: olcSecurity
+olcSecurity: tls=1
+
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h1 id="fin">Fin</h1>
+
+<div class="github-widget" data-repo="AnalogJ/docker-openldap-starttls"></div>
+
+<p>Getting all the details right took some time, but it was worth it. With this containerized setup, its easy to start
+up a fresh “trusted” OpenLDAP image for testing, and conditionally enforce StartTLS.</p>
+
+<p>Thankfully, I was able to use this local containerized OpenLDAP server to finish my work in the
+<a href="https://github.com/jenkinsci/ldap-plugin/pull/97">Jenkins LDAP-Plugin</a>, which I’ll be writing about in a future blog post.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=OpenLDAP using STARTTLS & LetsEncrypt&amp;url=https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/openldap-using-starttls-and-letsencrypt" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/openldap-using-starttls-and-letsencrypt'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'OpenLDAP using STARTTLS &amp; LetsEncrypt';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_gmail.jpg)" href="/hatchet">
+            <section class="post">
+                <h2>Hatchet - Cut down spam in your Gmail Inbox</h2>
+                <p>I got frustrated with the amount of daily spam in my Gmail "Promotions" tab --...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_docker.jpg)" href="/cron-in-docker">
+            <section class="post">
+                <h2>Running Cron in Docker</h2>
+                <p>Running cron in a Docker container is incredibly difficult to do correctly. This is partially...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

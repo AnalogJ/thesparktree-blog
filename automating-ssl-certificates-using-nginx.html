@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22" />
+    <meta name="twitter:description" content="There’s a ton of smart people out there who’ve written guides on setting up Nginx, and automating Letsencrypt —but none that setup automation and work 100%..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/automating-ssl-certificates-using-nginx" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_letsencrypt.jpg" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22" />
+    <meta property="og:description" content="There’s a ton of smart people out there who’ve written guides on setting up Nginx, and automating Letsencrypt —but none that setup automation and work 100%..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/automating-ssl-certificates-using-nginx" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_letsencrypt.jpg" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/automating-ssl-certificates-using-nginx",
+        "image": "https://blog.thesparktree.com/assets/images/cover_letsencrypt.jpg",
+        "description": "There’s a ton of smart people out there who’ve written guides on setting up Nginx, and automating Letsencrypt —but none that setup automation and work 100%..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_letsencrypt.jpg) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2016-01-31">31 Jan 2016</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/letsencrypt'>Letsencrypt</a>,
+                    
+                
+                    
+                       <a href='/tag/docker'>Docker</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>,
+                    
+                
+                    
+                       <a href='/tag/SSL'>Ssl</a>,
+                    
+                
+                    
+                       <a href='/tag/nginx'>Nginx</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+
+            <p>There’s a ton of smart people out there who’ve written guides on <a href="https://sysops.forlaravel.com/letsencrypt">setting</a> <a href="https://blog.rudeotter.com/lets-encrypt-ssl-certificate-nginx-ubuntu/">up</a> <a href="https://davidzych.com/setting-up-ssl-with-lets-encrypt-on-ubuntu-and-nginx/">Nginx</a>, <a href="https://community.letsencrypt.org/t/howto-easy-cert-generation-and-renewal-with-nginx/3491/2">and</a> <a href="https://adambard.com/blog/using-letsencrypt-with-nginx/">automating</a> <a href="https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-14-04">Letsencrypt</a> —but none that setup automation and work 100% correctly out of the box. That’s the goal here, I’ll be documenting all the steps required to get your web application protected by an automatically renewing SSL certificate.</p>
+
+<blockquote>
+  <p>NOTE: The following commands will require root user permissions.
+You might want to run <code class="language-plaintext highlighter-rouge">sudo su -</code> first.</p>
+</blockquote>
+
+<h2 id="installing-nginx">Installing Nginx</h2>
+
+<p>The first step is to install Nginx. If all you want to do is install the standard version, it should be available via your distro’s package manager.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># install Nginx on Ubuntu</span>
+apt-get update
+apt-get <span class="nb">install</span> <span class="nt">-y</span> nginx
+</code></pre></div></div>
+
+<h2 id="install-letsencryptsh">Install Letsencrypt.sh</h2>
+
+<p>The second step is to install a Letsencrypt client. The <a href="https://github.com/letsencrypt/letsencrypt">official client</a> is a bit bloated and complicated to setup. I prefer to use the <a href="https://github.com/lukas2511/letsencrypt.sh">letsencrypt.sh client</a> instead as its code is easier to understand, has few dependencies and its incredibly simple to automate.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># install letsencrypt.sh dependencies (most should already be installed)</span>
+apt-get <span class="nb">install</span> <span class="nt">-y</span> openssl curl <span class="nb">sed grep mktemp </span>git
+
+<span class="c"># install letsencrypt.sh into /srv/letsencrypt</span>
+git clone https://github.com/lukas2511/letsencrypt.sh.git /srv/letsencrypt
+</code></pre></div></div>
+
+<h2 id="configure-letsencrypt">Configure Letsencrypt</h2>
+
+<p>Letsencrypt.sh requires some configuration, but not much, the defaults work out of the box. That means that all you need to do is</p>
+
+<ul>
+  <li>create a domains.txt file with the url(s) of the site(s) you’re generating ssl certificates for</li>
+  <li>create a acme-challenges folder that can be  accessed by Nginx.</li>
+</ul>
+
+<p>Here’s how we can do that.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># First we need to make the client executable</span>
+<span class="nb">chmod</span> +x /srv/letsencrypt/letsencrypt.sh
+<span class="c"># Then we need to create an ACME challenges folder and symlink it for Nginx to use</span>
+<span class="nb">mkdir</span> <span class="nt">-p</span> /srv/letsencrypt/.acme-challenges
+<span class="nb">mkdir</span> <span class="nt">-p</span> /var/www/
+<span class="nb">ln</span> <span class="nt">-s</span> /srv/letsencrypt/.acme-challenges /var/www/letsencrypt
+</code></pre></div></div>
+
+<p>Finally we need to specify the site(s) that will be protected by Letsencrypt ssl certificates.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>echo "www.example.com" &gt;&gt; /srv/letsencrypt/domains.txt
+</code></pre></div></div>
+
+<p>Read more about the domains.txt file format <a href="https://github.com/lukas2511/letsencrypt.sh#domainstxt">here</a></p>
+
+<h2 id="configure-nginx-without-the-catch-22">Configure Nginx (without the Catch-22)</h2>
+
+<p>Up to now, the steps I’ve shown have been the same as almost any other Letsencrypt+Nginx guide you’ve seen online. However most of other guides will tell you to configure Nginx in a way that requires manual intervention.</p>
+
+<p>A basic Letsencrypt Nginx configuration file looks like this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># DONT USE THIS, IT WONT WORK.
+
+# /etc/nginx/sites-enabled/example.conf
+# HTTP server
+server {
+	listen      80;
+	server_name www.example.com;
+	location '/.well-known/acme-challenge' {
+		default_type "text/plain";
+		alias /var/www/letsencrypt;
+	}
+	location / {
+		return 301 https://$server_name$request_uri;
+	}
+}
+# HTTPS
+server {
+	listen       443;
+	server_name  www.example.com;
+	ssl                  on;
+	ssl_certificate      /srv/letsencrypt/certs/www.example.com/fullchain.pem;
+	ssl_certificate_key  /srv/letsencrypt/certs/www.example.com/privkey.pem;
+
+	...
+}
+</code></pre></div></div>
+
+<p>There’s a problem with this though. If you try starting up your Nginx server with this config, it’ll throw an error because the SSL certificate files don’t exist. And you can’t start the letencrypt.sh command to generate the SSL certificates without a working Nginx server to serve up the acme-challenge folder. Classic catch 22.</p>
+
+<p>Here’s the solution: we’re going to break up the Nginx configuration into 2 separate configuration files, one for the  HTTP endpoint with letsencrypt challenge files and one for the HTTPS endpoint serving the actual web application.</p>
+
+<p>We’ll then place them both in the <code class="language-plaintext highlighter-rouge">sites-available</code> folder rather than the standard <code class="language-plaintext highlighter-rouge">sites-enabled</code> folder. By default, any configuration files in the <code class="language-plaintext highlighter-rouge">sites-enabled</code> folder are automatically parsed by Nginx when it’s restarted, however we want to control this process.</p>
+
+<p>The HTTP Nginx configuration file will be located at: <code class="language-plaintext highlighter-rouge">/etc/nginx/sites-available/http.example.conf</code> and look like:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># HTTP server
+server {
+	listen      80;
+	server_name www.example.com;
+	location '/.well-known/acme-challenge' {
+		default_type "text/plain";
+		alias /var/www/letsencrypt;
+	}
+	location / {
+		return 301 https://$server_name$request_uri;
+	}
+}
+</code></pre></div></div>
+
+<p>The HTTPS Nginx configuration file will be located at <code class="language-plaintext highlighter-rouge">/etc/nginx/sites-available/https.example.conf</code> and look like:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># HTTPS
+server {
+	listen       443;
+	server_name  www.example.com;
+	ssl                  on;
+	ssl_certificate      /srv/letsencrypt/certs/www.example.com/fullchain.pem;
+	ssl_certificate_key  /srv/letsencrypt/certs/www.example.com/privkey.pem;
+
+	#Include actual web application configuration here.
+}
+</code></pre></div></div>
+
+<h2 id="controlling-nginx">Controlling Nginx</h2>
+
+<p>Before we do anything else, we’ll need to first stop the running Nginx service.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>service nginx stop
+</code></pre></div></div>
+
+<p>Then we need to enable the HTTP endpoint by creating a symlink from the <code class="language-plaintext highlighter-rouge">sites-available</code> file to the <code class="language-plaintext highlighter-rouge">sites-enabled</code> folder, and starting the Nginx service</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Enable the http endpoint"</span>
+<span class="nb">ln</span> <span class="nt">-s</span> /etc/nginx/sites-available/http.example.conf /etc/nginx/sites-enabled/http.example.conf
+
+<span class="nb">echo</span> <span class="s2">"Starting nginx service..."</span>
+service nginx start
+</code></pre></div></div>
+
+<p>At this point we have a working HTTP endpoint which will correctly serve up any files in the <code class="language-plaintext highlighter-rouge">acme-challenge</code> folder. Lets generate some certificates.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Generate Letsencrypt SSL certificates"</span>
+/srv/letsencrypt/letsencrypt.sh <span class="nt">--cron</span>
+</code></pre></div></div>
+
+<p>After the certificates are generated successfully by Letsencrypt.sh, we’ll have to enable our HTTPS endpoint, which is where all standard traffic is being redirected to.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Enable the https endpoint"</span>
+<span class="nb">ln</span> <span class="nt">-s</span> /etc/nginx/sites-available/https.example.conf /etc/nginx/sites-enabled/https.example.conf
+</code></pre></div></div>
+
+<p>Finally, we need to tell Nginx update its configuration, as we’ve just added the HTTPS endpoint, but we want to do it without any downtime. Thankfully the Nginx developers have provided us a way to do that.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Reload nginx service..."</span>
+service nginx reload
+</code></pre></div></div>
+
+<p>Now we have a working HTTPS enabled web application. The only thing left to do is automate the certificate renewal.</p>
+
+<h2 id="downtime-free-automatic-certificate-renewal">Downtime-Free Automatic Certificate Renewal</h2>
+
+<p>Automatically renewing your SSL certificate isn’t just a cool feature of Letsencrypt.sh, its actually almost a requirement. By default Letsencrypt certificates expire every 90 days, so renewing it manually would pretty annoying. Thankfully it only takes a single command to completely automate this process.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">echo</span> <span class="s2">"Register Letsencrypt to run weekly"</span>
+<span class="nb">echo</span> <span class="s2">"5 8 * * 7 root /srv/letsencrypt/letsencrypt.sh --cron &amp;&amp; service nginx reload"</span> <span class="o">&gt;</span> /etc/cron.d/letsencrypt.sh
+<span class="nb">chmod </span>u+x  /etc/cron.d/letsencrypt.sh
+</code></pre></div></div>
+
+<p>That command will register a new cron task to run every week that will run the letsencrypt.sh command. If the letsencrypt.sh script detects that the certificate will expire within 30 days, the certificates will be renewed automatically, and the Nginx server will reload, without any downtime.</p>
+
+<h2 id="fin">Fin</h2>
+
+<p>At this point you should have a working SSL protected web application, with automatic certificate renewal, at the cost of a handful of bash commands.</p>
+
+<p>If you’re looking for an example of how this process can be used to automatically protect a website running inside a Docker container, look no further than my minimal <a href="https://github.com/AnalogJ/letsencrypt-http01-docker-nginx-example">letsencrypt-http01-docker-nginx-example</a> repo.</p>
+
+<div class="github-widget" data-repo="AnalogJ/letsencrypt-http01-docker-nginx-example"></div>
+
+<p>If you would like to see a more real world use of Letsencrypt with Nginx and automation you should check my <a href="https://github.com/AnalogJ/gitmask">Gitmask</a> repo.</p>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=Automating SSL Certificates using Nginx & Letsencrypt - Without the Catch 22&amp;url=https://blog.thesparktree.com/automating-ssl-certificates-using-nginx"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/automating-ssl-certificates-using-nginx"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/automating-ssl-certificates-using-nginx"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/automating-ssl-certificates-using-nginx" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/automating-ssl-certificates-using-nginx'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'Automating SSL Certificates using Nginx &amp; Letsencrypt - Without the Catch 22';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_letsencrypt.jpg)" href="/generating-intranet-and-private-network-ssl">
+            <section class="post">
+                <h2>Generating Intranet and Private Network SSL Certificates using LetsEncrypt</h2>
+                <p>This post is a follow up to my previous one [Automating SSL Certificates using Nginx...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_fireworks.jpg)" href="/i-built-that-2015">
+            <section class="post">
+                <h2>I Built That - 2015</h2>
+                <p>Its 2016 now, and like many others, I thought it would be a good idea...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>blog.thesparktree.com</title>
+   
+   <link>https://blog.thesparktree.com</link>
+   <description>Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. </description>
+   <language>en-uk</language>
+   <managingEditor> Jason Kulatunga</managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Debugging Upstart Jobs on Ubuntu 14.04</title>
+	  <link>/debugging-upstart-jobs-on-ubuntu-1404</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-09-01T17:22:00-05:00</pubDate>
+	  <guid>/debugging-upstart-jobs-on-ubuntu-1404</guid>
+	  <description><![CDATA[
+	     <p>Before you begin, you should be (intimately) familiar with the <a href="https://upstart.ubuntu.com/cookbook/">Upstart Cookbook</a>. It’s an incredible resource for understanding the in’s and out’s of Upstart and its configuration.</p>
+
+<p>That said, unfortunately its still pretty difficult to debug Upstart jobs. You’ll get messages like “Job failed to start” or “Unknown job”  without any obvious reasons why. The following is just a collection of the different methods I’ve found useful to debug Upstart jobs that are acting up.</p>
+
+<h1 id="verify-job-configuration-location">Verify job configuration location</h1>
+
+<p>Upstart jobs are located in <code class="language-plaintext highlighter-rouge">/etc/init/</code> and are text files named <code class="language-plaintext highlighter-rouge">foo.conf</code> where <code class="language-plaintext highlighter-rouge">foo</code> is your job name.
+Session jobs can be found in one of the following directories:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">$XDG_CONFIG_HOME/upstart/</code> (or <code class="language-plaintext highlighter-rouge">$HOME/.config/upstart/</code> if <code class="language-plaintext highlighter-rouge">$XDG_CONFIG_HOME</code> not set).</li>
+  <li><code class="language-plaintext highlighter-rouge">$HOME/.init/</code> (deprecated - supported for legacy User Jobs).</li>
+  <li><code class="language-plaintext highlighter-rouge">$XDG_CONFIG_DIRS</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/usr/share/upstart/sessions/</code></li>
+</ul>
+
+<h1 id="check-the-job-using-the-built-in-validators">Check the job using the built-in validators</h1>
+
+<p>The built in validators are pretty basic, but they can help you catch simple errors, and save you from running into migration errors.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>init-checkconfig foo.conf
+<span class="nv">$ </span>initctl check-config
+</code></pre></div></div>
+
+<h1 id="check-the-job-logs">Check the Job logs</h1>
+
+<p>The first and most obvious way to debug anything is to check the log files.
+By default all Upstart jobs will log their output to a log file located at <code class="language-plaintext highlighter-rouge">/var/log/upstart/foo.log</code> where <code class="language-plaintext highlighter-rouge">foo</code> is your job name.
+<em>Note:</em> Session/User jobs have a special log location: <code class="language-plaintext highlighter-rouge">~/.cache/upstart/foo.log</code></p>
+
+<h1 id="enable-verbosedebug-mode">Enable Verbose/Debug mode</h1>
+
+<p>If the log files aren’t helpful enough, you can enable verbose debugging using</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>initctl log-priority debug
+<span class="nb">sudo </span>start foo
+</code></pre></div></div>
+
+<h1 id="grep-dmesg-for-related-information">Grep <code class="language-plaintext highlighter-rouge">dmesg</code> for related information</h1>
+<p>If the logs still don’t show any new information about why the job is failing, you can try <code class="language-plaintext highlighter-rouge">grepping</code> the output of <code class="language-plaintext highlighter-rouge">dmesg</code>.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo dmesg | grep foo
+</code></pre></div></div>
+
+<p>This has helped me solve <code class="language-plaintext highlighter-rouge">start: Job failed to start</code> issues where the errors occured in the <code class="language-plaintext highlighter-rouge">pre-start script</code> stanza.</p>
+
+<h1 id="force-reload-upstart-configuration">Force reload Upstart configuration</h1>
+
+<p>While this should be unnecesssary (Upstart watches for changes to the config directories), you can force a reload</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo initctl reload-configuration
+</code></pre></div></div>
+
+<h1 id="solving-unknown-job-errors">Solving <code class="language-plaintext highlighter-rouge">Unknown Job</code> errors</h1>
+
+<p>In my experience <code class="language-plaintext highlighter-rouge">start: Unknown job: foo</code> errors happen for three reasons.</p>
+
+<ol>
+  <li>
+    <p>You are incorrectly spelling/calling the job  - <code class="language-plaintext highlighter-rouge">/etc/init/foo-job.conf</code> should be called by <code class="language-plaintext highlighter-rouge">start foo-job</code></p>
+
+    <p>Solving the first case is simple, stop being stupid. You can verify that your job exists by <code class="language-plaintext highlighter-rouge">initctl list | grep foo</code></p>
+  </li>
+  <li>
+    <p>Theres an error in the job configuration file</p>
+
+    <p>Debugging the second case is a bit more difficult. Job configuration is loaded immediately on system startup, and you will have to check syslog for errors related to your specific job. I’ve had luck grepping <code class="language-plaintext highlighter-rouge">dmesg</code> as well.</p>
+  </li>
+  <li>
+    <p>You are attempting to start a Session job and a Upstart session has not been started.</p>
+
+    <p>If you are trying to start a session job, ensure that there is a valid Upstart session running <code class="language-plaintext highlighter-rouge">echo "$UPSTART_SESSION"</code>. Make sure that you are running your terminal as the correct user. By default Ubuntu will start a Upstart session for you.</p>
+  </li>
+</ol>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>Installing a custom version of NodeJS on Ubuntu 13.10</title>
+	  <link>/installing-a-custom-version-of-nodejs-on-ubuntu</link>
+	  <author>Jason Kulatunga</author>
+	  <pubDate>2014-01-23T15:27:00-06:00</pubDate>
+	  <guid>/installing-a-custom-version-of-nodejs-on-ubuntu</guid>
+	  <description><![CDATA[
+	     <p>The following is the quickest way to install nodejs latest and specific versions node.js on Ubuntu. According to the nodejs <a href="https://gist.github.com/isaacs/579814">official gists</a>, there are a few other ways to install node.js, and you can check out the other possibilities if you prefer.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Adding yourself to the group to access /usr/local/bin</span>
+<span class="nv">ME</span><span class="o">=</span><span class="si">$(</span><span class="nb">whoami</span><span class="si">)</span> <span class="p">;</span> <span class="nb">sudo chown</span> <span class="nt">-R</span> <span class="nv">$ME</span> /usr/local <span class="o">&amp;&amp;</span> <span class="nb">cd</span> /usr/local/bin
+
+<span class="nb">mkdir </span>_node <span class="o">&amp;&amp;</span> <span class="nb">cd</span> <span class="nv">$_</span> <span class="o">&amp;&amp;</span> wget http://nodejs.org/dist/v0.10.24/node-v0.10.24-linux-x64.tar.gz <span class="nt">-O</span> - | <span class="nb">tar </span>zxf - <span class="nt">--strip-components</span><span class="o">=</span>1
+
+<span class="c"># Making the symbolic link to node</span>
+<span class="nb">ln</span> <span class="nt">-s</span> <span class="s2">"/usr/local/bin/_node/bin/node"</span> ..
+<span class="c"># Making the symbolic link to npm</span>
+<span class="nb">ln</span> <span class="nt">-s</span> <span class="s2">"/usr/local/bin/_node/lib/node_modules/npm/bin/npm-cli.js"</span> ../npm
+</code></pre></div></div>
+
+<p>You can replace the <code class="language-plaintext highlighter-rouge">v.0.11.10</code> in the script above with any version from the list of <a href="http://nodejs.org/dist/">all nodejs versions</a></p>
+
+<p>If you just wanted the official latest release you can also do:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get <span class="nb">install </span>python-software-properties python g++ make
+<span class="nb">sudo </span>add-apt-repository ppa:chris-lea/node.js
+<span class="nb">sudo </span>apt-get update
+<span class="nb">sudo </span>apt-get <span class="nb">install </span>nodejs
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

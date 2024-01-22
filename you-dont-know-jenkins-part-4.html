@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- [[! Document Settings ]] -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- [[! Page Meta ]] -->
+    <title>You Don't Know Jenkins - Part 4 - Kubernetes Slaves</title>
+    <meta name="description" content="Sparktree - Devops posts & guides about interesting tech like Docker, Letsencrypt, Chef, Angular, Automation, API's or other topics that you should know about. " />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/assets/favicon/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/assets/favicon/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/assets/favicon/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/assets/favicon/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/assets/favicon/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/assets/favicon/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/assets/favicon/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/assets/favicon/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/assets/favicon/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;"/>
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="/assets/favicon/mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/assets/favicon/mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="/assets/favicon/mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="/assets/favicon/mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="/assets/favicon/mstile-310x310.png" />
+
+
+    <!-- [[! Styles'n'Scripts ]] -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css"
+          href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/github-repos.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/lightgallery.min.css" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/justifiedGallery.min.css" />
+
+    <!-- [[! highlight.js ]] -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/default.min.css">
+    <style>.hljs { background: none; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- [[! Ghost outputs important style and meta data with this tag ]] -->
+    <!-- Everything inside the #post tags pulls data from the page -->
+<!-- #post -->
+    <link rel="canonical" href="/" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+
+    
+    <!-- Twitter page metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@analogj">
+    <meta name="twitter:creator" content="@analogj">
+    <meta name="twitter:title" content="Sparktree - You Don't Know Jenkins - Part 4 - Kubernetes Slaves" />
+    <meta name="twitter:description" content="Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks, source code management systems and tools via..." />
+    <meta name="twitter:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-4" />
+    <meta name="twitter:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins_docker.png" />
+
+    <!-- Opengraph page metadata -->
+    <meta property="og:site_name" content="Sparktree" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Sparktree - You Don't Know Jenkins - Part 4 - Kubernetes Slaves" />
+    <meta property="og:description" content="Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks, source code management systems and tools via..." />
+    <meta property="og:url" content="https://blog.thesparktree.com/you-dont-know-jenkins-part-4" />
+    <meta property="og:image" content="https://blog.thesparktree.com/assets/images/cover_jenkins_docker.png" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "Website",
+        "publisher": "Sparktree",
+        "url": "https://blog.thesparktree.com/you-dont-know-jenkins-part-4",
+        "image": "https://blog.thesparktree.com/assets/images/cover_jenkins_docker.png",
+        "description": "Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks, source code management systems and tools via..."
+    }
+    </script>
+
+    
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="Sparktree" href="/feed.xml" />
+<!-- /post -->
+
+
+    <meta name="google-site-verification" content="u9dNr8UKTVkH5x31v66leOs6mu10T2cm2RRbeYbOh4o" />
+</head>
+<body class="home-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="javascript:void(0)" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+        <li class="nav-author " role="presentation"><a href="/author/analogj">Author</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+    <div class="site-wrapper">
+
+        <!-- [[! Everything else gets inserted here ]] -->
+        <!-- < default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/cover_jenkins_docker.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/logo-dark.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="javascript:void(0)"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-post">
+
+        <header class="post-header">
+            <h1 class="post-title">You Don't Know Jenkins - Part 4 - Kubernetes Slaves</h1>
+            <section class="post-meta">
+            <!-- <a href=''>Jason Kulatunga</a> -->
+            <time class="post-date" datetime="2020-04-29">29 Apr 2020</time>
+                <!-- [[tags prefix=" on "]] -->
+                 
+                <span class="tags-wrapper">
+                
+                    
+                       <a href='/tag/jenkins'>Jenkins</a>,
+                    
+                
+                    
+                       <a href='/tag/devops'>Devops</a>,
+                    
+                
+                    
+                       <a href='/tag/groovy'>Groovy</a>,
+                    
+                
+                    
+                       <a href='/tag/kubernetes'>Kubernetes</a>,
+                    
+                
+                    
+                       <a href='/tag/dsl'>Dsl</a>,
+                    
+                
+                    
+                       <a href='/tag/automation'>Automation</a>
+                    
+                
+                </span>
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            
+            <h4 class="toc"><i class="fa fa-file-text"></i> </h4>
+            <ul class="toc__menu">
+  <li><a href="#requirements">Requirements</a></li>
+  <li><a href="#configure-your-kubernetes-cluster">Configure your Kubernetes Cluster</a>
+    <ul>
+      <li><a href="#jenkins-namespace">Jenkins Namespace</a></li>
+      <li><a href="#optional---docker-registry-authentication">Optional - Docker Registry Authentication</a></li>
+      <li><a href="#convert-kubernetes-client-config-to-pfx">Convert Kubernetes Client Config to PFX</a></li>
+    </ul>
+  </li>
+  <li><a href="#configure-kubernetes-jenkins-plugin">Configure Kubernetes Jenkins Plugin</a>
+    <ul>
+      <li><a href="#add-jenkins-certificate-credential">Add Jenkins Certificate Credential</a></li>
+      <li><a href="#add-kubernetes-cloud">Add Kubernetes Cloud</a></li>
+      <li><a href="#testing">Testing</a></li>
+    </ul>
+  </li>
+  <li><a href="#global-template-configuration">Global Template Configuration</a>
+    <ul>
+      <li><a href="#jenkins-agent-recap">Jenkins Agent Recap</a></li>
+      <li><a href="#the-problem">The Problem</a></li>
+      <li><a href="#the-solution">The Solution</a></li>
+      <li><a href="#configure-jobs">Configure Jobs</a></li>
+    </ul>
+  </li>
+  <li><a href="#fin">Fin.</a></li>
+</ul>
+            
+
+            <p>Jenkins is one of the most popular Continuous Integration servers ever. It supports an absurd amount of languages, frameworks,
+source code management systems and tools via plugins maintained by its active community.</p>
+
+<p>As your application and deployed infrastructure becomes more complex, you’ll need to re-assess your CI/CD tool chain to keep up.
+Natively, Jenkins supports the concept of slave machines to distribute your testing and automation, leaving the Jenkins master
+as the orchestrator for your jobs.</p>
+
+<p>This works great in theory, however now there’s an additional management overhead keeping the slave nodes up-to-date with
+the software required for your jobs. Under/over utilization also becomes a problem. Your peak job load may differ significantly
+from your baseline, meaning that lots of resources are wasted, or your slaves just can’t keep up with the number of jobs
+in the queue, delaying your builds &amp; tests.</p>
+
+<p>Adding Docker &amp; Kubernetes to the mix fixes those limitations, an allows your CI/CD infrastructure to scale with ease.</p>
+
+<p>This post is part of a series that is all about solving common problems using new Jenkins features, modern automation &amp; configuration-as-code practices.</p>
+
+<ul>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-1">Part 1 - Automated Jenkins Install using Chef</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-2">Part 2 - Maintainable Jenkins Jobs using Job DSL</a></li>
+  <li><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-3">Part 3 - Leveraging Pipelines for Continuous Deployment/Orchestration</a></li>
+  <li><strong><a href="https://blog.thesparktree.com/you-dont-know-jenkins-part-4">Part 4 - Kubernetes Slave Cluster</a></strong></li>
+</ul>
+
+<hr />
+
+<h2 id="requirements">Requirements</h2>
+
+<p>I’m assuming that you already have a working (and accessible):</p>
+
+<ul>
+  <li>Kubernetes cluster
+    <ul>
+      <li>A cloud provider managed cluster (like EKS/AKS) is preferable, but not required.</li>
+      <li><code class="language-plaintext highlighter-rouge">master</code> nodes/API needs to be accessible via Jenkins</li>
+      <li><code class="language-plaintext highlighter-rouge">kubectl</code> should be configured to communicate with your cluster</li>
+    </ul>
+  </li>
+  <li>Jenkins server (v2.199+)
+    <ul>
+      <li>You’ll also need to install the <a href="https://plugins.jenkins.io/kubernetes/">Kubernetes Plugin for Jenkins</a> (v1.24.0+)</li>
+    </ul>
+  </li>
+</ul>
+
+<p>If you want to follow along at home, but you don’t have a dedicated Kubernetes cluster or Jenkins server, you can spin up a Dockerized lab
+environment by following the documentation on the following repo.</p>
+
+<div class="github-widget" data-repo="AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves"></div>
+
+<p>Once you’ve completed the steps in that README, just come back here and follow along.</p>
+
+<h2 id="configure-your-kubernetes-cluster">Configure your Kubernetes Cluster</h2>
+
+<p>Before we start configuring Jenkins, we’ll need to ensure that our Kubernetes cluster has some basic configuration.</p>
+
+<h3 id="jenkins-namespace">Jenkins Namespace</h3>
+
+<p>We should create a Jenkins specific namespace on our Kubernetes cluster, so we can isolate pods created from our Jenkins
+server from other workloads running on our cluster.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ kubectl create namespace jenkins-kube-slaves
+
+namespace/jenkins-kube-slaves created
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: If you’re planning on sharing this Kubernetes cluster with different Jenkins servers, you should probably use a unique namespace for each.</p>
+</blockquote>
+
+<h3 id="optional---docker-registry-authentication">Optional - Docker Registry Authentication</h3>
+
+<blockquote>
+  <p>This section is optional, and only required if you use a private registry, or have private images on Docker hub</p>
+</blockquote>
+
+<p>If your team uses a private Docker registry to store your images, you’ll need to tell Kubernetes how to authenticate against it. This is done using a Kubernetes secret.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  kubectl create secret docker-registry docker-registry-auth-jenkins <span class="se">\</span>
+  <span class="nt">--namespace</span><span class="o">=</span><span class="s2">"jenkins-kube-slaves"</span> <span class="se">\</span>
+  <span class="nt">--docker-server</span><span class="o">=</span>https://index.private-registry-hostname.com <span class="se">\</span>
+  <span class="nt">--docker-username</span><span class="o">=</span>myusername <span class="se">\</span>
+  <span class="nt">--docker-password</span><span class="o">=</span>mypassworrd <span class="se">\</span>
+  <span class="nt">--docker-email</span><span class="o">=</span>myemail@corp.example.com
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: you can use <a href="https://index.docker.io/v1/">https://index.docker.io/v1/</a> if you use Docker Hub with private images.</p>
+</blockquote>
+
+<p>You’ll want to deploy a pod to the <code class="language-plaintext highlighter-rouge">jenkins-kube-slaves</code> namespace manually to ensure that the credentials are valid.</p>
+
+<h3 id="convert-kubernetes-client-config-to-pfx">Convert Kubernetes Client Config to PFX</h3>
+
+<p>The Kubernetes Plugin for Jenkins requires a <code class="language-plaintext highlighter-rouge">*.pkf</code> formatted certificate authenticating against the Kubernetes API,
+rather than the standard <code class="language-plaintext highlighter-rouge">kubectl</code> config file format (<code class="language-plaintext highlighter-rouge">~/.kube/config</code>).</p>
+
+<p>You can generate a <code class="language-plaintext highlighter-rouge">*.pkf</code> file by running the following commands</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> <span class="nt">-p</span> /tmp/kube-certs
+<span class="nv">$ </span><span class="nb">cd</span> /tmp/kube-certs
+
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'client-certificate-data'</span> ~/.kube/config | <span class="nb">head</span> <span class="nt">-n</span> 1 | <span class="nb">awk</span> <span class="s1">'{print $2}'</span> | <span class="nb">base64</span> <span class="nt">-d</span> <span class="o">&gt;&gt;</span> client.crt
+<span class="nv">$ </span><span class="nb">grep</span> <span class="s1">'client-key-data'</span> ~/.kube/config | <span class="nb">head</span> <span class="nt">-n</span> 1 | <span class="nb">awk</span> <span class="s1">'{print $2}'</span> | <span class="nb">base64</span> <span class="nt">-d</span> <span class="o">&gt;&gt;</span> client.key
+
+<span class="c"># generate pfx file</span>
+<span class="nv">$ </span>openssl pkcs12 <span class="nt">-export</span> <span class="nt">-clcerts</span> <span class="nt">-inkey</span> client.key <span class="nt">-in</span> client.crt <span class="nt">-out</span> client.pfx <span class="nt">-name</span> <span class="s2">"kubernetes-client"</span> <span class="nt">-passout</span> pass:SECRET_PASSPHRASE
+
+<span class="c"># you should now have 3 files in your /tmp/kube-certs directory</span>
+<span class="nv">$ </span><span class="nb">ls
+</span>client.crt    client.key    client.pfx
+</code></pre></div></div>
+
+<p>You can validate that your generated <code class="language-plaintext highlighter-rouge">*.pfx</code> file worked by querying the kubernetes cluster API with it.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c"># first we'll verify that the cert and key were extracted correctly</span>
+curl <span class="nt">--insecure</span> <span class="nt">--cert</span> client.crt <span class="nt">--key</span> client.key  https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+
+<span class="c"># next we'll validate that the generated .pfx file that Jenkins will use is correctly encoded.</span>
+curl <span class="nt">--insecure</span> <span class="nt">--cert-type</span> P12 <span class="nt">--cert</span> client.pfx:SECRET_PASSPHRASE https://KUBERNETES_APISERVER_HOSTNAME:PORT/api/v1
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: the <code class="language-plaintext highlighter-rouge">SECRET_PASSPHRASE</code> value above should be replaced and treated as a password. The <code class="language-plaintext highlighter-rouge">*.pfx</code> passphrase is used
+to encrypt the <code class="language-plaintext highlighter-rouge">*.pfx</code> file contents before storing them on disk.</p>
+</blockquote>
+
+<p>Now that we’ve configured our Kubernetes cluster, its time to setup Jenkins</p>
+
+<h2 id="configure-kubernetes-jenkins-plugin">Configure Kubernetes Jenkins Plugin</h2>
+
+<p>The Kubernetes plugin is fairly complicated at first glance. There’s a handful of settings that must be set for everything
+to work correctly. If you’re following along, you’ll want to pay close attention to the screenshots below.</p>
+
+<h3 id="add-jenkins-certificate-credential">Add Jenkins Certificate Credential</h3>
+
+<p>The first thing we’re going to need to do is add store our generated <code class="language-plaintext highlighter-rouge">client.pfx</code> file as a Jenkins Certificate Credential,
+so we can reference it in the Kubernetes plugin configuration.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-certificate-credential.png" alt="certificate credential" style="max-height: 500px;" /></p>
+
+<blockquote>
+  <p>Note: You must specify the same <code class="language-plaintext highlighter-rouge">SECRET_PASSPHRASE</code> you used when generating your <code class="language-plaintext highlighter-rouge">*.pfx</code> file above.</p>
+</blockquote>
+
+<h3 id="add-kubernetes-cloud">Add Kubernetes Cloud</h3>
+
+<p>Now we can finally start configuring our Jenkins server to communicate with our Kubernetes cluster.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-kubernetes-configure.png" alt="kubernetes configure" style="max-height: 900px;" /></p>
+
+<blockquote>
+  <p>Note: in the screenshot above, I’ve disabled the “https certificate check” for testing. You’ll want to make sure that’s
+enabled in production. When you do so, you’ll need to specify your Kubernetes server CA Certificate key in the box above.</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: if you’re using my <a href="https://github.com/AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves">AnalogJ/you-dont-know-jenkins-dynamic-kubernetes-slaves</a> repo,
+you will need to set the Jenkins Url to “http://localhost:8080” (not https://)</p>
+</blockquote>
+
+<h3 id="testing">Testing</h3>
+
+<p>A this point we have finished configuring the Kubernetes plugin, and we can test it out by creating a simple Jenkins Pipeline job, with the following script.</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+<span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+        <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>This method allows you to define your pod and containers on demand, <strong>however it does not work with older Jenkins Freestyle jobs.</strong></p>
+
+<h2 id="global-template-configuration">Global Template Configuration</h2>
+
+<p>Before discuss how to get the Jenkins Kubernetes plugin working with Freestyle jobs, we should first recap how the Jenkins slave agents work.</p>
+
+<h3 id="jenkins-agent-recap">Jenkins Agent Recap</h3>
+
+<p>Jenkins communicates with its slaves using a Jenkins agent (using a protocol called <code class="language-plaintext highlighter-rouge">jnlp</code>). The logic for this agent is packaged into a jar and
+automatically installed on your Jenkins slave node when you register the slave with the Jenkins master.</p>
+
+<p>This agent software is also required for the dynamic Kubernetes slaves, however in this case it’s baked into the docker
+image that is automatically included in every pod you run.</p>
+
+<p>The default agent (based on the <a href="https://hub.docker.com/r/jenkins/inbound-agent">jenkins/inbound-agent</a> image) can be
+customized by adding it to the template:</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'jnlp'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'jenkins/inbound-agent:3.35-5-alpine'</span><span class="o">,</span> <span class="nl">args:</span> <span class="s1">'${computer.jnlpmac} ${computer.name}'</span><span class="o">),</span>
+</code></pre></div></div>
+
+<p>This default agent image is based on Debian, but Alpine and Windows Nanoserver flavors exist as well.</p>
+
+<h3 id="the-problem">The Problem</h3>
+
+<p>While Pipeline jobs are flexible and have a syntax to configure the Kubernetes pod used in the job, there’s no equivalent
+in for Freestyle jobs. The naiive solution would be to use the a global Pod Template, and reference it via a job “label”</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job-label.png" alt="freestyle job configuration label" style="max-height: 500px;" /></p>
+
+<p><strong>However this is not usable for most Freestyle jobs.</strong></p>
+
+<p>When used with a Freestyle job, the Kubernetes plugin will <strong>run the job steps in the default Pod container, the <code class="language-plaintext highlighter-rouge">jnlp</code>
+slave agent container.</strong> Which is where we run into the main issue: <strong>The jnlp slave agent container is based on a minimal
+image with no language runtimes.</strong></p>
+
+<h3 id="the-solution">The Solution</h3>
+
+<h4 id="custom-agent-images">Custom Agent Images</h4>
+
+<p>The solution is to customize the <code class="language-plaintext highlighter-rouge">jnlp</code> slave image container with the custom software your jobs require – language
+runtimes, tools, packages, fonts, etc.</p>
+
+<p>Since <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> is just a standard Docker image, you can customize it like you would any other Docker image.</p>
+
+<p>Here’s an example <code class="language-plaintext highlighter-rouge">Dockerfile</code> adding the Go language runtime to the <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> image, so you can use <code class="language-plaintext highlighter-rouge">go build</code>
+in your Jenkins jobs</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> jenkins/inbound-agent</span>
+
+<span class="c"># the jenkins/inbound-agent is configured to run as the `jenkins` user. To install new software &amp; packages, we'll need to change back to `root`</span>
+<span class="k">USER</span><span class="s"> root</span>
+
+
+<span class="c"># lets download &amp; install the latest Go language runtime and tools.# since this is a debian machine, we can also install standard packages using `apt-get`</span>
+<span class="k">RUN </span>curl <span class="nt">-O</span> <span class="nt">--silent</span> <span class="nt">--location</span> https://dl.google.com/go/go1.13.10.linux-amd64.tar.gz <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    <span class="nb">mkdir</span> <span class="nt">-p</span> /usr/local/go <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    tar <span class="nt">-xvf</span> go1.13.10.linux-amd64.tar.gz <span class="nt">-C</span> /usr/local/go <span class="nt">--strip</span> 1 <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    rm <span class="nt">-f</span> go1.13.10.linux-amd64.tar.gz
+    
+# lets setup some Go specific environmental variables
+<span class="k">ENV</span><span class="s"> GOROOT="/usr/local/go" \</span>
+    GOPATH="/home/jenkins/go"
+    
+# next, we'll customize the PATH env variable to add the `go` binary, and ensure that binaries on the GOROOT and GOPATH are also available.
+<span class="k">ENV</span><span class="s"> PATH="$PATH:/usr/local/go/bin:$GOROOT/bin:$GOPATH/bin"</span>
+
+<span class="c"># now that we've finished customizing our Jenkins image, we should drop back to the `jenkins` user.</span>
+<span class="k">USER</span><span class="s"> jenkins</span>
+
+<span class="c"># finally, we'll setup the `go` cache directory (GOPATH), and test that the go binary is installed correctly.</span>
+<span class="k">RUN </span><span class="nb">mkdir</span> /home/jenkins/go <span class="o">&amp;&amp;</span> <span class="se">\
+</span>    go version 
+</code></pre></div></div>
+
+<p>Once you push this up to your Docker registry, you we can reference it in a global Pod Template, with a label like <code class="language-plaintext highlighter-rouge">kube-slave-go</code> or maybe <code class="language-plaintext highlighter-rouge">kube-slave-go1.13</code> if you care about the specific version of the language runtime.</p>
+
+<p>While you could go off and build custom Docker images for all the languages you use, I’ve already created <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> based Docker images for most popular languages (go, ruby, node, python). Feel free to use them if you’d like.</p>
+
+<div class="github-widget" data-repo="AnalogJ/docker-jenkins-inbound-agent-runtimes"></div>
+
+<h4 id="configure-global-pod-templates">Configure Global Pod Templates</h4>
+
+<p>To use our customized <code class="language-plaintext highlighter-rouge">jnlp</code> slave images with Freestyle jobs, we’ll configure a handful of global Pod Templates, to look like the following:</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-ruby.png" alt="pod template configuration" style="max-height: 500px;" /></p>
+
+<p>The fields to pay attention to are the following</p>
+
+<ul>
+  <li><strong>Namespace</strong>  - this determines the namespace that Jenkins uses when it creates slaves on demand.</li>
+  <li><strong>Label</strong> - the most important field. The label(s) you specify here will be used in your Jenkins jobs to assign them to this dynamic slave. We’ll call ours <code class="language-plaintext highlighter-rouge">kube-slave-ruby</code>.</li>
+  <li><strong>Container Template - Name</strong> - this must be <code class="language-plaintext highlighter-rouge">jnlp</code> to tell Jenkins to override the default <em>minimal</em> slave agent image.</li>
+  <li><strong>Docker Image</strong> - as mentioned above, <code class="language-plaintext highlighter-rouge">analogj/jenkins-inbound-agent-runtimes:latest-ruby2.7</code> is customized version of the <code class="language-plaintext highlighter-rouge">jenkins/inbound-agent</code> image with Ruby installed. Replace with your customized image with the tools you need.</li>
+  <li>
+    <p>Optional - <strong>ImagePullSecrets</strong> - only required if you use a private Docker registry, or private Docker Hub images. Should have the exact name used in the <strong>Docker Registry Authentication</strong> section above.</p>
+
+    <p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-pod-template-secret.png" alt="pod template secret" style="max-height: 500px;" /></p>
+  </li>
+</ul>
+
+<h3 id="configure-jobs">Configure Jobs</h3>
+
+<p>Now that we have our Kubernetes plugin fully configured, its time to start running our Jenkins jobs on our cluster.</p>
+
+<p>Though Jenkins has a multitude of different job types, they’re all fundamentally based on one of the two core job types:</p>
+
+<ul>
+  <li>Freestyle jobs</li>
+  <li>Pipeline jobs</li>
+</ul>
+
+<h4 id="freestyle-jobs">Freestyle Jobs</h4>
+
+<p>Lets look at freestyle jobs first. They’ve been around the longest, and most other job types can be configured in the same way.</p>
+
+<p><img src="https://blog.thesparktree.com/assets/images/jenkins-kubernetes-slaves/jenkins-freestyle-job.png" alt="docker hub configuration" style="max-height: 500px;" /></p>
+
+<p>As mentioned above, with Freestyle Jobs (and other legacy job types) you cannot configure your Kubernetes pod per job. You’re limited to the global pod templates you’ve pre-configured.</p>
+
+<h4 id="pipeline-jobs">Pipeline Jobs</h4>
+
+<p>Similar to Freestyle jobs, running your job on the Kubernetes cluster is as simple as specifying it in the <code class="language-plaintext highlighter-rouge">node{}</code> code block</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>node('kube-slave-java') {
+    # the following commands will execute in the specified docker container on your kubernetes cluster,
+    sh 'echo "hello world"'
+}
+</code></pre></div></div>
+
+<p>However, Pipeline jobs provide additional flexibility, allowing you to define the Pod template in the job itself, allowing for much more flexibility
+(including running multiple containers in a pod)</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">podTemplate</span><span class="o">(</span><span class="nl">containers:</span> <span class="o">[</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'maven'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'maven:3.3.9-jdk-8-alpine'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">),</span>
+    <span class="n">containerTemplate</span><span class="o">(</span><span class="nl">name:</span> <span class="s1">'golang'</span><span class="o">,</span> <span class="nl">image:</span> <span class="s1">'golang:1.8.0'</span><span class="o">,</span> <span class="nl">ttyEnabled:</span> <span class="kc">true</span><span class="o">,</span> <span class="nl">command:</span> <span class="s1">'cat'</span><span class="o">)</span>
+  <span class="o">])</span> <span class="o">{</span>
+
+    <span class="n">node</span><span class="o">(</span><span class="n">POD_LABEL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="s1">'https://github.com/jenkinsci/kubernetes-plugin.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'maven'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Maven project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s1">'mvn -B clean install'</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="n">stage</span><span class="o">(</span><span class="s1">'Get a Golang project'</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">git</span> <span class="nl">url:</span> <span class="s1">'https://github.com/hashicorp/terraform.git'</span>
+            <span class="n">container</span><span class="o">(</span><span class="s1">'golang'</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">stage</span><span class="o">(</span><span class="s1">'Build a Go project'</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">sh</span> <span class="s2">"""
+                    mkdir -p /go/src/github.com/hashicorp
+                    ln -s `pwd` /go/src/github.com/hashicorp/terraform
+                    cd /go/src/github.com/hashicorp/terraform &amp;&amp; make core-dev
+                    """</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>For a full list of options for the <code class="language-plaintext highlighter-rouge">podTemplate</code> and <code class="language-plaintext highlighter-rouge">containerTemplate</code> functions, see the Jenkins Kubernetes Plugin <a href="https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration">README.md</a></p>
+
+<hr />
+
+<h2 id="fin">Fin.</h2>
+
+<p>That’s it. You should now have a working Jenkins server that dynamically creates slaves on demand. Jenkins Kubernetes slaves
+can be configured with all the same software you would need on a regular slave, with the added benefit of following
+configuration-as-code best practices.</p>
+
+<p>In addition, it’s generally easier to automate scaling up your Kubernetes cluster, than it is to scale up Jenkins nodes.</p>
+
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+
+            
+            <figure class="author-image">
+                <a class="img" href="/author/analogj" style="background-image: url(/assets/images/analogj.jpg)"><span class="hidden">'s Picture</span></a>
+            </figure>
+            
+
+            <section class="author">
+                <h4><a href="/author/analogj">Jason Kulatunga</a></h4>
+                
+                
+                    <p> Devops & Infrastructure guy @Gusto (ex-Adobe). I write about, and play with, all sorts of new tech. All opinions are my own.</p>
+                
+                <div class="author-meta">
+                    <span class="author-location icon-location"> San Francisco, CA</span> 
+                    <span class="author-link icon-link"><a href="https://blog.thesparktree.com"> blog.thesparktree.com</a></span> 
+                </div>
+            </section>
+
+            <!-- /author  -->
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="http://twitter.com/share?text=You Don't Know Jenkins - Part 4 - Kubernetes Slaves&amp;url=https://blog.thesparktree.com/you-dont-know-jenkins-part-4"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.thesparktree.com/you-dont-know-jenkins-part-4"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://blog.thesparktree.com/you-dont-know-jenkins-part-4"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <!-- Subscribe -->
+            
+            <!-- Begin MailChimp Signup Form -->
+<section class="gh-subscribe">
+    <h3 class="gh-subscribe-title">Subscribe to Sparktree</h3>
+    <p>Get the latest posts delivered right to your inbox.</p>
+
+    <form action="//thesparktree.us12.list-manage.com/subscribe/post?u=8600f4c40c69856634ec2a2c8&amp;id=db2fcf78fd" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+        <div class="mc-field-group form-group">
+            <input type="email" value="" name="EMAIL" class="subscribe-email required email" id="mce-EMAIL">
+        </div>
+        <button class="" type="submit">Subscribe</button>
+
+        <input type="hidden" name="SIGNUP" value="/you-dont-know-jenkins-part-4" id="mce-SIGNUP">
+        <div id="mce-responses" class="clear">
+            <div class="response" id="mce-error-response" style="display:none"></div>
+            <div class="response" id="mce-success-response" style="display:none"></div>
+        </div>    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+        <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_8600f4c40c69856634ec2a2c8_db2fcf78fd" tabindex="-1" value=""></div>
+    </form>
+
+
+    <span class="gh-subscribe-rss">or subscribe <a href="http://cloud.feedly.com/#subscription/feed/https://blog.thesparktree.com/feed.xml">via RSS</a> with Feedly!</span>
+</section>
+
+
+<!--End mc_embed_signup-->
+            
+            <!-- Add Disqus Comments -->
+            
+                <div id="disqus_thread"></div>
+<script>
+    /**
+     *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+     *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+     */
+
+    var disqus_config = function () {
+        this.page.url = 'https://blog.thesparktree.com/you-dont-know-jenkins-part-4'; //'a unique URL for each page where Disqus is present'
+        this.page.title = 'You Don&#39;t Know Jenkins - Part 4 - Kubernetes Slaves';
+    };
+
+    (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+        var d = document, s = d.createElement('script');
+
+        s.src = '//sparktree.disqus.com/embed.js';  // IMPORTANT: Replace EXAMPLE with your forum shortname!
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+            
+            
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+        <a class="read-next-story " style="background-image: url(/assets/images/cover_traefik_docker.png)" href="/traefik-advanced-config">
+            <section class="post">
+                <h2>Traefik v2 - Advanced Configuration</h2>
+                <p>> Traefik is the leading open source reverse proxy and load balancer for HTTP and...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/cover_docker_hub.png)" href="/docker-hub-matrix-builds">
+            <section class="post">
+                <h2>Docker Hub - Matrix Builds and Tagging using Build Args</h2>
+                <p>If you’re a heavy user of Docker, you’re already intimately familiar with Docker Hub, the...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">Sparktree</a> &copy; 2024</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/biomadeira/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- [[! Ghost outputs important scripts and data with this tag ]] -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <!-- [[! The main JavaScript file for Casper ]] -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/assets/js/github-repos.min.js"></script>
+    <script type="text/javascript" src="/assets/js/lightgallery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/jquery.justifiedGallery.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-33233417-3', 'auto');
+        ga('send', 'pageview');
+
+     </script>
+
+     <!-- Sumo -->
+    <script src="https://load.sumome.com/" data-sumo-site-id="94ea7fd31eeea5aeae29f85e1ab1c01e52c9cc1aaf11deefb55faf0f57bdf2b4" async="async"></script>
+
+</body>
+</html>
